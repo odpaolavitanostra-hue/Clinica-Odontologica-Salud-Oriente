@@ -5,7 +5,7 @@ import { useCosoStore } from "@/store/useCosoStore";
 import { toast } from "sonner";
 
 const Booking = () => {
-  const { doctors, treatments, validateSlot, validateSchedule, addAppointment } = useCosoStore();
+  const { doctors, treatments, validateSlot, validateSchedule, addAppointment, patients, addPatient, appointments } = useCosoStore();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -45,6 +45,23 @@ const Booking = () => {
         ? parseFloat(form.customPrice) || 0
         : selectedTreatment?.priceUSD || 0;
 
+    // Auto-register patient if not exists
+    const existingPatient = patients.find(
+      (p) => p.phone === form.patientPhone.trim() || p.name.toLowerCase() === form.patientName.trim().toLowerCase()
+    );
+    if (!existingPatient) {
+      addPatient({
+        id: Math.random().toString(36).substring(2, 10),
+        name: form.patientName.trim(),
+        cedula: "",
+        phone: form.patientPhone.trim(),
+        email: "",
+        notes: "Registrado vía booking online",
+        photos: [],
+        clinicalHistoryUrl: "",
+      });
+    }
+
     addAppointment({
       id: Math.random().toString(36).substring(2, 10),
       patientName: form.patientName.trim(),
@@ -64,7 +81,7 @@ const Booking = () => {
 
   const update = (key: string, val: string) => setForm((p) => ({ ...p, [key]: val }));
 
-  // Generate available time slots
+  // Generate available time slots (1-hour intervals, exclude booked)
   const getTimeSlots = () => {
     if (!form.date) return [];
     const d = new Date(form.date + "T00:00:00");
@@ -73,9 +90,13 @@ const Booking = () => {
     const end = day === 6 ? 14 : 17;
     const slots: string[] = [];
     for (let h = 8; h < end; h++) {
-      slots.push(`${h.toString().padStart(2, "0")}:00`);
-      if (h < end - 1 || (day === 6 && h < 13)) {
-        slots.push(`${h.toString().padStart(2, "0")}:30`);
+      const time = `${h.toString().padStart(2, "0")}:00`;
+      // Check if slot is already booked
+      const isBooked = appointments.some(
+        (a) => a.date === form.date && a.time === time && a.status !== "cancelada"
+      );
+      if (!isBooked) {
+        slots.push(time);
       }
     }
     return slots;

@@ -1,6 +1,10 @@
 import { MapPin, Phone, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-clinic.jpg";
+import serviceLimpieza from "@/assets/service-limpieza.jpg";
+import serviceResina from "@/assets/service-resina.jpg";
+import serviceExtraccion from "@/assets/service-extraccion.jpg";
+import serviceEndodoncia from "@/assets/service-endodoncia.jpg";
 
 const Index = () => {
   return (
@@ -88,18 +92,23 @@ const Index = () => {
             Ofrecemos tratamientos odontológicos de alta calidad con tecnología moderna.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            {["Limpieza Dental", "Resina Compuesta", "Extracción", "Endodoncia"].map((s) => (
+            {[
+              { name: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
+              { name: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
+              { name: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros con mínima molestia." },
+              { name: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar tu pieza dental." },
+            ].map((s) => (
               <div
-                key={s}
-                className="bg-card rounded-xl p-6 gold-border hover:gold-glow transition-shadow duration-300"
+                key={s.name}
+                className="bg-card rounded-xl overflow-hidden gold-border hover:gold-glow transition-shadow duration-300 group"
               >
-                <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-gold text-lg font-display font-bold">✦</span>
+                <div className="h-40 overflow-hidden">
+                  <img src={s.img} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
-                <h3 className="font-display text-lg font-semibold mb-2">{s}</h3>
-                <p className="text-muted-foreground text-sm">
-                  Atención profesional con los mejores materiales.
-                </p>
+                <div className="p-5">
+                  <h3 className="font-display text-lg font-semibold mb-2">{s.name}</h3>
+                  <p className="text-muted-foreground text-sm">{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
