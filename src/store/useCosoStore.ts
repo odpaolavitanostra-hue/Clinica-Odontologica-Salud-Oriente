@@ -18,6 +18,8 @@ export interface Patient {
   phone: string;
   email: string;
   notes: string;
+  photos: string[];
+  clinicalHistoryUrl: string;
 }
 
 export interface InventoryItem {

@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   CalendarDays, Users, Package, DollarSign, Settings, LogOut, 
-  Stethoscope, Menu, X 
+  Stethoscope, Menu, X, LayoutDashboard 
 } from "lucide-react";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminCalendar } from "@/components/admin/AdminCalendar";
 import { AdminDoctors } from "@/components/admin/AdminDoctors";
 import { AdminPatients } from "@/components/admin/AdminPatients";
@@ -12,6 +13,7 @@ import { AdminFinances } from "@/components/admin/AdminFinances";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 
 const tabs = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "calendar", label: "Agenda", icon: CalendarDays },
   { id: "doctors", label: "Doctores", icon: Stethoscope },
   { id: "patients", label: "Pacientes", icon: Users },
@@ -22,7 +24,7 @@ const tabs = [
 
 const Admin = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("calendar");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -38,13 +40,14 @@ const Admin = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "dashboard": return <AdminDashboard />;
       case "calendar": return <AdminCalendar />;
       case "doctors": return <AdminDoctors />;
       case "patients": return <AdminPatients />;
       case "inventory": return <AdminInventory />;
       case "finances": return <AdminFinances />;
       case "settings": return <AdminSettings />;
-      default: return <AdminCalendar />;
+      default: return <AdminDashboard />;
     }
   };
 
