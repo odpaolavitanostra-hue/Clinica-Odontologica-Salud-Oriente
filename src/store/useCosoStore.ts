@@ -122,13 +122,13 @@ export const useCosoStore = create<CosoState>()(
       appointments: [],
       
       treatments: [
-        { name: 'Limpieza', priceUSD: 30 },
-        { name: 'Resina', priceUSD: 45 },
-        { name: 'Extracción', priceUSD: 40 },
-        { name: 'Endodoncia', priceUSD: 120 },
-        { name: 'Revisión', priceUSD: 25 },
         { name: 'Blanqueamiento', priceUSD: 80 },
+        { name: 'Endodoncia', priceUSD: 120 },
+        { name: 'Extracción', priceUSD: 40 },
+        { name: 'Limpieza', priceUSD: 30 },
         { name: 'Prótesis', priceUSD: 200 },
+        { name: 'Resina', priceUSD: 45 },
+        { name: 'Revisión', priceUSD: 25 },
         { name: 'Otros', priceUSD: 0 },
       ],
       

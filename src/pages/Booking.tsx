@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope } from "lucide-react";
 import { useCosoStore } from "@/store/useCosoStore";
 import { toast } from "sonner";
@@ -7,14 +7,16 @@ import { toast } from "sonner";
 const Booking = () => {
   const { doctors, treatments, validateSlot, validateSchedule, addAppointment, patients, addPatient, appointments } = useCosoStore();
   const navigate = useNavigate();
-
+  const [searchParams] = useSearchParams();
+  const initialTreatment = searchParams.get("tratamiento") || treatments[0]?.name || "";
+  
   const [form, setForm] = useState({
     patientName: "",
     patientPhone: "",
     doctorId: doctors[0]?.id || "",
     date: "",
     time: "",
-    treatment: treatments[0]?.name || "",
+    treatment: initialTreatment,
     customPrice: "",
     notes: "",
   });
@@ -230,7 +232,7 @@ const Booking = () => {
         <div className="mt-8 rounded-xl overflow-hidden gold-border">
           <a href="https://maps.app.goo.gl/XCTMewNAjtyAQrqk7" target="_blank" rel="noopener noreferrer">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.123!2d-64.63!3d10.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDEzJzEyLjAiTiA2NMKwMzcnNDguMCJX!5e0!3m2!1ses!2sve!4v1234567890"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.5!2d-64.6333!3d10.2167!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c2d7412e5c9e2e7%3A0x4b5e7b4d1a2c3f8e!2sC.C.+Novocentro!5e0!3m2!1ses!2sve!4v1700000000000"
               width="100%"
               height="250"
               style={{ border: 0, pointerEvents: "none" }}

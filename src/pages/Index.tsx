@@ -96,17 +96,18 @@ const Index = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
-              { name: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
-              { name: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
-              { name: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros con mínima molestia." },
-              { name: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar tu pieza dental." },
-              { name: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
-              { name: "Blanqueamiento", img: serviceBlanqueamiento, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros." },
-              { name: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
+              { name: "Blanqueamiento", treatment: "Blanqueamiento", img: serviceBlanqueamiento, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros." },
+              { name: "Endodoncia", treatment: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar tu pieza dental." },
+              { name: "Extracción", treatment: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros con mínima molestia." },
+              { name: "Limpieza Dental", treatment: "Limpieza", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
+              { name: "Prótesis", treatment: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
+              { name: "Resina Compuesta", treatment: "Resina", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
+              { name: "Revisión", treatment: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
             ].map((s) => (
-              <div
+              <Link
                 key={s.name}
-                className="bg-card rounded-xl overflow-hidden gold-border hover:gold-glow transition-shadow duration-300 group"
+                to={`/reservar?tratamiento=${encodeURIComponent(s.treatment)}`}
+                className="bg-card rounded-xl overflow-hidden gold-border hover:gold-glow transition-shadow duration-300 group block"
               >
                 <div className="h-40 overflow-hidden">
                   <img src={s.img} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -115,7 +116,7 @@ const Index = () => {
                   <h3 className="font-display text-lg font-semibold mb-2">{s.name}</h3>
                   <p className="text-muted-foreground text-sm">{s.desc}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -134,16 +135,16 @@ const Index = () => {
               rel="noopener noreferrer"
               className="block w-full"
             >
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.123!2d-64.63!3d10.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDEzJzEyLjAiTiA2NMKwMzcnNDguMCJX!5e0!3m2!1ses!2sve!4v1234567890"
-                width="100%"
-                height="350"
-                style={{ border: 0, pointerEvents: "none" }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Ubicación de la clínica"
-              />
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.5!2d-64.6333!3d10.2167!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8c2d7412e5c9e2e7%3A0x4b5e7b4d1a2c3f8e!2sC.C.+Novocentro!5e0!3m2!1ses!2sve!4v1700000000000"
+              width="100%"
+              height="350"
+              style={{ border: 0, pointerEvents: "none" }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Ubicación de la clínica"
+            />
             </a>
           </div>
         </div>
