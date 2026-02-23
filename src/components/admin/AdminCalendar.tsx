@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCosoStore, Appointment } from "@/store/useCosoStore";
-import { CalendarDays, Check, X, Trash2, Edit, DollarSign, Save } from "lucide-react";
+import { CalendarDays, Check, X, Trash2, Edit, DollarSign, Save, UserCog } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminCalendar = () => {
@@ -10,6 +10,8 @@ export const AdminCalendar = () => {
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
   const [editingPay, setEditingPay] = useState<string | null>(null);
   const [customDoctorPay, setCustomDoctorPay] = useState<number>(0);
+  const [editingDoctor, setEditingDoctor] = useState<string | null>(null);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
 
   const filtered = appointments
     .filter((a) => filter === "all" || a.status === filter)
@@ -82,6 +84,13 @@ export const AdminCalendar = () => {
                   {app.status === "pendiente" && (
                     <div className="flex gap-1">
                       <button
+                        onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }}
+                        className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"
+                        title="Cambiar doctor"
+                      >
+                        <UserCog className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => { setCompleting(app.id); setMaterials([]); }}
                         className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20"
                         title="Completar"
@@ -119,6 +128,35 @@ export const AdminCalendar = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Edit doctor dialog */}
+              {editingDoctor === app.id && (
+                <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+                  <h4 className="font-semibold text-sm">Reasignar doctor:</h4>
+                  <select
+                    className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm"
+                    value={selectedDoctorId}
+                    onChange={(e) => setSelectedDoctorId(e.target.value)}
+                  >
+                    {doctors.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        updateAppointment(app.id, { doctorId: selectedDoctorId });
+                        setEditingDoctor(null);
+                        toast.success("Doctor reasignado");
+                      }}
+                      className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"
+                    >
+                      <Save className="w-4 h-4" /> Guardar
+                    </button>
+                    <button onClick={() => setEditingDoctor(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
+                  </div>
+                </div>
+              )}
 
               {/* Edit doctor pay dialog */}
               {editingPay === app.id && (
