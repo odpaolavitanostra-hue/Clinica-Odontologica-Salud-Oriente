@@ -136,7 +136,7 @@ const Index = () => {
               className="block w-full"
             >
             <iframe
-              src="https://maps.google.com/maps?q=C.C.+Novocentro+Puerto+La+Cruz+Anzoategui+Venezuela&t=&z=17&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=Novocentro+piso+1+local+1-02+Puerto+La+Cruz+6023+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="350"
               style={{ border: 0, pointerEvents: "none" }}

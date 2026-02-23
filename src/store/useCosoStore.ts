@@ -92,6 +92,7 @@ interface CosoState {
   completeAppointment: (id: string, materialsUsed: { itemId: string; qty: number }[]) => void;
   
   addFinance: (f: FinanceRecord) => void;
+  updateTreatment: (name: string, priceUSD: number) => void;
   
   validateSlot: (date: string, time: string, excludeId?: string) => boolean;
   validateSchedule: (date: string, time: string) => { valid: boolean; reason?: string };
@@ -215,6 +216,9 @@ export const useCosoStore = create<CosoState>()(
       },
 
       addFinance: (f) => set((s) => ({ finances: [...s.finances, f] })),
+      updateTreatment: (name, priceUSD) => set((s) => ({
+        treatments: s.treatments.map((t) => t.name === name ? { ...t, priceUSD } : t),
+      })),
 
       validateSlot: (date, time, excludeId) => {
         const requested = new Date(`${date}T${time}`);

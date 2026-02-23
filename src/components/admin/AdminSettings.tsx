@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useCosoStore } from "@/store/useCosoStore";
-import { Settings, Save, Eye, EyeOff } from "lucide-react";
+import { Settings, Save, Eye, EyeOff, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminSettings = () => {
-  const { adminPassword, setAdminPassword, doctors, updateDoctor, tasaBCV, setTasaBCV } = useCosoStore();
+  const { adminPassword, setAdminPassword, doctors, updateDoctor, tasaBCV, setTasaBCV, treatments } = useCosoStore();
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -45,6 +45,24 @@ export const AdminSettings = () => {
         </div>
       </div>
 
+      {/* Treatment Prices */}
+      <div className="bg-card rounded-xl p-5 gold-border space-y-3">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Stethoscope className="w-4 h-4 text-gold" /> Precios de Servicios (USD)
+        </h3>
+        <div className="space-y-2">
+          {[...treatments]
+            .sort((a, b) => {
+              if (a.name === "Otros") return 1;
+              if (b.name === "Otros") return -1;
+              return a.name.localeCompare(b.name, "es");
+            })
+            .map((t) => (
+              <TreatmentPriceRow key={t.name} treatment={t} />
+            ))}
+        </div>
+      </div>
+
       {/* Admin Password */}
       <div className="bg-card rounded-xl p-5 gold-border space-y-3">
         <h3 className="font-semibold">Contraseña de Administrador</h3>
@@ -70,6 +88,42 @@ export const AdminSettings = () => {
         {doctors.map((d) => (
           <DoctorPassRow key={d.id} doctor={d} onSave={(pass) => handleChangeDoctorPass(d.id, pass)} />
         ))}
+      </div>
+    </div>
+  );
+};
+
+const TreatmentPriceRow = ({ treatment }: { treatment: { name: string; priceUSD: number } }) => {
+  const updateTreatment = useCosoStore((s) => s.updateTreatment);
+  const [price, setPrice] = useState(treatment.priceUSD.toString());
+
+  const handleSave = () => {
+    const val = parseFloat(price) || 0;
+    updateTreatment(treatment.name, val);
+    toast.success(`Precio de ${treatment.name} actualizado a $${val.toFixed(2)}`);
+  };
+
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      <span className="text-sm flex-1 min-w-[120px]">{treatment.name}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">$</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          className="bg-muted rounded-lg px-3 py-2 text-sm border border-border w-24 text-center"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          disabled={treatment.name === "Otros"}
+        />
+        <button
+          onClick={handleSave}
+          className="bg-gold text-gold-foreground px-3 py-2 rounded-lg text-xs font-semibold"
+          disabled={treatment.name === "Otros"}
+        >
+          <Save className="w-3 h-3" />
+        </button>
       </div>
     </div>
   );
