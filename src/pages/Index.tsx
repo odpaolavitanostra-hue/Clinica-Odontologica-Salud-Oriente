@@ -23,7 +23,7 @@ const Index = () => {
               to="/reservar"
               className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
             >
-              Reservar Cita
+              Agendar Cita
             </Link>
             <Link
               to="/login"
