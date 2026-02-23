@@ -252,6 +252,6 @@ export const useCosoStore = create<CosoState>()(
         return { valid: true };
       },
     }),
-    { name: 'coso-ultimate-v41' }
+    { name: 'coso-ultimate-v42' }
   )
 );
