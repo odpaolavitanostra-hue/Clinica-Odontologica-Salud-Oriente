@@ -39,6 +39,8 @@ export interface Appointment {
   id: string;
   patientName: string;
   patientPhone: string;
+  patientCedula?: string;
+  patientEmail?: string;
   doctorId: string;
   date: string;
   time: string;
@@ -60,6 +62,27 @@ export interface FinanceRecord {
   tasaBCV: number;
 }
 
+export interface TenantBlockedSlot {
+  id: string;
+  date: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface Tenant {
+  id: string;
+  firstName: string;
+  lastName: string;
+  cov: string;
+  email: string;
+  phone: string;
+  cedula: string;
+  rentalMode: 'turno' | 'percent';
+  rentalPrice: number;
+  blockedSlots: TenantBlockedSlot[];
+}
+
 interface CosoState {
   tasaBCV: number;
   adminPassword: string;
@@ -69,6 +92,7 @@ interface CosoState {
   appointments: Appointment[];
   treatments: Treatment[];
   finances: FinanceRecord[];
+  tenants: Tenant[];
   
   setTasaBCV: (tasa: number) => void;
   setAdminPassword: (pass: string) => void;
@@ -94,11 +118,26 @@ interface CosoState {
   addFinance: (f: FinanceRecord) => void;
   updateTreatment: (name: string, priceUSD: number) => void;
   
+  addTenant: (t: Tenant) => void;
+  updateTenant: (id: string, t: Partial<Tenant>) => void;
+  deleteTenant: (id: string) => void;
+  addTenantBlockedSlot: (tenantId: string, slot: TenantBlockedSlot) => void;
+  removeTenantBlockedSlot: (tenantId: string, slotId: string) => void;
+  
   validateSlot: (date: string, time: string, excludeId?: string) => boolean;
   validateSchedule: (date: string, time: string) => { valid: boolean; reason?: string };
+  isSlotBlockedByTenant: (date: string, time: string) => { blocked: boolean; tenantName?: string };
+  getCaracasNow: () => Date;
+  getCaracasToday: () => string;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 10);
+
+const getCaracasDate = () => {
+  const now = new Date();
+  const caracas = new Date(now.toLocaleString("en-US", { timeZone: "America/Caracas" }));
+  return caracas;
+};
 
 export const useCosoStore = create<CosoState>()(
   persist(
@@ -134,6 +173,7 @@ export const useCosoStore = create<CosoState>()(
       ],
       
       finances: [],
+      tenants: [],
 
       setTasaBCV: (tasa) => set({ tasaBCV: tasa }),
       setAdminPassword: (pass) => set({ adminPassword: pass }),
@@ -176,12 +216,10 @@ export const useCosoStore = create<CosoState>()(
         const app = state.appointments.find((a) => a.id === id);
         if (!app) return;
 
-        // Deduct materials
         materialsUsed.forEach(({ itemId, qty }) => {
           state.deductInventory(itemId, qty);
         });
 
-        // Calculate finance
         const doctor = state.doctors.find((d) => d.id === app.doctorId);
         const doctorPayUSD = doctor
           ? doctor.payModel === 'percent'
@@ -220,9 +258,57 @@ export const useCosoStore = create<CosoState>()(
         treatments: s.treatments.map((t) => t.name === name ? { ...t, priceUSD } : t),
       })),
 
+      // Tenant CRUD
+      addTenant: (t) => set((s) => ({ tenants: [...s.tenants, t] })),
+      updateTenant: (id, t) => set((s) => ({
+        tenants: s.tenants.map((ten) => ten.id === id ? { ...ten, ...t } : ten),
+      })),
+      deleteTenant: (id) => set((s) => ({ tenants: s.tenants.filter((t) => t.id !== id) })),
+      addTenantBlockedSlot: (tenantId, slot) => set((s) => ({
+        tenants: s.tenants.map((t) =>
+          t.id === tenantId ? { ...t, blockedSlots: [...t.blockedSlots, slot] } : t
+        ),
+      })),
+      removeTenantBlockedSlot: (tenantId, slotId) => set((s) => ({
+        tenants: s.tenants.map((t) =>
+          t.id === tenantId ? { ...t, blockedSlots: t.blockedSlots.filter((sl) => sl.id !== slotId) } : t
+        ),
+      })),
+
+      // Check if a slot is blocked by any tenant
+      isSlotBlockedByTenant: (date, time) => {
+        const tenants = get().tenants;
+        const hour = parseInt(time.split(':')[0]);
+        for (const tenant of tenants) {
+          for (const slot of tenant.blockedSlots) {
+            if (slot.date !== date) continue;
+            if (slot.allDay) return { blocked: true, tenantName: `${tenant.firstName} ${tenant.lastName}` };
+            if (slot.startTime && slot.endTime) {
+              const start = parseInt(slot.startTime.split(':')[0]);
+              const end = parseInt(slot.endTime.split(':')[0]);
+              if (hour >= start && hour < end) {
+                return { blocked: true, tenantName: `${tenant.firstName} ${tenant.lastName}` };
+              }
+            }
+          }
+        }
+        return { blocked: false };
+      },
+
+      getCaracasNow: () => getCaracasDate(),
+      getCaracasToday: () => {
+        const c = getCaracasDate();
+        return `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, '0')}-${String(c.getDate()).padStart(2, '0')}`;
+      },
+
       validateSlot: (date, time, excludeId) => {
+        const state = get();
+        // Check tenant blocks
+        const tenantCheck = state.isSlotBlockedByTenant(date, time);
+        if (tenantCheck.blocked) return false;
+
         const requested = new Date(`${date}T${time}`);
-        const collision = get().appointments.some((app) => {
+        const collision = state.appointments.some((app) => {
           if (excludeId && app.id === excludeId) return false;
           if (app.status === 'cancelada') return false;
           const existing = new Date(`${app.date}T${app.time}`);
@@ -252,6 +338,6 @@ export const useCosoStore = create<CosoState>()(
         return { valid: true };
       },
     }),
-    { name: 'coso-ultimate-v42' }
+    { name: 'coso-ultimate-v43' }
   )
 );

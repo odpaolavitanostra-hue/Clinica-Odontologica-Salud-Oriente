@@ -1,23 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard } from "lucide-react";
 import { useCosoStore } from "@/store/useCosoStore";
 import { toast } from "sonner";
 
 const Booking = () => {
-  const { doctors, treatments, validateSlot, validateSchedule, addAppointment, patients, addPatient, appointments } = useCosoStore();
+  const { doctors, treatments, validateSlot, validateSchedule, addAppointment, patients, addPatient, appointments, isSlotBlockedByTenant, getCaracasNow, getCaracasToday } = useCosoStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTreatment = searchParams.get("tratamiento") || treatments[0]?.name || "";
   
   const [form, setForm] = useState({
     patientName: "",
+    patientCedula: "",
     patientPhone: "",
+    patientEmail: "",
     doctorId: doctors[0]?.id || "",
     date: "",
     time: "",
     treatment: initialTreatment,
-    customPrice: "",
     notes: "",
   });
 
@@ -26,7 +27,7 @@ const Booking = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.patientName || !form.patientPhone || !form.date || !form.time) {
+    if (!form.patientName || !form.patientCedula || !form.patientPhone || !form.patientEmail || !form.date || !form.time) {
       toast.error("Por favor completa todos los campos obligatorios");
       return;
     }
@@ -37,6 +38,12 @@ const Booking = () => {
       return;
     }
 
+    const tenantCheck = isSlotBlockedByTenant(form.date, form.time);
+    if (tenantCheck.blocked) {
+      toast.error("Este horario está reservado. Selecciona otro.");
+      return;
+    }
+
     if (!validateSlot(form.date, form.time)) {
       toast.error("Ya existe una cita en ese horario. Debe haber al menos 60 min de diferencia.");
       return;
@@ -44,17 +51,16 @@ const Booking = () => {
 
     const priceUSD = selectedTreatment?.priceUSD || 0;
 
-    // Auto-register patient if not exists
     const existingPatient = patients.find(
-      (p) => p.phone === form.patientPhone.trim() || p.name.toLowerCase() === form.patientName.trim().toLowerCase()
+      (p) => p.cedula === form.patientCedula.trim() || p.phone === form.patientPhone.trim() || p.name.toLowerCase() === form.patientName.trim().toLowerCase()
     );
     if (!existingPatient) {
       addPatient({
         id: Math.random().toString(36).substring(2, 10),
         name: form.patientName.trim(),
-        cedula: "",
+        cedula: form.patientCedula.trim(),
         phone: form.patientPhone.trim(),
-        email: "",
+        email: form.patientEmail.trim(),
         notes: "Registrado vía booking online",
         photos: [],
         clinicalHistoryUrl: "",
@@ -65,6 +71,8 @@ const Booking = () => {
       id: Math.random().toString(36).substring(2, 10),
       patientName: form.patientName.trim(),
       patientPhone: form.patientPhone.trim(),
+      patientCedula: form.patientCedula.trim(),
+      patientEmail: form.patientEmail.trim(),
       doctorId: form.doctorId,
       date: form.date,
       time: form.time,
@@ -80,7 +88,6 @@ const Booking = () => {
 
   const update = (key: string, val: string) => setForm((p) => ({ ...p, [key]: val }));
 
-  // Generate available time slots (1-hour intervals, exclude booked)
   const getTimeSlots = () => {
     if (!form.date) return [];
     const d = new Date(form.date + "T00:00:00");
@@ -88,9 +95,23 @@ const Booking = () => {
     if (day === 0) return [];
     const end = day === 6 ? 14 : 17;
     const slots: string[] = [];
+
+    const caracasNow = getCaracasNow();
+    const caracasToday = getCaracasToday();
+    const isToday = form.date === caracasToday;
+    const currentHour = caracasNow.getHours();
+
     for (let h = 8; h < end; h++) {
+      // Block past hours for today
+      if (isToday && h <= currentHour) continue;
+
       const time = `${h.toString().padStart(2, "0")}:00`;
-      // Check if slot is already booked
+
+      // Check tenant blocks
+      const tenantCheck = isSlotBlockedByTenant(form.date, time);
+      if (tenantCheck.blocked) continue;
+
+      // Check if already booked
       const isBooked = appointments.some(
         (a) => a.date === form.date && a.time === time && a.status !== "cancelada"
       );
@@ -101,17 +122,16 @@ const Booking = () => {
     return slots;
   };
 
-  const today = new Date().toISOString().split("T")[0];
+  const caracasToday = getCaracasToday();
 
   return (
     <div className="min-h-screen bg-background font-body">
-      {/* Header */}
       <header className="noir-gradient py-4">
         <div className="container mx-auto px-4 flex items-center gap-4">
           <Link to="/" className="text-noir-foreground hover:text-gold transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="font-display text-xl text-gold font-semibold">Reservar Cita</h1>
+          <h1 className="font-display text-xl text-gold font-semibold">Agendar Cita</h1>
         </div>
       </header>
 
@@ -135,6 +155,20 @@ const Booking = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+                <CreditCard className="w-4 h-4" /> Cédula *
+              </label>
+              <input
+                type="text"
+                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
+                value={form.patientCedula}
+                onChange={(e) => update("patientCedula", e.target.value)}
+                required
+                maxLength={20}
+                placeholder="V-12345678"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 flex items-center gap-1">
                 <Phone className="w-4 h-4" /> Teléfono *
               </label>
               <input
@@ -144,6 +178,20 @@ const Booking = () => {
                 onChange={(e) => update("patientPhone", e.target.value)}
                 required
                 maxLength={20}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+                <Mail className="w-4 h-4" /> Email *
+              </label>
+              <input
+                type="email"
+                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
+                value={form.patientEmail}
+                onChange={(e) => update("patientEmail", e.target.value)}
+                required
+                maxLength={100}
+                placeholder="correo@ejemplo.com"
               />
             </div>
           </div>
@@ -190,10 +238,10 @@ const Booking = () => {
                 <label className="block text-sm font-medium mb-1">Fecha *</label>
                 <input
                   type="date"
-                  min={today}
+                  min={caracasToday}
                   className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none"
                   value={form.date}
-                  onChange={(e) => update("date", e.target.value)}
+                  onChange={(e) => { update("date", e.target.value); update("time", ""); }}
                   required
                 />
               </div>
@@ -214,6 +262,9 @@ const Booking = () => {
                 </select>
               </div>
             </div>
+            {form.date && getTimeSlots().length === 0 && (
+              <p className="text-xs text-destructive">No hay horarios disponibles para esta fecha.</p>
+            )}
             <div>
               <label className="block text-sm font-medium mb-1">Notas (opcional)</label>
               <textarea
@@ -234,7 +285,6 @@ const Booking = () => {
           </button>
         </form>
 
-        {/* Map */}
         <div className="mt-8 rounded-xl overflow-hidden gold-border">
           <a href="https://maps.app.goo.gl/XCTMewNAjtyAQrqk7" target="_blank" rel="noopener noreferrer">
             <iframe
