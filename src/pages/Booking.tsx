@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { validateSlot, validateSchedule, isSlotBlockedByTenant, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
+import { validateSlot, validateSchedule, isSlotBlockedByTenant, getSmartTimeSlots, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
 import { toast } from "sonner";
 
 const Booking = () => {
@@ -132,30 +132,19 @@ const Booking = () => {
 
   const getTimeSlots = () => {
     if (!form.date) return [];
-    const d = new Date(form.date + "T00:00:00");
-    const day = d.getDay();
-    if (day === 0) return [];
-    const end = day === 6 ? 14 : 17;
-    const slots: string[] = [];
 
     const caracasNow = getCaracasNow();
-    const caracasToday = getCaracasToday();
-    const isToday = form.date === caracasToday;
+    const todayStr = getCaracasToday();
+    const isToday = form.date === todayStr;
     const currentHour = caracasNow.getHours();
 
-    for (let h = 8; h < end; h++) {
-      if (isToday && h <= currentHour) continue;
-      const time = `${h.toString().padStart(2, "0")}:00`;
-      const tenantCheck = isSlotBlockedByTenant(form.date, time, tenants);
-      if (tenantCheck.blocked) continue;
-      const isBooked = appointments.some(
-        (a) => a.date === form.date && a.time === time && a.status !== "cancelada"
-      );
-      if (!isBooked) {
-        slots.push(time);
-      }
-    }
-    return slots;
+    return getSmartTimeSlots(
+      form.date,
+      appointments,
+      tenants,
+      isToday ? currentHour : undefined,
+      isToday
+    );
   };
 
   const caracasToday = getCaracasToday();

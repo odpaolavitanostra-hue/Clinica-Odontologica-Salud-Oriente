@@ -93,3 +93,106 @@ export const validateSchedule = (date: string, time: string): { valid: boolean; 
   }
   return { valid: true };
 };
+
+/**
+ * Smart scheduling algorithm that maximizes agenda density.
+ * Rules:
+ * 1. Empty day → only anchor slots (08:00, 14:00)
+ * 2. Proximity: enable T-1 and T+1 from existing bookings
+ * 3. Max 3 options shown, prioritizing gap-closing slots
+ * 4. 70% block rule: don't open opposite block if current < 70% contiguous
+ */
+export const getSmartTimeSlots = (
+  date: string,
+  allAppointments: AppointmentSlotData[],
+  tenants: TenantWithSlots[],
+  currentHour?: number,
+  isToday?: boolean
+): string[] => {
+  const d = new Date(date + 'T00:00:00');
+  const day = d.getDay();
+  if (day === 0) return [];
+
+  const endHour = day === 6 ? 14 : 17;
+  const allHours: number[] = [];
+  for (let h = 8; h < endHour; h++) allHours.push(h);
+
+  // Filter out past hours, blocked by tenant, or already booked
+  const bookedHours = new Set<number>();
+  const dayAppointments = allAppointments.filter(
+    a => a.date === date && a.status !== 'cancelada'
+  );
+  for (const a of dayAppointments) {
+    bookedHours.add(parseInt(a.time.split(':')[0]));
+  }
+
+  const availableHours = allHours.filter(h => {
+    if (isToday && currentHour !== undefined && h <= currentHour) return false;
+    const time = `${h.toString().padStart(2, '0')}:00`;
+    if (isSlotBlockedByTenant(date, time, tenants).blocked) return false;
+    if (bookedHours.has(h)) return false;
+    return true;
+  });
+
+  if (availableHours.length === 0) return [];
+
+  // Define blocks
+  const MORNING_ANCHOR = 8;
+  const AFTERNOON_ANCHOR = 14;
+  const morningRange = allHours.filter(h => h < 13);
+  const afternoonRange = allHours.filter(h => h >= 13);
+
+  // If NO bookings for the day → only anchors
+  if (bookedHours.size === 0) {
+    const anchors: string[] = [];
+    if (availableHours.includes(MORNING_ANCHOR))
+      anchors.push(`${MORNING_ANCHOR.toString().padStart(2, '0')}:00`);
+    if (availableHours.includes(AFTERNOON_ANCHOR))
+      anchors.push(`${AFTERNOON_ANCHOR.toString().padStart(2, '0')}:00`);
+    return anchors.slice(0, 3);
+  }
+
+  // Build proximity set: for each booked hour, allow T-1 and T+1
+  const proximitySet = new Set<number>();
+  for (const bh of bookedHours) {
+    if (bh - 1 >= 8) proximitySet.add(bh - 1);
+    if (bh + 1 < endHour) proximitySet.add(bh + 1);
+  }
+
+  // Also always keep anchors in proximity if their block has activity
+  const morningBooked = [...bookedHours].filter(h => morningRange.includes(h));
+  const afternoonBooked = [...bookedHours].filter(h => afternoonRange.includes(h));
+
+  if (morningBooked.length > 0) proximitySet.add(MORNING_ANCHOR);
+  if (afternoonBooked.length > 0) proximitySet.add(AFTERNOON_ANCHOR);
+
+  // 70% block rule
+  const morningCapacity = morningRange.length;
+  const afternoonCapacity = afternoonRange.length;
+  const morningOccupancy = morningBooked.length / morningCapacity;
+  const afternoonOccupancy = afternoonBooked.length / afternoonCapacity;
+
+  // Filter available by proximity
+  let smartSlots = availableHours.filter(h => proximitySet.has(h));
+
+  // Apply 70% rule: if morning < 70%, remove afternoon slots (unless afternoon already has bookings)
+  if (morningBooked.length > 0 && afternoonBooked.length === 0 && morningOccupancy < 0.7) {
+    smartSlots = smartSlots.filter(h => morningRange.includes(h));
+  }
+  if (afternoonBooked.length > 0 && morningBooked.length === 0 && afternoonOccupancy < 0.7) {
+    smartSlots = smartSlots.filter(h => afternoonRange.includes(h));
+  }
+
+  // Prioritize gap-closing: slots adjacent to the most bookings get priority
+  smartSlots.sort((a, b) => {
+    const scoreA = (bookedHours.has(a - 1) ? 1 : 0) + (bookedHours.has(a + 1) ? 1 : 0);
+    const scoreB = (bookedHours.has(b - 1) ? 1 : 0) + (bookedHours.has(b + 1) ? 1 : 0);
+    if (scoreB !== scoreA) return scoreB - scoreA; // higher adjacency first
+    return a - b; // earlier first as tiebreaker
+  });
+
+  // Return max 3
+  return smartSlots.slice(0, 3).sort((a, b) => a - b).map(
+    h => `${h.toString().padStart(2, '0')}:00`
+  );
+};
