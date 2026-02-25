@@ -17,6 +17,8 @@ export const AdminDoctors = () => {
 
   const handleAdd = async () => {
     if (!form.name || !form.email) { toast.error("Completa nombre y email"); return; }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) { toast.error("Ingresa un email válido (ej: doctor@clinica.com)"); return; }
     if (!form.password || form.password.length < 6) { toast.error("Contraseña de al menos 6 caracteres"); return; }
 
     try {
