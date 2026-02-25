@@ -1,19 +1,24 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package } from "lucide-react";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { appointments, doctors, finances, tasaBCV, patients, inventory, completeAppointment } = useClinicData();
-  const [doctorId, setDoctorId] = useState("");
+  const { appointments, doctors, finances, tasaBCV, patients, inventory, completeAppointment, updatePatient } = useClinicData();
   const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "inventario">("agenda");
   const [completing, setCompleting] = useState<string | null>(null);
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
+  const [editingPatient, setEditingPatient] = useState<string | null>(null);
+  const [patientForm, setPatientForm] = useState({ name: "", cedula: "", phone: "", email: "", notes: "" });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [viewingPdf, setViewingPdf] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -21,12 +26,10 @@ const DoctorPanel = () => {
     }
   }, [authLoading, user, navigate]);
 
-  // Auto-select first doctor if none selected
-  useEffect(() => {
-    if (!doctorId && doctors.length > 0) setDoctorId(doctors[0].id);
-  }, [doctors, doctorId]);
+  // Find the doctor matched to the logged-in user's email
+  const doctor = doctors.find((d) => d.email === user?.email);
+  const doctorId = doctor?.id || "";
 
-  const doctor = doctors.find((d) => d.id === doctorId);
   const myAppointments = appointments.filter((a) => a.doctorId === doctorId);
   const myPatientNames = [...new Set(myAppointments.map((a) => a.patientName))];
   const myPatients = patients.filter((p) => myPatientNames.includes(p.name));
@@ -51,25 +54,57 @@ const DoctorPanel = () => {
     setMaterials([]);
   };
 
+  const startEditPatient = (p: typeof patients[0]) => {
+    setEditingPatient(p.id);
+    setPatientForm({ name: p.name, cedula: p.cedula, phone: p.phone, email: p.email, notes: p.notes });
+  };
+
+  const savePatient = async (id: string) => {
+    await updatePatient(id, patientForm);
+    toast.success("Paciente actualizado");
+    setEditingPatient(null);
+  };
+
+  const handlePhotoUpload = async (patientId: string, file: File) => {
+    setUploadingPhoto(true);
+    const path = `patients/${patientId}/photos/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("patient-files").upload(path, file);
+    if (error) { toast.error("Error al subir foto"); setUploadingPhoto(false); return; }
+    const { data: urlData } = supabase.storage.from("patient-files").getPublicUrl(path);
+    const patient = patients.find(p => p.id === patientId);
+    if (patient) {
+      await updatePatient(patientId, { photos: [...patient.photos, urlData.publicUrl] });
+      toast.success("Foto agregada");
+    }
+    setUploadingPhoto(false);
+  };
+
+  const handlePdfUpload = async (patientId: string, file: File) => {
+    setUploadingPdf(true);
+    const path = `patients/${patientId}/clinical/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("patient-files").upload(path, file);
+    if (error) { toast.error("Error al subir PDF"); setUploadingPdf(false); return; }
+    const { data: urlData } = supabase.storage.from("patient-files").getPublicUrl(path);
+    await updatePatient(patientId, { clinicalHistoryUrl: urlData.publicUrl });
+    toast.success("Historia clínica actualizada");
+    setUploadingPdf(false);
+  };
+
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Cargando...</p></div>;
-  if (!user || !doctor) return null;
+  if (!user) return null;
+  if (!doctor) return (
+    <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4">
+      <p className="text-muted-foreground">No se encontró un perfil de doctor asociado a tu cuenta ({user.email}).</p>
+      <button onClick={handleLogout} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold">Cerrar sesión</button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background font-body">
       <header className="noir-gradient py-4">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <select
-                className="bg-transparent text-gold font-display text-xl font-semibold border-none focus:outline-none"
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-              >
-                {doctors.map((d) => (
-                  <option key={d.id} value={d.id} className="bg-noir text-noir-foreground">{d.name}</option>
-                ))}
-              </select>
-            </div>
+            <h2 className="font-display text-xl text-gold font-semibold">{doctor.name}</h2>
             <p className="text-noir-foreground/50 text-sm">{doctor.specialty}</p>
           </div>
           <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-gold transition-colors flex items-center gap-1 text-sm">
@@ -163,10 +198,72 @@ const DoctorPanel = () => {
               <p className="text-muted-foreground text-center py-8">No tienes pacientes asignados</p>
             ) : (
               myPatients.map((p) => (
-                <div key={p.id} className="bg-card rounded-xl p-5 gold-border">
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">Cédula: {p.cedula || "—"} • Tel: {p.phone || "—"}</p>
-                  <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
+                <div key={p.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
+                  {editingPatient === p.id ? (
+                    <div className="space-y-2">
+                      <input className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={patientForm.name} onChange={(e) => setPatientForm(f => ({...f, name: e.target.value}))} placeholder="Nombre" />
+                      <input className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={patientForm.cedula} onChange={(e) => setPatientForm(f => ({...f, cedula: e.target.value}))} placeholder="Cédula" />
+                      <input className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={patientForm.phone} onChange={(e) => setPatientForm(f => ({...f, phone: e.target.value}))} placeholder="Teléfono" />
+                      <input className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={patientForm.email} onChange={(e) => setPatientForm(f => ({...f, email: e.target.value}))} placeholder="Email" />
+                      <textarea className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border resize-none" rows={2} value={patientForm.notes} onChange={(e) => setPatientForm(f => ({...f, notes: e.target.value}))} placeholder="Notas" />
+                      <div className="flex gap-2">
+                        <button onClick={() => savePatient(p.id)} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                        <button onClick={() => setEditingPatient(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"><X className="w-3 h-3" /> Cancelar</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold">{p.name}</p>
+                          <p className="text-sm text-muted-foreground">Cédula: {p.cedula || "—"} • Tel: {p.phone || "—"}</p>
+                          <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
+                          {p.notes && <p className="text-xs text-muted-foreground mt-1">📝 {p.notes}</p>}
+                        </div>
+                        <button onClick={() => startEditPatient(p)} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Photos */}
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1"><Camera className="w-3 h-3" /> Fotos ({p.photos.length})</p>
+                        {p.photos.length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {p.photos.map((url, i) => (
+                              <img key={i} src={url} alt={`Foto ${i+1}`} className="w-16 h-16 object-cover rounded-lg border border-border cursor-pointer" onClick={() => window.open(url, "_blank")} />
+                            ))}
+                          </div>
+                        )}
+                        <label className={`inline-flex items-center gap-1 mt-1 text-xs text-gold cursor-pointer hover:underline ${uploadingPhoto ? 'opacity-50' : ''}`}>
+                          <Upload className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar foto"}
+                          <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(p.id, e.target.files[0]); }} />
+                        </label>
+                      </div>
+
+                      {/* Clinical History */}
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
+                        {p.clinicalHistoryUrl ? (
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-gold hover:underline">
+                              {viewingPdf === p.id ? "Cerrar visor" : "Ver PDF"}
+                            </button>
+                            <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">Sin historia clínica</p>
+                        )}
+                        {viewingPdf === p.id && p.clinicalHistoryUrl && (
+                          <iframe src={p.clinicalHistoryUrl} className="w-full h-96 mt-2 rounded-lg border border-border" title="Historia Clínica" />
+                        )}
+                        <label className={`inline-flex items-center gap-1 mt-1 text-xs text-gold cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
+                          <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
+                          <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) handlePdfUpload(p.id, e.target.files[0]); }} />
+                        </label>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))
             )}

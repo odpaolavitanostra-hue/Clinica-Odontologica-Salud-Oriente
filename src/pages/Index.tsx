@@ -18,20 +18,12 @@ const Index = () => {
           <h1 className="font-display text-lg md:text-xl text-gold font-semibold tracking-wide">
             COSO
           </h1>
-          <div className="flex gap-3">
-            <Link
-              to="/reservar"
-              className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Agendar Cita
-            </Link>
-            <Link
-              to="/login"
-              className="border border-gold/30 text-noir-foreground px-4 py-2 rounded-lg text-sm font-medium hover:border-gold/60 transition-colors"
-            >
-              Acceso
-            </Link>
-          </div>
+          <Link
+            to="/reservar"
+            className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            Agendar Cita
+          </Link>
         </div>
       </nav>
 
@@ -74,7 +66,8 @@ const Index = () => {
             <InfoCard
               icon={<Phone className="w-5 h-5 text-gold" />}
               title="Teléfono"
-              text="+58 422 7180013"
+              text="0422-7180013"
+              href="https://wa.me/584227180013"
             />
             <InfoCard
               icon={<Clock className="w-5 h-5 text-gold" />}
@@ -152,27 +145,36 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="bg-primary py-8">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4 flex items-center justify-center gap-4">
           <p className="text-primary-foreground/60 text-sm">
             © 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.
           </p>
+          <Link
+            to="/login"
+            className="text-primary-foreground/30 text-xs hover:text-primary-foreground/50 transition-colors"
+          >
+            Acceso
+          </Link>
         </div>
       </footer>
     </div>
   );
 };
 
-const InfoCard = ({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) => (
+const InfoCard = ({ icon, title, text, href }: { icon: React.ReactNode; title: string; text: string; href?: string }) => {
+  const link = href || (title === "Ubicación" ? "https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" : undefined);
+  return (
   <a
-    href={title === "Ubicación" ? "https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" : undefined}
-    target={title === "Ubicación" ? "_blank" : undefined}
-    rel={title === "Ubicación" ? "noopener noreferrer" : undefined}
+    href={link}
+    target={link ? "_blank" : undefined}
+    rel={link ? "noopener noreferrer" : undefined}
     className="glass-card-pearl rounded-xl p-5 text-center block hover:opacity-90 transition-opacity"
   >
     <div className="flex items-center justify-center mb-3">{icon}</div>
     <h3 className="font-display font-semibold text-pearl-foreground mb-1">{title}</h3>
     <p className="text-pearl-foreground/70 text-sm">{text}</p>
   </a>
-);
+  );
+};
 
 export default Index;
