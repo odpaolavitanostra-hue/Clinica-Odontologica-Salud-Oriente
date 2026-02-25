@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Shield, LogIn, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Login = () => {
@@ -23,11 +24,24 @@ const Login = () => {
       if (isSignUp) {
         await signUp(email, password);
         toast.success("Cuenta creada exitosamente");
+        navigate("/admin");
       } else {
         await signIn(email, password);
-        toast.success("Bienvenido, Administrador");
+        
+        // Check if user has admin role
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+          const isAdmin = roles?.some(r => r.role === "admin");
+          if (isAdmin) {
+            toast.success("Bienvenido, Administrador");
+            navigate("/admin");
+          } else {
+            toast.success("Bienvenido, Doctor");
+            navigate("/doctor");
+          }
+        }
       }
-      navigate("/admin");
     } catch (err: any) {
       toast.error(err.message || "Error de autenticación");
     } finally {
@@ -43,7 +57,7 @@ const Login = () => {
         </Link>
 
         <h1 className="font-display text-3xl text-gold font-bold mb-2">
-          {isSignUp ? "Crear Cuenta" : "Acceso Admin"}
+          {isSignUp ? "Crear Cuenta" : "Acceso"}
         </h1>
         <p className="text-noir-foreground/50 mb-8">
           {isSignUp ? "Registra tu cuenta de administrador" : "Ingresa al panel de gestión"}
@@ -59,7 +73,7 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               maxLength={100}
-              placeholder="admin@clinica.com"
+              placeholder="correo@clinica.com"
             />
           </div>
           <div>

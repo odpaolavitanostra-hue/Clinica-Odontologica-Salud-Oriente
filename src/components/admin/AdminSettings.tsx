@@ -1,11 +1,27 @@
 
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
-import { Settings, Save, Stethoscope } from "lucide-react";
+import { Settings, Save, Stethoscope, Lock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const AdminSettings = () => {
   const { tasaBCV, setTasaBCV, treatments, updateTreatment } = useClinicData();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPw, setChangingPw] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) { toast.error("La contraseña debe tener al menos 6 caracteres"); return; }
+    if (newPassword !== confirmPassword) { toast.error("Las contraseñas no coinciden"); return; }
+    setChangingPw(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPw(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Contraseña actualizada exitosamente");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
 
   return (
     <div className="space-y-6">
@@ -46,11 +62,36 @@ export const AdminSettings = () => {
         </div>
       </div>
 
+      {/* Change Password */}
       <div className="bg-card rounded-xl p-5 gold-border space-y-3">
-        <h3 className="font-semibold">Autenticación</h3>
-        <p className="text-sm text-muted-foreground">
-          La autenticación ahora se gestiona a través de Lovable Cloud. Usa tu email y contraseña para acceder al panel de administración.
-        </p>
+        <h3 className="font-semibold flex items-center gap-2">
+          <Lock className="w-4 h-4 text-gold" /> Cambiar Contraseña
+        </h3>
+        <div className="space-y-2">
+          <input
+            type="password"
+            placeholder="Nueva contraseña"
+            className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            minLength={6}
+          />
+          <input
+            type="password"
+            placeholder="Confirmar contraseña"
+            className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={6}
+          />
+          <button
+            onClick={handleChangePassword}
+            disabled={changingPw}
+            className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+          >
+            {changingPw ? "Actualizando..." : "Actualizar Contraseña"}
+          </button>
+        </div>
       </div>
     </div>
   );
