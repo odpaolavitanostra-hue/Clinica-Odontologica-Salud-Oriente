@@ -2,28 +2,33 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !serviceRoleKey || !anonKey) {
+      throw new Error("Configuración del servidor incompleta");
+    }
+
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify caller is admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No autorizado");
-    
-    const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user: caller } } = await callerClient.auth.getUser();
     if (!caller) throw new Error("No autorizado");
-    
+
     if (caller.email !== "clinicaodsaludoriente@gmail.com") {
       throw new Error("Solo el administrador puede gestionar cuentas de doctores");
     }
@@ -54,7 +59,6 @@ Deno.serve(async (req) => {
 
     if (action === "update-password-by-email") {
       if (!email || !password) throw new Error("Email y contraseña requeridos");
-      // Find user by email
       const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
       if (listError) throw listError;
       const targetUser = users.find((u: any) => u.email === email);

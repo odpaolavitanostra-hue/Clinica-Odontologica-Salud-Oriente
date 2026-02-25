@@ -1,1 +1,4 @@
 project_id = "qwyzsyeuovlzecqhmvpz"
+
+[functions.manage-doctor-auth]
+verify_jwt = false
