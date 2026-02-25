@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
-import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Building2 } from "lucide-react";
+import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Building2, Edit, Save, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { AdminTenants } from "./AdminTenants";
@@ -17,7 +17,9 @@ interface AccountingEntry {
 const generateId = () => Math.random().toString(36).substring(2, 10);
 
 export const AdminFinances = () => {
-  const { finances, appointments, doctors, tasaBCV, setTasaBCV } = useClinicData();
+  const { finances, appointments, doctors, tasaBCV, setTasaBCV, updateFinance } = useClinicData();
+  const [editingFinance, setEditingFinance] = useState<string | null>(null);
+  const [editDoctorPay, setEditDoctorPay] = useState("");
 
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "alquileres">("resumen");
   const [purchases, setPurchases] = useState<AccountingEntry[]>(() => {
@@ -163,11 +165,33 @@ export const AdminFinances = () => {
                   <div key={f.id} className="bg-card rounded-xl p-4 gold-border">
                     <div className="flex items-start justify-between flex-wrap gap-2">
                       <div><p className="font-semibold">{app?.patientName} — {app?.treatment}</p><p className="text-sm text-muted-foreground">{f.date} • {doctor?.name}</p></div>
-                      <div className="text-right"><p className="font-semibold text-gold">${f.utilityUSD.toFixed(2)} USD</p><p className="text-xs text-muted-foreground">Bs. {(f.utilityUSD * f.tasaBCV).toFixed(2)}</p></div>
+                      <div className="text-right flex items-center gap-2">
+                        <div>
+                          <p className="font-semibold text-gold">${f.utilityUSD.toFixed(2)} USD</p>
+                          <p className="text-xs text-muted-foreground">Bs. {(f.utilityUSD * f.tasaBCV).toFixed(2)}</p>
+                        </div>
+                        <button onClick={() => { setEditingFinance(editingFinance === f.id ? null : f.id); setEditDoctorPay(f.doctorPayUSD.toString()); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar pago doctor"><Edit className="w-3.5 h-3.5" /></button>
+                      </div>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
                       <span>Ingreso: ${f.treatmentPriceUSD.toFixed(2)}</span><span>Doctor: ${f.doctorPayUSD.toFixed(2)}</span><span>Materiales: ${f.materialsCostUSD.toFixed(2)}</span><span>Tasa: {f.tasaBCV}</span>
                     </div>
+                    {editingFinance === f.id && (
+                      <div className="mt-3 p-3 bg-muted rounded-lg space-y-2">
+                        <p className="text-xs font-semibold">Sobrescribir pago al doctor (USD):</p>
+                        <div className="flex gap-2 items-center">
+                          <input type="number" step="0.01" min="0" className="bg-card rounded-lg px-3 py-2 text-sm border border-border w-32" value={editDoctorPay} onChange={(e) => setEditDoctorPay(e.target.value)} />
+                          <button onClick={async () => {
+                            const newPay = parseFloat(editDoctorPay) || 0;
+                            const newUtility = f.treatmentPriceUSD - newPay - f.materialsCostUSD;
+                            await updateFinance(f.appointmentId, { doctorPayUSD: newPay, utilityUSD: newUtility });
+                            toast.success("Pago actualizado");
+                            setEditingFinance(null);
+                          }} className="bg-gold text-gold-foreground px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                          <button onClick={() => setEditingFinance(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })

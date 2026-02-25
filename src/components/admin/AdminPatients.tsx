@@ -1,7 +1,8 @@
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
-import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminPatients = () => {
@@ -9,9 +10,10 @@ export const AdminPatients = () => {
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [viewingPhotos, setViewingPhotos] = useState<string | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", cedula: "", phone: "", email: "", notes: "" });
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
@@ -32,33 +34,29 @@ export const AdminPatients = () => {
     setForm({ name: p.name, cedula: p.cedula, phone: p.phone, email: p.email, notes: p.notes });
   };
 
-  const handleAddPhoto = (patientId: string, files: FileList | null) => {
-    if (!files) return;
-    const newPhotos: string[] = [];
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        newPhotos.push(e.target?.result as string);
-        if (newPhotos.length === files.length) {
-          const patient = patients.find((p) => p.id === patientId);
-          if (patient) {
-            await updatePatient(patientId, { photos: [...(patient.photos || []), ...newPhotos] });
-            toast.success(`${newPhotos.length} foto(s) agregada(s)`);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+  const handlePhotoUpload = async (patientId: string, file: File) => {
+    setUploadingPhoto(true);
+    const path = `patients/${patientId}/photos/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("patient-files").upload(path, file);
+    if (error) { toast.error("Error al subir foto"); setUploadingPhoto(false); return; }
+    const { data: urlData } = supabase.storage.from("patient-files").getPublicUrl(path);
+    const patient = patients.find(p => p.id === patientId);
+    if (patient) {
+      await updatePatient(patientId, { photos: [...patient.photos, urlData.publicUrl] });
+      toast.success("Foto agregada");
+    }
+    setUploadingPhoto(false);
   };
 
-  const handleAddPdf = (patientId: string, files: FileList | null) => {
-    if (!files || !files[0]) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      await updatePatient(patientId, { clinicalHistoryUrl: e.target?.result as string });
-      toast.success("Historia clínica cargada");
-    };
-    reader.readAsDataURL(files[0]);
+  const handlePdfUpload = async (patientId: string, file: File) => {
+    setUploadingPdf(true);
+    const path = `patients/${patientId}/clinical/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("patient-files").upload(path, file);
+    if (error) { toast.error("Error al subir PDF"); setUploadingPdf(false); return; }
+    const { data: urlData } = supabase.storage.from("patient-files").getPublicUrl(path);
+    await updatePatient(patientId, { clinicalHistoryUrl: urlData.publicUrl });
+    toast.success("Historia clínica actualizada");
+    setUploadingPdf(false);
   };
 
   const removePhoto = async (patientId: string, index: number) => {
@@ -109,33 +107,49 @@ export const AdminPatients = () => {
                 <div>
                   <p className="font-semibold">{p.name}</p>
                   <p className="text-sm text-muted-foreground">{p.cedula || "Sin cédula"} • {p.phone || "Sin teléfono"}</p>
+                  <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
                   {p.notes && <p className="text-xs text-muted-foreground">📝 {p.notes}</p>}
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Fotos del proceso"><Camera className="w-4 h-4" /></button>
-                  <button onClick={() => pdfInputRef.current?.click()} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Historia clínica PDF"><FileText className="w-4 h-4" /></button>
-                  <input ref={pdfInputRef} type="file" accept=".pdf" className="hidden" onChange={(e) => handleAddPdf(p.id, e.target.files)} />
+                  <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Fotos"><Camera className="w-4 h-4" /></button>
                   <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
                   <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
 
-              {p.clinicalHistoryUrl && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <FileText className="w-4 h-4 text-gold" />
-                    <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-gold underline">Ver Historia Clínica (PDF)</a>
+              {/* Clinical History PDF */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
+                {p.clinicalHistoryUrl ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-gold hover:underline">
+                        {viewingPdf === p.id ? "Cerrar visor" : "Ver PDF"}
+                      </button>
+                      <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
+                    </div>
+                    {viewingPdf === p.id && (
+                      <iframe src={p.clinicalHistoryUrl} className="w-full h-96 rounded-lg border border-border" title={`HC ${p.name}`} />
+                    )}
                   </div>
-                  <iframe src={p.clinicalHistoryUrl} className="w-full h-[400px] rounded-lg border border-border" title={`Historia clínica de ${p.name}`} />
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-muted-foreground">Sin historia clínica</p>
+                )}
+                <label className={`inline-flex items-center gap-1 text-xs text-gold cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
+                  <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
+                  <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) handlePdfUpload(p.id, e.target.files[0]); }} />
+                </label>
+              </div>
 
+              {/* Photos */}
               {viewingPhotos === p.id && (
                 <div className="bg-muted rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Fotos del Proceso ({(p.photos || []).length})</h4>
-                    <button onClick={() => photoInputRef.current?.click()} className="bg-gold text-gold-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1"><Plus className="w-3 h-3" /> Agregar</button>
-                    <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleAddPhoto(p.id, e.target.files)} />
+                    <label className={`bg-gold text-gold-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer ${uploadingPhoto ? 'opacity-50' : ''}`}>
+                      <Plus className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar"}
+                      <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(p.id, e.target.files[0]); }} />
+                    </label>
                   </div>
                   {(p.photos || []).length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-4">Sin fotos aún</p>
@@ -143,7 +157,7 @@ export const AdminPatients = () => {
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {(p.photos || []).map((photo, i) => (
                         <div key={i} className="relative group rounded-lg overflow-hidden aspect-square">
-                          <img src={photo} alt={`Proceso ${i + 1}`} className="w-full h-full object-cover" />
+                          <img src={photo} alt={`Proceso ${i + 1}`} className="w-full h-full object-cover cursor-pointer" onClick={() => window.open(photo, "_blank")} />
                           <button onClick={() => removePhoto(p.id, i)} className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                         </div>
                       ))}
