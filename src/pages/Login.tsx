@@ -1,15 +1,14 @@
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Shield, LogIn, UserPlus } from "lucide-react";
+import { ArrowLeft, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,25 +20,18 @@ const Login = () => {
 
     setLoading(true);
     try {
-      if (isSignUp) {
-        await signUp(email, password);
-        toast.success("Cuenta creada exitosamente");
-        navigate("/admin");
-      } else {
-        await signIn(email, password);
-        
-        // Check if user has admin role
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-          const isAdmin = roles?.some(r => r.role === "admin");
-          if (isAdmin) {
-            toast.success("Bienvenido, Administrador");
-            navigate("/admin");
-          } else {
-            toast.success("Bienvenido, Doctor");
-            navigate("/doctor");
-          }
+      await signIn(email, password);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        const isAdmin = roles?.some(r => r.role === "admin");
+        if (isAdmin) {
+          toast.success("Bienvenido, Administrador");
+          navigate("/admin");
+        } else {
+          toast.success("Bienvenido, Doctor");
+          navigate("/doctor");
         }
       }
     } catch (err: any) {
@@ -56,12 +48,8 @@ const Login = () => {
           <ArrowLeft className="w-4 h-4" /> Volver
         </Link>
 
-        <h1 className="font-display text-3xl text-gold font-bold mb-2">
-          {isSignUp ? "Crear Cuenta" : "Acceso"}
-        </h1>
-        <p className="text-noir-foreground/50 mb-8">
-          {isSignUp ? "Registra tu cuenta de administrador" : "Ingresa al panel de gestión"}
-        </p>
+        <h1 className="font-display text-3xl text-gold font-bold mb-2">Acceso</h1>
+        <p className="text-noir-foreground/50 mb-8">Ingresa al panel de gestión</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -95,19 +83,12 @@ const Login = () => {
           >
             {loading ? "Cargando..." : (
               <>
-                {isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-                {isSignUp ? "Crear Cuenta" : "Ingresar"}
+                <LogIn className="w-4 h-4" />
+                Ingresar
               </>
             )}
           </button>
         </form>
-
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full mt-4 text-center text-sm text-noir-foreground/50 hover:text-gold transition-colors"
-        >
-          {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿Primera vez? Crear cuenta de admin"}
-        </button>
       </div>
     </div>
   );

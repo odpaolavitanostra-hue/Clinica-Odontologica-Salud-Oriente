@@ -29,18 +29,9 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
-    // Auto-assign admin role
-    if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: "admin" as const });
-    }
-  };
-
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
-  return { user, session, loading, signIn, signUp, signOut };
+  return { user, session, loading, signIn, signOut };
 }

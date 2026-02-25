@@ -93,6 +93,7 @@ const Index = () => {
               { name: "Endodoncia", treatment: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar tu pieza dental." },
               { name: "Extracción", treatment: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros con mínima molestia." },
               { name: "Limpieza Dental", treatment: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
+              { name: "Otros", treatment: "Otros", img: serviceRevision, desc: "Consulta personalizada según tus necesidades." },
               { name: "Prótesis", treatment: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
               { name: "Resina Compuesta", treatment: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
               { name: "Revisión", treatment: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
