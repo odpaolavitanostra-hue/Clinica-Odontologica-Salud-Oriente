@@ -158,7 +158,7 @@ export const getSmartTimeSlots = (
   // 48-hour bypass: show all available slots to avoid losing last-minute patients
   if (isWithin48Hours(date)) {
     const all = getAllAvailableSlots(date, allAppointments, tenants, currentHour, isToday);
-    return all.slice(0, 4);
+    return all.slice(0, 3);
   }
 
   const d = new Date(date + 'T00:00:00');
@@ -201,7 +201,7 @@ export const getSmartTimeSlots = (
       anchors.push(`${MORNING_ANCHOR.toString().padStart(2, '0')}:00`);
     if (availableHours.includes(AFTERNOON_ANCHOR))
       anchors.push(`${AFTERNOON_ANCHOR.toString().padStart(2, '0')}:00`);
-    return anchors.slice(0, 4);
+    return anchors.slice(0, 3);
   }
 
   // Build proximity set: for each booked hour, allow T-1 and T+1
@@ -243,8 +243,8 @@ export const getSmartTimeSlots = (
     return a - b; // earlier first as tiebreaker
   });
 
-  // Return max 4
-  return smartSlots.slice(0, 4).sort((a, b) => a - b).map(
+  // Return max 3
+  return smartSlots.slice(0, 3).sort((a, b) => a - b).map(
     h => `${h.toString().padStart(2, '0')}:00`
   );
 };
