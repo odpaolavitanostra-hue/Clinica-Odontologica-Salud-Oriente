@@ -229,11 +229,17 @@ const Booking = () => {
             {form.date && (
               <button
                 type="button"
-                onClick={() => setWaitlistOpen(true)}
-                className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors py-2 border border-dashed border-border rounded-lg hover:border-gold/50"
+                onClick={() => {
+                  if (!form.patientName || !form.patientCedula || !form.patientPhone || !form.patientEmail) {
+                    toast.error("Completa tus datos personales primero antes de solicitar un horario especial");
+                    return;
+                  }
+                  setWaitlistOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors py-3 border border-dashed border-border rounded-lg hover:border-gold/50"
               >
                 <HelpCircle className="w-4 h-4" />
-                No encuentro mi horario
+                <span>¿No encuentras un horario que te sirva? <strong className="text-gold">Haz clic aquí para solicitar uno personalizado</strong></span>
               </button>
             )}
             <div>
