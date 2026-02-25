@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload } from "lucide-react";
+import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminPatients = () => {
-  const { patients, addPatient, updatePatient, deletePatient } = useClinicData();
+  const { patients, appointments, addPatient, updatePatient, deletePatient } = useClinicData();
+  const waitingAppointments = appointments.filter((a) => a.status === "pendiente_confirmacion");
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [viewingPhotos, setViewingPhotos] = useState<string | null>(null);
@@ -93,6 +94,28 @@ export const AdminPatients = () => {
           <div className="flex gap-2">
             <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => { setAdding(false); setEditing(null); }} className="bg-muted text-foreground px-4 py-2 rounded-lg text-sm flex items-center gap-1"><X className="w-4 h-4" /> Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Waiting patients section */}
+      {waitingAppointments.length > 0 && (
+        <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
+          <h3 className="font-display font-semibold flex items-center gap-2">
+            <Clock className="w-5 h-5 text-orange-500" /> Pacientes en Espera de Cita ({waitingAppointments.length})
+          </h3>
+          <div className="space-y-2">
+            {waitingAppointments.map((app) => (
+              <div key={app.id} className="flex items-center justify-between bg-orange-500/10 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold">{app.patientName}</p>
+                  <p className="text-xs text-muted-foreground">{app.patientPhone} • {app.patientCedula || "—"}</p>
+                  <p className="text-xs text-muted-foreground">{app.treatment} • {app.date} {app.time}</p>
+                  {app.notes && <p className="text-xs text-orange-500 mt-1">📝 {app.notes}</p>}
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full font-semibold bg-orange-500/20 text-orange-500">Esperando</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

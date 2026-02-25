@@ -46,7 +46,7 @@ const Admin = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard": return <AdminDashboard />;
+      case "dashboard": return <AdminDashboard onNavigate={setActiveTab} />;
       case "calendar": return <AdminCalendar />;
       case "doctors": return <AdminDoctors />;
       case "patients": return <AdminPatients />;

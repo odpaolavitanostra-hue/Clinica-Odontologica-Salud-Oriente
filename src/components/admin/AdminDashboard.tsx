@@ -2,7 +2,11 @@
 import { useClinicData } from "@/hooks/useClinicData";
 import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle } from "lucide-react";
 
-export const AdminDashboard = () => {
+interface AdminDashboardProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
   const { appointments, patients, doctors, inventory, finances, tasaBCV } = useClinicData();
 
   const today = new Date().toISOString().split("T")[0];
@@ -19,6 +23,14 @@ export const AdminDashboard = () => {
   const monthRevenueUSD = monthFinances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
   const monthUtilityUSD = monthFinances.reduce((s, f) => s + f.utilityUSD, 0);
 
+  // Use per-record tasaBCV for Bs conversions (daily rate)
+  const monthRevenueBs = monthFinances.reduce((s, f) => s + f.treatmentPriceUSD * f.tasaBCV, 0);
+  const monthUtilityBs = monthFinances.reduce((s, f) => s + f.utilityUSD * f.tasaBCV, 0);
+  const totalRevenueBs = finances.reduce((s, f) => s + f.treatmentPriceUSD * f.tasaBCV, 0);
+  const totalUtilityBs = finances.reduce((s, f) => s + f.utilityUSD * f.tasaBCV, 0);
+
+  const nav = (tab: string) => onNavigate?.(tab);
+
   return (
     <div className="space-y-6">
       <h2 className="font-display text-2xl font-bold flex items-center gap-2">
@@ -26,34 +38,34 @@ export const AdminDashboard = () => {
       </h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="Citas Hoy" value={todayApps.length} accent />
-        <StatCard icon={<Clock className="w-5 h-5" />} label="Pendientes" value={pendingApps.length} />
-        <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Completadas" value={completedApps.length} />
-        <StatCard icon={<Users className="w-5 h-5" />} label="Pacientes" value={patients.length} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="Citas Hoy" value={todayApps.length} accent onClick={() => nav("calendar")} />
+        <StatCard icon={<Clock className="w-5 h-5" />} label="Pendientes" value={pendingApps.length} onClick={() => nav("calendar")} />
+        <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Completadas" value={completedApps.length} onClick={() => nav("calendar")} />
+        <StatCard icon={<Users className="w-5 h-5" />} label="Pacientes" value={patients.length} onClick={() => nav("patients")} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl p-5 gold-border space-y-3">
+        <div className="bg-card rounded-xl p-5 gold-border space-y-3 cursor-pointer hover:ring-1 hover:ring-gold/40 transition-all" onClick={() => nav("finances")}>
           <h3 className="font-display font-semibold flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-gold" /> Finanzas del Mes
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div><p className="text-xs text-muted-foreground">Ingresos USD</p><p className="text-xl font-bold text-gold">${monthRevenueUSD.toFixed(2)}</p></div>
             <div><p className="text-xs text-muted-foreground">Utilidad USD</p><p className="text-xl font-bold text-clinic-green">${monthUtilityUSD.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Ingresos Bs.</p><p className="text-lg font-semibold">Bs. {(monthRevenueUSD * tasaBCV).toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Utilidad Bs.</p><p className="text-lg font-semibold">Bs. {(monthUtilityUSD * tasaBCV).toFixed(2)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Ingresos Bs.</p><p className="text-lg font-semibold">Bs. {monthRevenueBs.toFixed(2)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Utilidad Bs.</p><p className="text-lg font-semibold">Bs. {monthUtilityBs.toFixed(2)}</p></div>
           </div>
         </div>
 
-        <div className="bg-card rounded-xl p-5 gold-border space-y-3">
+        <div className="bg-card rounded-xl p-5 gold-border space-y-3 cursor-pointer hover:ring-1 hover:ring-gold/40 transition-all" onClick={() => nav("finances")}>
           <h3 className="font-display font-semibold flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-gold" /> Totales Históricos
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div><p className="text-xs text-muted-foreground">Ingresos Totales</p><p className="text-xl font-bold text-gold">${totalRevenueUSD.toFixed(2)}</p></div>
             <div><p className="text-xs text-muted-foreground">Utilidad Total</p><p className="text-xl font-bold text-clinic-green">${totalUtilityUSD.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Total Citas</p><p className="text-lg font-semibold">{appointments.length}</p></div>
-            <div><p className="text-xs text-muted-foreground">Doctores Activos</p><p className="text-lg font-semibold">{doctors.length}</p></div>
+            <div><p className="text-xs text-muted-foreground">Ingresos Bs.</p><p className="text-lg font-semibold">Bs. {totalRevenueBs.toFixed(2)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Utilidad Bs.</p><p className="text-lg font-semibold">Bs. {totalUtilityBs.toFixed(2)}</p></div>
           </div>
         </div>
       </div>
@@ -100,8 +112,8 @@ export const AdminDashboard = () => {
   );
 };
 
-const StatCard = ({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent?: boolean }) => (
-  <div className={`bg-card rounded-xl p-4 gold-border ${accent ? "ring-1 ring-gold/30" : ""}`}>
+const StatCard = ({ icon, label, value, accent, onClick }: { icon: React.ReactNode; label: string; value: number; accent?: boolean; onClick?: () => void }) => (
+  <div className={`bg-card rounded-xl p-4 gold-border cursor-pointer hover:ring-1 hover:ring-gold/40 transition-all ${accent ? "ring-1 ring-gold/30" : ""}`} onClick={onClick}>
     <div className="flex items-center gap-2 mb-2 text-gold">{icon}</div>
     <p className="text-2xl font-bold">{value}</p>
     <p className="text-xs text-muted-foreground">{label}</p>
