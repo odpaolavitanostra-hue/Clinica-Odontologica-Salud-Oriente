@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check } from "lucide-react";
+import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check, UserCog } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminPatients = () => {
@@ -15,6 +15,8 @@ export const AdminPatients = () => {
   const [form, setForm] = useState({ name: "", cedula: "", phone: "", email: "", notes: "" });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [editingDoctorId, setEditingDoctorId] = useState<string | null>(null);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
@@ -126,10 +128,23 @@ export const AdminPatients = () => {
                       {app.patientEmail && (
                         <a href={`mailto:${app.patientEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
                       )}
+                      <button onClick={() => { setEditingDoctorId(editingDoctorId === app.id ? null : app.id); setSelectedDoctorId(app.doctorId || doctors[0]?.id || ""); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Asignar doctor"><UserCog className="w-4 h-4" /></button>
                       <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
                       <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
                     </div>
                   </div>
+                  {editingDoctorId === app.id && (
+                    <div className="mt-2 p-3 bg-muted rounded-lg space-y-2">
+                      <h4 className="font-semibold text-xs">Asignar / Cambiar doctor:</h4>
+                      <select className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm" value={selectedDoctorId} onChange={(e) => setSelectedDoctorId(e.target.value)}>
+                        {doctors.map((d) => <option key={d.id} value={d.id}>{d.name} — {d.specialty}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctorId(null); toast.success("Doctor asignado"); }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                        <button onClick={() => setEditingDoctorId(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs">Cancelar</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
