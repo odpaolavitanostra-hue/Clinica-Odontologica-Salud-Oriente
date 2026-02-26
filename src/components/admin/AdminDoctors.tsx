@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useClinicData, Doctor } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Stethoscope, Plus, Trash2, Edit, Save, X, Key } from "lucide-react";
+import { Stethoscope, Plus, Trash2, Edit, Save, X, Key, Mail, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminDoctors = () => {
@@ -111,10 +111,11 @@ export const AdminDoctors = () => {
                   Pago: {d.payModel === "percent" ? `${(d.rate * 100).toFixed(0)}%` : `$${d.rate.toFixed(2)} USD`}
                 </p>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
+                <a href={`mailto:${d.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Enviar correo"><Mail className="w-4 h-4" /></a>
                 <button onClick={() => setChangingPw(changingPw === d.id ? null : d.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar contraseña"><Key className="w-4 h-4" /></button>
-                <button onClick={() => startEdit(d)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-                <button onClick={async () => { await deleteDoctor(d.id); toast.info("Doctor eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => startEdit(d)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
+                <button onClick={async () => { await deleteDoctor(d.id); toast.info("Doctor eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
             {changingPw === d.id && (

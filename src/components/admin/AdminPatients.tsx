@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock } from "lucide-react";
+import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminPatients = () => {
-  const { patients, appointments, addPatient, updatePatient, deletePatient } = useClinicData();
+  const { patients, appointments, addPatient, updatePatient, deletePatient, updateAppointment, doctors } = useClinicData();
   const waitingAppointments = appointments.filter((a) => a.status === "pendiente_confirmacion");
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -102,20 +102,37 @@ export const AdminPatients = () => {
       {waitingAppointments.length > 0 && (
         <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
           <h3 className="font-display font-semibold flex items-center gap-2">
-            <Clock className="w-5 h-5 text-orange-500" /> Pacientes en Espera de Cita ({waitingAppointments.length})
+            <Clock className="w-5 h-5 text-orange-500" /> Solicitudes Especiales ({waitingAppointments.length})
           </h3>
           <div className="space-y-2">
-            {waitingAppointments.map((app) => (
-              <div key={app.id} className="flex items-center justify-between bg-orange-500/10 rounded-lg px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold">{app.patientName}</p>
-                  <p className="text-xs text-muted-foreground">{app.patientPhone} • {app.patientCedula || "—"}</p>
-                  <p className="text-xs text-muted-foreground">{app.treatment} • {app.date} {app.time}</p>
-                  {app.notes && <p className="text-xs text-orange-500 mt-1">📝 {app.notes}</p>}
+            {waitingAppointments.map((app) => {
+              const phoneClean = (app.patientPhone || "").replace(/[^0-9]/g, "");
+              const waPhone = phoneClean.startsWith("58") ? phoneClean : `58${phoneClean}`;
+              const doctor = doctors.find(d => d.id === app.doctorId);
+              return (
+                <div key={app.id} className="bg-orange-500/10 rounded-lg px-4 py-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                      <p className="text-sm font-semibold">{app.patientName}</p>
+                      <p className="text-xs text-muted-foreground">{app.patientPhone} • {app.patientCedula || "—"} • {app.patientEmail || "—"}</p>
+                      <p className="text-xs text-muted-foreground">{app.treatment} • {app.date} {app.time}</p>
+                      {doctor && <p className="text-xs text-muted-foreground">Dr. {doctor.name}</p>}
+                      {app.notes && <p className="text-xs text-orange-500 mt-1">📝 {app.notes}</p>}
+                    </div>
+                    <div className="flex gap-1 flex-wrap">
+                      {app.patientPhone && (
+                        <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>
+                      )}
+                      {app.patientEmail && (
+                        <a href={`mailto:${app.patientEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
+                      )}
+                      <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
+                      <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs px-2 py-1 rounded-full font-semibold bg-orange-500/20 text-orange-500">Esperando</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -133,10 +150,20 @@ export const AdminPatients = () => {
                   <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
                   {p.notes && <p className="text-xs text-muted-foreground">📝 {p.notes}</p>}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-wrap">
+                  {p.phone && (() => {
+                    const phoneClean = p.phone.replace(/[^0-9]/g, "");
+                    const waPhone = phoneClean.startsWith("58") ? phoneClean : `58${phoneClean}`;
+                    return (
+                      <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>
+                    );
+                  })()}
+                  {p.email && (
+                    <a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
+                  )}
                   <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Fotos"><Camera className="w-4 h-4" /></button>
-                  <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-                  <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
+                  <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
 
