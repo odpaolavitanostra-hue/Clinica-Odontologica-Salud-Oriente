@@ -176,15 +176,15 @@ const Booking = () => {
             </h2>
             <div>
               <label className="block text-sm font-medium mb-1">Nombre completo *</label>
-              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientName} onChange={(e) => update("patientName", e.target.value)} required maxLength={100} />
+              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientName} onChange={(e) => { const val = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""); update("patientName", val); }} required maxLength={100} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><CreditCard className="w-4 h-4" /> Cédula *</label>
-              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientCedula} onChange={(e) => update("patientCedula", e.target.value)} required maxLength={20} placeholder="V-12345678" />
+              <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientCedula} onChange={(e) => { const val = e.target.value.replace(/[^0-9]/g, ""); update("patientCedula", val); }} required maxLength={20} placeholder="12345678" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Phone className="w-4 h-4" /> Teléfono *</label>
-              <input type="tel" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => update("patientPhone", e.target.value)} required maxLength={20} />
+              <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => { const val = e.target.value.replace(/[^0-9]/g, ""); update("patientPhone", val); }} required maxLength={20} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Mail className="w-4 h-4" /> Email *</label>
@@ -244,7 +244,7 @@ const Booking = () => {
                 className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors py-3 border border-dashed border-border rounded-lg hover:border-gold/50"
               >
                 <HelpCircle className="w-4 h-4" />
-                <span>¿No encuentras un horario que te sirva? <strong className="text-gold">Haz clic aquí para solicitar uno personalizado</strong></span>
+                <span className="text-center">¿No encuentras un horario que te sirva? <strong className="text-gold">Solicitar uno personalizado</strong></span>
               </button>
             )}
             <div>

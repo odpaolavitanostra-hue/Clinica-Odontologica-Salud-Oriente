@@ -146,8 +146,8 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="bg-primary py-8">
-        <div className="container mx-auto px-4 flex items-center justify-center gap-4">
-          <p className="text-primary-foreground/60 text-sm">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+          <p className="text-primary-foreground/60 text-sm text-center">
             © 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.
           </p>
           <Link
