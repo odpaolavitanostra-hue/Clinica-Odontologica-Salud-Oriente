@@ -1,9 +1,9 @@
 
 import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
-import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock } from "lucide-react";
+import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
-import { getCaracasToday } from "@/lib/scheduleUtils";
+import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
   const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest } = useClinicData();
@@ -14,12 +14,24 @@ export const AdminTenants = () => {
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
   });
-  const [blockForm, setBlockForm] = useState({ date: "", selectedHours: [] as string[] });
+  const [blockForm, setBlockForm] = useState({
+    date: "",
+    rentalMode: "" as "" | "turno" | "percent",
+    turnoBlock: "" as "" | "am" | "pm",
+    selectedHours: [] as string[],
+  });
+
+  const caracasToday = getCaracasToday();
+  const caracasNow = getCaracasNow();
 
   const resetForm = () => {
     setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0 });
     setShowForm(false);
     setEditing(null);
+  };
+
+  const resetBlockForm = () => {
+    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [] });
   };
 
   const handleSave = async () => {
@@ -40,43 +52,52 @@ export const AdminTenants = () => {
     setShowForm(true);
   };
 
-  // Get all possible hours for a given date
-  const getAvailableHours = (date: string) => {
-    if (!date) return [];
-    const d = new Date(date + "T00:00:00");
+  // Check if AM/PM block is fully available
+  const isBlockAvailable = (block: "am" | "pm"): boolean => {
+    if (!blockForm.date) return false;
+    const startH = block === "am" ? 8 : 13;
+    const endH = block === "am" ? 12 : 17;
+    const d = new Date(blockForm.date + "T00:00:00");
     const day = d.getDay();
-    if (day === 0) return []; // domingo
-    const end = day === 6 ? 14 : 17;
-    const hours: { time: string; status: "free" | "booked" | "blocked" }[] = [];
+    if (day === 0) return false;
+    if (day === 6 && block === "pm") return false;
+    const actualEnd = day === 6 && block === "am" ? 14 : endH;
+    const isToday = blockForm.date === caracasToday;
+    const currentHour = caracasNow.getHours();
 
-    // Get all blocked slots for this date (from all tenants)
-    const allBlockedSlots = tenants.flatMap(t => t.blockedSlots);
-
-    for (let h = 8; h < end; h++) {
+    for (let h = startH; h < actualEnd; h++) {
+      if (isToday && h <= currentHour) continue;
       const time = `${h.toString().padStart(2, "0")}:00`;
-
-      // Check if already booked by appointment
-      const isBooked = appointments.some(
-        (a) => a.date === date && a.time === time && a.status !== "cancelada"
+      const hasAppointment = appointments.some(
+        (a) => a.date === blockForm.date && a.status !== "cancelada" && parseInt(a.time.split(":")[0]) === h
       );
-
-      // Check if blocked by a tenant
-      const isBlocked = allBlockedSlots.some(sl => {
-        if (sl.date !== date) return false;
-        if (sl.allDay) return true;
-        if (sl.startTime && sl.endTime) {
-          return time >= sl.startTime && time < sl.endTime;
-        }
-        return false;
-      });
-
-      hours.push({
-        time,
-        status: isBlocked ? "blocked" : isBooked ? "booked" : "free",
-      });
+      if (hasAppointment) return false;
+      if (isSlotBlockedByTenant(blockForm.date, time, tenants).blocked) return false;
     }
-    return hours;
+    return true;
   };
+
+  const getTurnoHours = (block: "am" | "pm"): string[] => {
+    const d = new Date(blockForm.date + "T00:00:00");
+    const day = d.getDay();
+    if (block === "am") {
+      const end = day === 6 ? 14 : 12;
+      const hours: string[] = [];
+      for (let h = 8; h < end; h++) hours.push(`${h.toString().padStart(2, "0")}:00`);
+      return hours;
+    } else {
+      const hours: string[] = [];
+      for (let h = 13; h < 17; h++) hours.push(`${h.toString().padStart(2, "0")}:00`);
+      return hours;
+    }
+  };
+
+  // Get all available slots for percent mode
+  const isToday = blockForm.date === caracasToday;
+  const currentHour = caracasNow.getHours();
+  const percentSlots = blockForm.date && blockForm.rentalMode === "percent"
+    ? getAllAvailableSlots(blockForm.date, appointments, tenants, isToday ? currentHour : undefined, isToday)
+    : [];
 
   const toggleHour = (time: string) => {
     setBlockForm(prev => ({
@@ -87,63 +108,49 @@ export const AdminTenants = () => {
     }));
   };
 
-  const selectAllFree = (date: string) => {
-    const hours = getAvailableHours(date);
-    const freeHours = hours.filter(h => h.status === "free").map(h => h.time);
-    setBlockForm(prev => ({ ...prev, selectedHours: freeHours }));
-  };
-
   const handleAddBlocks = async (tenantId: string) => {
-    if (!blockForm.date) { toast.error("Selecciona una fecha"); return; }
-    if (blockForm.selectedHours.length === 0) { toast.error("Selecciona al menos una hora"); return; }
+    if (!blockForm.date || !blockForm.rentalMode) { toast.error("Selecciona fecha y modalidad"); return; }
 
-    const sorted = [...blockForm.selectedHours].sort();
-
-    // Group consecutive hours into ranges
-    const ranges: { start: string; end: string }[] = [];
-    let rangeStart = sorted[0];
-    let prevHour = parseInt(sorted[0]);
-
-    for (let i = 1; i <= sorted.length; i++) {
-      const currentHour = i < sorted.length ? parseInt(sorted[i]) : -1;
-      if (currentHour !== prevHour + 1) {
-        ranges.push({
-          start: rangeStart,
-          end: `${(prevHour + 1).toString().padStart(2, "0")}:00`,
-        });
-        if (i < sorted.length) rangeStart = sorted[i];
-      }
-      prevHour = currentHour;
-    }
-
-    // If all hours selected = full day
-    const hours = getAvailableHours(blockForm.date);
-    const allFreeHours = hours.filter(h => h.status === "free").map(h => h.time);
-    const isAllDay = sorted.length === allFreeHours.length && sorted.every((h, i) => h === allFreeHours[i]) && allFreeHours.length === hours.length;
-
-    if (isAllDay) {
+    if (blockForm.rentalMode === "turno") {
+      if (!blockForm.turnoBlock) { toast.error("Selecciona el turno (AM o PM)"); return; }
+      const hours = getTurnoHours(blockForm.turnoBlock as "am" | "pm");
+      const startTime = hours[0];
+      const lastH = parseInt(hours[hours.length - 1]);
+      const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
       await addTenantBlockedSlot(tenantId, {
         date: blockForm.date,
-        allDay: true,
+        allDay: false,
+        startTime,
+        endTime,
         status: 'approved',
       });
+      toast.success(`Turno ${blockForm.turnoBlock.toUpperCase()} bloqueado para ${blockForm.date}`);
     } else {
+      if (blockForm.selectedHours.length === 0) { toast.error("Selecciona al menos una hora"); return; }
+      const sorted = [...blockForm.selectedHours].sort();
+      const ranges: { start: string; end: string }[] = [];
+      let rangeStart = sorted[0];
+      let prevHour = parseInt(sorted[0]);
+      for (let i = 1; i <= sorted.length; i++) {
+        const currentH = i < sorted.length ? parseInt(sorted[i]) : -1;
+        if (currentH !== prevHour + 1) {
+          ranges.push({ start: rangeStart, end: `${(prevHour + 1).toString().padStart(2, "0")}:00` });
+          if (i < sorted.length) rangeStart = sorted[i];
+        }
+        prevHour = currentH;
+      }
       for (const range of ranges) {
         await addTenantBlockedSlot(tenantId, {
-          date: blockForm.date,
-          allDay: false,
-          startTime: range.start,
-          endTime: range.end,
-          status: 'approved',
+          date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved',
         });
       }
+      toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
-
-    toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
-    setBlockForm({ date: "", selectedHours: [] });
+    resetBlockForm();
   };
 
-  const caracasToday = getCaracasToday();
+  const amAvailable = blockForm.date ? isBlockAvailable("am") : false;
+  const pmAvailable = blockForm.date ? isBlockAvailable("pm") : false;
 
   return (
     <div className="space-y-6">
@@ -235,62 +242,143 @@ export const AdminTenants = () => {
               </div>
               <div className="flex gap-1">
                 <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-                <button onClick={() => { setBlockingTenant(blockingTenant === t.id ? null : t.id); setBlockForm({ date: "", selectedHours: [] }); }} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Bloquear horario"><Lock className="w-4 h-4" /></button>
+                <button onClick={() => { setBlockingTenant(blockingTenant === t.id ? null : t.id); resetBlockForm(); }} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Agendar horario"><Lock className="w-4 h-4" /></button>
                 <button onClick={async () => { await deleteTenant(t.id); toast.success("Inquilino eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
 
             {blockingTenant === t.id && (
-              <div className="bg-muted rounded-lg p-4 space-y-3">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
+
+                {/* Date selection */}
                 <div>
-                  <label className="block text-xs font-medium mb-1">Fecha</label>
-                  <input type="date" min={caracasToday} className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={blockForm.date} onChange={(e) => setBlockForm({ date: e.target.value, selectedHours: [] })} />
+                  <label className="block text-xs font-medium mb-1">Fecha *</label>
+                  <input type="date" min={caracasToday} className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={blockForm.date} onChange={(e) => setBlockForm({ date: e.target.value, rentalMode: "", turnoBlock: "", selectedHours: [] })} />
                 </div>
 
+                {/* Rental mode selection (after date) */}
                 {blockForm.date && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold">Selecciona las horas a bloquear:</p>
-                      <button onClick={() => selectAllFree(blockForm.date)} className="text-xs text-gold hover:underline">Seleccionar todo</button>
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold flex items-center gap-1"><Building2 className="w-3 h-3 text-gold" /> Modalidad de Alquiler</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setBlockForm(prev => ({ ...prev, rentalMode: "turno", turnoBlock: "", selectedHours: [] }))}
+                        className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${
+                          blockForm.rentalMode === "turno"
+                            ? "bg-gold text-gold-foreground border-gold"
+                            : "bg-card border-border hover:border-gold/50"
+                        }`}
+                      >
+                        <Clock className="w-4 h-4" />
+                        Por Turno (USD)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBlockForm(prev => ({ ...prev, rentalMode: "percent", turnoBlock: "", selectedHours: [] }))}
+                        className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${
+                          blockForm.rentalMode === "percent"
+                            ? "bg-gold text-gold-foreground border-gold"
+                            : "bg-card border-border hover:border-gold/50"
+                        }`}
+                      >
+                        <Building2 className="w-4 h-4" />
+                        Por Porcentaje (%)
+                      </button>
                     </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                      {getAvailableHours(blockForm.date).map((slot) => {
-                        const isSelected = blockForm.selectedHours.includes(slot.time);
-                        return (
-                          <button
-                            key={slot.time}
-                            disabled={slot.status !== "free"}
-                            onClick={() => toggleHour(slot.time)}
-                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                              slot.status === "booked"
-                                ? "bg-destructive/10 text-destructive border-destructive/20 cursor-not-allowed line-through"
-                                : slot.status === "blocked"
-                                ? "bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20 cursor-not-allowed"
-                                : isSelected
-                                ? "bg-gold text-gold-foreground border-gold"
-                                : "bg-card border-border hover:border-gold hover:text-gold"
-                            }`}
-                          >
-                            {slot.time}
-                            {slot.status === "booked" && <span className="block text-[10px]">Ocupado</span>}
-                            {slot.status === "blocked" && <span className="block text-[10px]">Bloqueado</span>}
-                          </button>
-                        );
-                      })}
+                  </div>
+                )}
+
+                {/* Turno mode → AM/PM */}
+                {blockForm.date && blockForm.rentalMode === "turno" && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium">Seleccione el turno:</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        disabled={!amAvailable}
+                        onClick={() => setBlockForm(prev => ({ ...prev, turnoBlock: "am" }))}
+                        className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${
+                          !amAvailable
+                            ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed"
+                            : blockForm.turnoBlock === "am"
+                              ? "bg-gold text-gold-foreground border-gold"
+                              : "bg-card border-border hover:border-gold/50"
+                        }`}
+                      >
+                        <Sun className="w-5 h-5" />
+                        <span className="font-semibold">Mañana (AM)</span>
+                        <span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
+                        {!amAvailable && <span className="text-xs text-destructive">No disponible</span>}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!pmAvailable}
+                        onClick={() => setBlockForm(prev => ({ ...prev, turnoBlock: "pm" }))}
+                        className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${
+                          !pmAvailable
+                            ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed"
+                            : blockForm.turnoBlock === "pm"
+                              ? "bg-gold text-gold-foreground border-gold"
+                              : "bg-card border-border hover:border-gold/50"
+                        }`}
+                      >
+                        <Moon className="w-5 h-5" />
+                        <span className="font-semibold">Tarde (PM)</span>
+                        <span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
+                        {!pmAvailable && <span className="text-xs text-destructive">No disponible</span>}
+                      </button>
                     </div>
-                    {getAvailableHours(blockForm.date).length === 0 && (
-                      <p className="text-xs text-destructive">Domingo - no hay horario disponible</p>
+                    {!amAvailable && !pmAvailable && (
+                      <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha.</p>
                     )}
-                    {blockForm.selectedHours.length > 0 && (
-                      <div className="flex items-center justify-between pt-1">
-                        <p className="text-xs text-muted-foreground">{blockForm.selectedHours.length} hora(s) seleccionada(s)</p>
-                        <button onClick={() => handleAddBlocks(t.id)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold">
-                          Bloquear Selección
-                        </button>
-                      </div>
+                    {blockForm.turnoBlock && (
+                      <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">
+                        Bloquear Turno {blockForm.turnoBlock.toUpperCase()}
+                      </button>
                     )}
-                  </>
+                  </div>
+                )}
+
+                {/* Percent mode → individual hours */}
+                {blockForm.date && blockForm.rentalMode === "percent" && (
+                  <div className="space-y-3">
+                    {percentSlots.length > 0 ? (
+                      <>
+                        <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                          {percentSlots.map((slot) => {
+                            const isSelected = blockForm.selectedHours.includes(slot);
+                            return (
+                              <button
+                                key={slot}
+                                type="button"
+                                onClick={() => toggleHour(slot)}
+                                className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${
+                                  isSelected
+                                    ? "bg-gold text-gold-foreground border-gold"
+                                    : "bg-card border-border hover:border-gold/50"
+                                }`}
+                              >
+                                {slot}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {blockForm.selectedHours.length > 0 && (
+                          <div className="flex items-center justify-between pt-1">
+                            <p className="text-xs text-muted-foreground">{blockForm.selectedHours.length} hora(s) seleccionada(s)</p>
+                            <button onClick={() => handleAddBlocks(t.id)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold">
+                              Bloquear Selección
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-destructive text-center py-4">No hay horas disponibles para esta fecha.</p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
