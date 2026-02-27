@@ -31,6 +31,7 @@ export const AdminCalendar = () => {
   const [bookingForm, setBookingForm] = useState({
     patientName: "", patientCedula: "", patientPhone: "", patientEmail: "",
     doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "",
+    customPrice: "" as string, otrosMotivo: "",
   });
 
   const navigate = (dir: number) => {
@@ -103,16 +104,19 @@ export const AdminCalendar = () => {
       });
     }
 
+    const finalPrice = f.customPrice !== "" ? parseFloat(f.customPrice) : (treat?.priceUSD || 0);
+    const finalNotes = effectiveTreatment === "Otros" && f.otrosMotivo ? `Motivo: ${f.otrosMotivo}${f.notes ? ` | ${f.notes}` : ""}` : f.notes;
+
     await addAppointment({
       patientName: f.patientName, patientPhone: f.patientPhone,
       patientCedula: f.patientCedula, patientEmail: f.patientEmail,
       doctorId: effectiveDoctorId, date: f.date, time: f.time,
-      treatment: effectiveTreatment, priceUSD: treat?.priceUSD || 0,
-      status: "pendiente", notes: f.notes,
+      treatment: effectiveTreatment, priceUSD: finalPrice,
+      status: "pendiente", notes: finalNotes,
     });
     toast.success("Cita agendada");
     setShowBooking(false);
-    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "" });
+    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "" });
   };
 
   const selectExistingPatient = (p: typeof patients[0]) => {
@@ -279,7 +283,15 @@ export const AdminCalendar = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div><label className="block text-sm font-medium mb-1">Doctor</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.doctorId || doctors[0]?.id} onChange={(e) => setBookingForm((p) => ({ ...p, doctorId: e.target.value }))}>{doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-            <div><label className="block text-sm font-medium mb-1">Tratamiento</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.treatment || treatments[0]?.name} onChange={(e) => setBookingForm((p) => ({ ...p, treatment: e.target.value }))}>{[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}</select></div>
+            <div><label className="block text-sm font-medium mb-1">Tratamiento</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.treatment || treatments[0]?.name} onChange={(e) => setBookingForm((p) => ({ ...p, treatment: e.target.value, customPrice: "" }))}>{[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}</select></div>
+          </div>
+          {(bookingForm.treatment || treatments[0]?.name) === "Otros" && (
+            <div><label className="block text-sm font-medium mb-1">Motivo de consulta *</label><input type="text" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" placeholder="Describa el motivo de la consulta" value={bookingForm.otrosMotivo} onChange={(e) => setBookingForm((p) => ({ ...p, otrosMotivo: e.target.value }))} maxLength={200} /></div>
+          )}
+          <div>
+            <label className="block text-sm font-medium mb-1">Precio USD (editable)</label>
+            <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" placeholder={`Estándar: $${(treatments.find(t => t.name === (bookingForm.treatment || treatments[0]?.name))?.priceUSD || 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
+            <p className="text-xs text-muted-foreground mt-1">Deja vacío para usar el precio estándar</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="block text-sm font-medium mb-1">Fecha</label><input type="date" min={todayStr} className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.date} onChange={(e) => setBookingForm((p) => ({ ...p, date: e.target.value, time: "" }))} /></div>

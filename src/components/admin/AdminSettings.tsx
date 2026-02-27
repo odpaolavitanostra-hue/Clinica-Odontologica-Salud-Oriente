@@ -35,8 +35,8 @@ export const AdminSettings = () => {
         <div className="flex items-center gap-3">
           <input
             type="number"
-            step="0.01"
-            className="bg-muted rounded-lg px-3 py-2 text-sm border border-border w-32"
+            step="0.001"
+            className="bg-muted rounded-lg px-3 py-2 text-sm border border-border w-40"
             value={tasaBCV}
             onChange={(e) => setTasaBCV(parseFloat(e.target.value) || 0)}
           />
