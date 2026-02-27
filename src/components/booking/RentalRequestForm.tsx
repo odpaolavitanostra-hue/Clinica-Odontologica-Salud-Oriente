@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase } from "lucide-react";
+import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useClinicData } from "@/hooks/useClinicData";
-import { getAllAvailableSlots, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
+import { getAllAvailableSlots, getCaracasNow, getCaracasToday, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 import BookingConfirmationModal from "./BookingConfirmationModal";
 
 interface RentalRequestFormProps {
@@ -23,8 +23,9 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     cov: "",
     email: "",
     phone: "",
-    rentalMode: "turno" as "turno" | "percent",
+    rentalMode: "" as "" | "turno" | "percent",
     date: "",
+    turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
   });
 
@@ -35,7 +36,36 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
   const isToday = form.date === caracasToday;
   const currentHour = caracasNow.getHours();
 
-  const availableSlots = form.date
+  // Check if a block (AM/PM) is fully free (no patient appointments and no tenant blocks)
+  const isBlockAvailable = (block: "am" | "pm"): boolean => {
+    if (!form.date) return false;
+    const startH = block === "am" ? 8 : 13;
+    const endH = block === "am" ? 12 : 17;
+
+    // Check day type - Saturday ends at 14
+    const d = new Date(form.date + "T00:00:00");
+    const day = d.getDay();
+    if (day === 0) return false;
+    if (day === 6 && block === "pm") return false; // No PM on Saturday
+
+    const actualEnd = day === 6 && block === "am" ? 14 : endH;
+
+    for (let h = startH; h < actualEnd; h++) {
+      if (isToday && h <= currentHour) continue;
+      const time = `${h.toString().padStart(2, "0")}:00`;
+      // Check patient appointments
+      const hasAppointment = appointments.some(
+        (a) => a.date === form.date && a.status !== "cancelada" && parseInt(a.time.split(":")[0]) === h
+      );
+      if (hasAppointment) return false;
+      // Check tenant blocks
+      if (isSlotBlockedByTenant(form.date, time, tenants).blocked) return false;
+    }
+    return true;
+  };
+
+  // Get all available slots for percent mode (no smart filtering)
+  const percentSlots = form.date && form.rentalMode === "percent"
     ? getAllAvailableSlots(form.date, appointments, tenants, isToday ? currentHour : undefined, isToday)
     : [];
 
@@ -48,45 +78,56 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     }));
   };
 
+  // Build hours for turno block
+  const getTurnoHours = (block: "am" | "pm"): string[] => {
+    const d = new Date(form.date + "T00:00:00");
+    const day = d.getDay();
+    if (block === "am") {
+      const end = day === 6 ? 14 : 12;
+      const hours: string[] = [];
+      for (let h = 8; h < end; h++) hours.push(`${h.toString().padStart(2, "0")}:00`);
+      return hours;
+    } else {
+      const hours: string[] = [];
+      for (let h = 13; h < 17; h++) hours.push(`${h.toString().padStart(2, "0")}:00`);
+      return hours;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.firstName || !form.lastName || !form.cedula || !form.cov || !form.email || !form.phone) {
       toast.error("Completa todos los campos obligatorios");
       return;
     }
-    if (!form.date || form.selectedHours.length === 0) {
-      toast.error("Selecciona fecha y al menos una hora");
+    if (!form.date || !form.rentalMode) {
+      toast.error("Selecciona fecha y modalidad de alquiler");
+      return;
+    }
+    if (form.rentalMode === "turno" && !form.turnoBlock) {
+      toast.error("Selecciona el turno (AM o PM)");
+      return;
+    }
+    if (form.rentalMode === "percent" && form.selectedHours.length === 0) {
+      toast.error("Selecciona al menos una hora");
       return;
     }
 
     setSubmitting(true);
     try {
       const formattedPhone = `+58${form.phone.replace(/^0/, "")}`;
-      const sorted = [...form.selectedHours].sort();
 
-      // Group consecutive hours into ranges
-      const ranges: { start: string; end: string }[] = [];
-      let rangeStart = sorted[0];
-      let prevHour = parseInt(sorted[0]);
+      if (form.rentalMode === "turno") {
+        // Block entire AM or PM range
+        const hours = getTurnoHours(form.turnoBlock as "am" | "pm");
+        const startTime = hours[0];
+        const lastH = parseInt(hours[hours.length - 1]);
+        const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
 
-      for (let i = 1; i <= sorted.length; i++) {
-        const currentH = i < sorted.length ? parseInt(sorted[i]) : -1;
-        if (currentH !== prevHour + 1) {
-          ranges.push({
-            start: rangeStart,
-            end: `${(prevHour + 1).toString().padStart(2, "0")}:00`,
-          });
-          if (i < sorted.length) rangeStart = sorted[i];
-        }
-        prevHour = currentH;
-      }
-
-      // Insert blocked slots with pending_review status
-      for (const range of ranges) {
         const { error } = await supabase.from("tenant_blocked_slots").insert({
           date: form.date,
           all_day: false,
-          start_time: range.start,
-          end_time: range.end,
+          start_time: startTime,
+          end_time: endTime,
           status: "pending_review",
           requester_first_name: form.firstName.trim(),
           requester_last_name: form.lastName.trim(),
@@ -97,19 +138,62 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           rental_mode: form.rentalMode,
         });
         if (error) throw error;
-      }
 
-      onOpenChange(false);
-      setConfirmationData({
-        name: `${form.firstName} ${form.lastName}`,
-        date: form.date,
-        time: sorted.join(", "),
-      });
+        onOpenChange(false);
+        setConfirmationData({
+          name: `${form.firstName} ${form.lastName}`,
+          date: form.date,
+          time: `${form.turnoBlock === "am" ? "Mañana" : "Tarde"} (${startTime} - ${endTime})`,
+        });
+      } else {
+        // Percent mode - individual hours
+        const sorted = [...form.selectedHours].sort();
+        const ranges: { start: string; end: string }[] = [];
+        let rangeStart = sorted[0];
+        let prevHour = parseInt(sorted[0]);
+
+        for (let i = 1; i <= sorted.length; i++) {
+          const currentH = i < sorted.length ? parseInt(sorted[i]) : -1;
+          if (currentH !== prevHour + 1) {
+            ranges.push({
+              start: rangeStart,
+              end: `${(prevHour + 1).toString().padStart(2, "0")}:00`,
+            });
+            if (i < sorted.length) rangeStart = sorted[i];
+          }
+          prevHour = currentH;
+        }
+
+        for (const range of ranges) {
+          const { error } = await supabase.from("tenant_blocked_slots").insert({
+            date: form.date,
+            all_day: false,
+            start_time: range.start,
+            end_time: range.end,
+            status: "pending_review",
+            requester_first_name: form.firstName.trim(),
+            requester_last_name: form.lastName.trim(),
+            requester_cedula: form.cedula.trim(),
+            requester_cov: form.cov.trim(),
+            requester_email: form.email.trim(),
+            requester_phone: formattedPhone,
+            rental_mode: form.rentalMode,
+          });
+          if (error) throw error;
+        }
+
+        onOpenChange(false);
+        setConfirmationData({
+          name: `${form.firstName} ${form.lastName}`,
+          date: form.date,
+          time: sorted.join(", "),
+        });
+      }
 
       // Reset form
       setForm({
         firstName: "", lastName: "", cedula: "", cov: "", email: "", phone: "",
-        rentalMode: "turno", date: "", selectedHours: [],
+        rentalMode: "", date: "", turnoBlock: "", selectedHours: [],
       });
     } catch (err) {
       toast.error("Error al enviar la solicitud. Intenta nuevamente.");
@@ -117,6 +201,9 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
       setSubmitting(false);
     }
   };
+
+  const amAvailable = form.date ? isBlockAvailable("am") : false;
+  const pmAvailable = form.date ? isBlockAvailable("pm") : false;
 
   return (
     <>
@@ -170,61 +257,132 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             </div>
 
-            {/* Rental mode selection only - price set by admin */}
+            {/* Step 1: Date */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modo de Alquiler</h3>
-              <div>
-                <label className="block text-xs font-medium mb-1">Modalidad Preferida *</label>
-                <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => update("rentalMode", e.target.value)}>
-                  <option value="turno">Por Turno (USD)</option>
-                  <option value="percent">Por Porcentaje (%)</option>
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">El monto será acordado con la administración.</p>
-              </div>
-            </div>
-
-            {/* Scheduling */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2"><Clock className="w-4 h-4 text-gold" /> Horario Solicitado</h3>
+              <h3 className="text-sm font-semibold flex items-center gap-2"><Clock className="w-4 h-4 text-gold" /> Fecha y Horario</h3>
               <div>
                 <label className="block text-xs font-medium mb-1">Fecha *</label>
-                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("selectedHours", []); }} />
+                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("rentalMode", ""); update("turnoBlock", ""); update("selectedHours", []); }} />
               </div>
-
-              {form.date && (
-                <>
-                  {availableSlots.length > 0 ? (
-                    <>
-                      <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                        {availableSlots.map((slot) => {
-                          const isSelected = form.selectedHours.includes(slot);
-                          return (
-                            <button
-                              key={slot}
-                              type="button"
-                              onClick={() => toggleHour(slot)}
-                              className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${
-                                isSelected
-                                  ? "bg-gold text-gold-foreground border-gold"
-                                  : "bg-muted border-border hover:border-gold/50"
-                              }`}
-                            >
-                              {slot}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {form.selectedHours.length > 0 && (
-                        <p className="text-xs text-muted-foreground">{form.selectedHours.length} hora(s) seleccionada(s)</p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-xs text-destructive">No hay horarios disponibles para esta fecha.</p>
-                  )}
-                </>
-              )}
             </div>
+
+            {/* Step 2: Rental mode (only after date) */}
+            {form.date && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modalidad de Alquiler</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { update("rentalMode", "turno"); update("turnoBlock", ""); update("selectedHours", []); }}
+                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${
+                      form.rentalMode === "turno"
+                        ? "bg-gold text-gold-foreground border-gold"
+                        : "bg-muted border-border hover:border-gold/50"
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    Por Turno (USD)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { update("rentalMode", "percent"); update("turnoBlock", ""); update("selectedHours", []); }}
+                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${
+                      form.rentalMode === "percent"
+                        ? "bg-gold text-gold-foreground border-gold"
+                        : "bg-muted border-border hover:border-gold/50"
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Por Porcentaje (%)
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">El monto será acordado con la administración.</p>
+              </div>
+            )}
+
+            {/* Step 3a: Turno mode → AM/PM selection */}
+            {form.date && form.rentalMode === "turno" && (
+              <div className="space-y-3">
+                <p className="text-xs font-medium">Seleccione el turno:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* AM Block */}
+                  <button
+                    type="button"
+                    disabled={!amAvailable}
+                    onClick={() => update("turnoBlock", "am")}
+                    className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${
+                      !amAvailable
+                        ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed"
+                        : form.turnoBlock === "am"
+                          ? "bg-gold text-gold-foreground border-gold"
+                          : "bg-muted border-border hover:border-gold/50"
+                    }`}
+                  >
+                    <Sun className="w-5 h-5" />
+                    <span className="font-semibold">Mañana (AM)</span>
+                    <span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
+                    {!amAvailable && <span className="text-xs text-destructive">No disponible</span>}
+                  </button>
+
+                  {/* PM Block */}
+                  <button
+                    type="button"
+                    disabled={!pmAvailable}
+                    onClick={() => update("turnoBlock", "pm")}
+                    className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${
+                      !pmAvailable
+                        ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed"
+                        : form.turnoBlock === "pm"
+                          ? "bg-gold text-gold-foreground border-gold"
+                          : "bg-muted border-border hover:border-gold/50"
+                    }`}
+                  >
+                    <Moon className="w-5 h-5" />
+                    <span className="font-semibold">Tarde (PM)</span>
+                    <span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
+                    {!pmAvailable && <span className="text-xs text-destructive">No disponible</span>}
+                  </button>
+                </div>
+                {!amAvailable && !pmAvailable && (
+                  <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha. Ya existen citas agendadas.</p>
+                )}
+              </div>
+            )}
+
+            {/* Step 3b: Percent mode → all available individual hours */}
+            {form.date && form.rentalMode === "percent" && (
+              <div className="space-y-3">
+                {percentSlots.length > 0 ? (
+                  <>
+                    <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {percentSlots.map((slot) => {
+                        const isSelected = form.selectedHours.includes(slot);
+                        return (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => toggleHour(slot)}
+                            className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${
+                              isSelected
+                                ? "bg-gold text-gold-foreground border-gold"
+                                : "bg-muted border-border hover:border-gold/50"
+                            }`}
+                          >
+                            {slot}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {form.selectedHours.length > 0 && (
+                      <p className="text-xs text-muted-foreground">{form.selectedHours.length} hora(s) seleccionada(s)</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-xs text-destructive">No hay horarios disponibles para esta fecha.</p>
+                )}
+              </div>
+            )}
 
             <button
               type="button"
