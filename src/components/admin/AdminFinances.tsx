@@ -83,7 +83,7 @@ export const AdminFinances = () => {
 
   // Rental income from blocked slots
   const allBlockedSlots = tenants.flatMap(t => t.blockedSlots.map(sl => ({ ...sl, tenantName: `${t.firstName} ${t.lastName}` })));
-  const filteredRentals = allBlockedSlots.filter(sl => sl.status === "approved" && sl.rentalPrice && sl.rentalPrice > 0 && inRange(sl.date, start, end));
+  const filteredRentals = allBlockedSlots.filter(sl => sl.status === "completed" && sl.rentalPrice && sl.rentalPrice > 0 && inRange(sl.date, start, end));
   const totalRentalIncomeUSD = filteredRentals.reduce((s, r) => s + (r.rentalPrice || 0), 0);
 
   const totalIncomeUSD = filteredFinances.reduce((s, f) => s + f.treatmentPriceUSD, 0);

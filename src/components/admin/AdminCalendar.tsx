@@ -41,16 +41,18 @@ export const AdminCalendar = () => {
   };
 
   const getBlockedForDate = (dateStr: string) => {
-    const blocked: { time: string; tenant: string }[] = [];
+    const blocked: { time: string; tenant: string; status: string }[] = [];
     tenants.forEach((t) => {
       t.blockedSlots.forEach((sl) => {
         if (sl.date !== dateStr) return;
+        if (sl.status === 'cancelled') return; // Skip cancelled
+        const status = sl.status || 'approved';
         if (sl.allDay) {
-          for (let h = 8; h < 17; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}` });
+          for (let h = 8; h < 17; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
         } else if (sl.startTime && sl.endTime) {
           const start = parseInt(sl.startTime.split(":")[0]);
           const end = parseInt(sl.endTime.split(":")[0]);
-          for (let h = start; h < end; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}` });
+          for (let h = start; h < end; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
         }
       });
     });
@@ -383,13 +385,17 @@ export const AdminCalendar = () => {
                     const app = appointments.find((a) => a.date === dateStr && a.time === time && (filter === "all" || a.status === filter));
                     const blocked = getBlockedForDate(dateStr).find((b) => b.time === time);
                     return (
-                      <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? "bg-destructive/10" : ""}`}>
+                      <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? (blocked.status === 'pending_review' ? "bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.15)_4px,rgba(245,158,11,0.15)_8px)]" : blocked.status === 'completed' ? "bg-clinic-green/15" : "bg-card border-gold/30") : ""}`}>
                         {app && (
                           <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400" : "bg-destructive/20 text-destructive"}`}>
                             {app.patientName.split(" ")[0]}
                           </div>
                         )}
-                        {blocked && !app && <span className="text-destructive">🔒 {blocked.tenant.split(" ")[0]}</span>}
+                        {blocked && !app && (
+                          <span className={`${blocked.status === 'pending_review' ? "text-amber-500" : blocked.status === 'completed' ? "text-clinic-green" : "text-gold"}`}>
+                            {blocked.status === 'pending_review' ? "⏳" : blocked.status === 'completed' ? "✔️" : "🔒"} {blocked.tenant.split(" ")[0]}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -410,8 +416,16 @@ export const AdminCalendar = () => {
             return (
               <div key={h} className="flex gap-3">
                 <div className="w-14 text-sm text-muted-foreground font-medium pt-3 text-right">{time}</div>
-                <div className="flex-1 min-h-[60px] border border-border/30 rounded-lg p-2">
-                  {blocked && <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1 mb-1">🔒 Reservado: {blocked.tenant}</div>}
+              <div className="flex-1 min-h-[60px] border border-border/30 rounded-lg p-2">
+                  {blocked && (
+                    <div className={`text-xs rounded px-2 py-1 mb-1 ${
+                      blocked.status === 'pending_review' ? "text-amber-500 bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.1)_4px,rgba(245,158,11,0.1)_8px)]"
+                      : blocked.status === 'completed' ? "text-clinic-green bg-clinic-green/10"
+                      : "text-gold bg-gold/10"
+                    }`}>
+                      {blocked.status === 'pending_review' ? "⏳ Por confirmar" : blocked.status === 'completed' ? "✔️ Completado" : "🔒 Reservado"}: {blocked.tenant}
+                    </div>
+                  )}
                   {dayApps.length === 0 && !blocked && (
                     <button onClick={() => { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); }} className="text-xs text-muted-foreground hover:text-gold">+ Agendar</button>
                   )}

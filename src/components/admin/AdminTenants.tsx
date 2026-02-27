@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
-  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, updateBlockedSlot } = useClinicData();
+  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot } = useClinicData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export const AdminTenants = () => {
   const [requestEditForm, setRequestEditForm] = useState<{
     rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string;
   }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "" });
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   // Editing existing blocked slots
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
   const [slotEditForm, setSlotEditForm] = useState<{
@@ -291,14 +291,18 @@ export const AdminTenants = () => {
 
   const pendingCount = rentalRequests.filter(r => r.status === 'pending_review').length;
   const confirmedCount = rentalRequests.filter(r => r.status === 'approved').length;
+  const completedCount = rentalRequests.filter(r => r.status === 'completed').length;
+  const cancelledCount = rentalRequests.filter(r => r.status === 'cancelled').length;
   const filteredRequests = rentalRequests.filter(r => {
     if (filterStatus === "pending") return r.status === 'pending_review';
     if (filterStatus === "approved") return r.status === 'approved';
+    if (filterStatus === "completed") return r.status === 'completed';
+    if (filterStatus === "cancelled") return r.status === 'cancelled';
     return true;
   }).sort((a, b) => {
-    if (a.status === 'pending_review' && b.status !== 'pending_review') return -1;
-    if (a.status !== 'pending_review' && b.status === 'pending_review') return 1;
-    return a.date.localeCompare(b.date);
+    const order: Record<string, number> = { pending_review: 0, approved: 1, completed: 2, cancelled: 3 };
+    const diff = (order[a.status] || 0) - (order[b.status] || 0);
+    return diff !== 0 ? diff : a.date.localeCompare(b.date);
   });
 
   return (
@@ -314,15 +318,21 @@ export const AdminTenants = () => {
         </h3>
 
         {/* Filter tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button onClick={() => setFilterStatus("all")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "all" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
             Todos ({rentalRequests.length})
           </button>
           <button onClick={() => setFilterStatus("pending")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "pending" ? "bg-orange-500 text-white border-orange-500" : "bg-card border-border hover:border-orange-500/50"}`}>
             ⏳ Pendientes ({pendingCount})
           </button>
-          <button onClick={() => setFilterStatus("approved")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "approved" ? "bg-clinic-green text-white border-clinic-green" : "bg-card border-border hover:border-clinic-green/50"}`}>
+          <button onClick={() => setFilterStatus("approved")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "approved" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
             ✅ Confirmados ({confirmedCount})
+          </button>
+          <button onClick={() => setFilterStatus("completed")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "completed" ? "bg-clinic-green text-white border-clinic-green" : "bg-card border-border hover:border-clinic-green/50"}`}>
+            ✔️ Completados ({completedCount})
+          </button>
+          <button onClick={() => setFilterStatus("cancelled")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "cancelled" ? "bg-destructive text-white border-destructive" : "bg-card border-border hover:border-destructive/50"}`}>
+            ❌ Cancelados ({cancelledCount})
           </button>
         </div>
 
@@ -334,15 +344,20 @@ export const AdminTenants = () => {
             const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone;
             const isEditing = editingRequest === req.id;
             const isPending = req.status === 'pending_review';
+            const isApproved = req.status === 'approved';
+            const isCompleted = req.status === 'completed';
+            const isCancelled = req.status === 'cancelled';
+            const statusBadge = isPending ? { cls: "bg-orange-500/20 text-orange-400", label: "⏳ Por confirmar" }
+              : isApproved ? { cls: "bg-gold/20 text-gold", label: "✅ Confirmado" }
+              : isCompleted ? { cls: "bg-clinic-green/20 text-clinic-green", label: "✔️ Completado" }
+              : { cls: "bg-destructive/20 text-destructive", label: "❌ Cancelado" };
             return (
-              <div key={req.id} className={`bg-card rounded-xl p-5 space-y-3 ${isPending ? "border border-orange-500/30" : "gold-border"}`}>
+              <div key={req.id} className={`bg-card rounded-xl p-5 space-y-3 ${isPending ? "border border-orange-500/30" : isCompleted ? "border border-clinic-green/30" : isCancelled ? "border border-destructive/30 opacity-60" : "gold-border"}`}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isPending ? "bg-orange-500/20 text-orange-400" : "bg-clinic-green/20 text-clinic-green"}`}>
-                        {isPending ? "⏳ Por confirmar" : "✅ Confirmado"}
-                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusBadge.cls}`}>{statusBadge.label}</span>
                       {req.tenantId && <span className="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold">Inquilino asignado</span>}
                     </div>
                     <p className="text-sm text-muted-foreground">COV: {req.requesterCov || "—"} • Cédula: {req.requesterCedula || "—"}</p>
@@ -355,11 +370,26 @@ export const AdminTenants = () => {
                     {req.requesterEmail && (
                       <a href={`mailto:${req.requesterEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
                     )}
-                    <button onClick={() => isEditing ? setEditingRequest(null) : startEditRequest(req)} className={`p-1.5 rounded-lg ${isEditing ? "bg-gold/20 text-gold" : "bg-gold/10 text-gold hover:bg-gold/20"}`} title="Editar"><Edit className="w-4 h-4" /></button>
+                    {/* Edit button - available for pending & approved */}
+                    {(isPending || isApproved) && (
+                      <button onClick={() => isEditing ? setEditingRequest(null) : startEditRequest(req)} className={`p-1.5 rounded-lg ${isEditing ? "bg-gold/20 text-gold" : "bg-gold/10 text-gold hover:bg-gold/20"}`} title="Editar"><Edit className="w-4 h-4" /></button>
+                    )}
+                    {/* Approve - only pending */}
                     {isPending && (
                       <button onClick={() => handleApproveRequest(req.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
                     )}
-                    <button onClick={async () => { await rejectRentalRequest(req.id); toast.info(isPending ? "Solicitud rechazada — Horario liberado" : "Alquiler eliminado — Horario liberado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title={isPending ? "Rechazar" : "Eliminar"}><X className="w-4 h-4" /></button>
+                    {/* Complete - only approved */}
+                    {isApproved && (
+                      <button onClick={async () => { await completeRentalSlot(req.id); toast.success("✔️ Alquiler completado — Registrado en contabilidad"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Completar"><Check className="w-4 h-4" /></button>
+                    )}
+                    {/* Cancel - pending or approved */}
+                    {(isPending || isApproved) && (
+                      <button onClick={async () => { await rejectRentalRequest(req.id); toast.info("Alquiler cancelado — Horario liberado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Cancelar"><X className="w-4 h-4" /></button>
+                    )}
+                    {/* Delete - completed or cancelled */}
+                    {(isCompleted || isCancelled) && (
+                      <button onClick={async () => { await deleteRentalRequest(req.id); toast.info("Registro eliminado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
+                    )}
                   </div>
                 </div>
 

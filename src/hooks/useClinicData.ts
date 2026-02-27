@@ -470,9 +470,9 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
-  // ─── Rental Requests (ALL blocked slots — pending + confirmed, with or without tenant) ───
+  // ─── Rental Requests (ALL blocked slots — all statuses) ───
   const rentalRequests = blockedSlots
-    .filter((slot) => slot.status === 'pending_review' || slot.status === 'approved')
+    .filter((slot) => ['pending_review', 'approved', 'completed', 'cancelled'].includes(slot.status))
     .map((slot) => {
       const tenant = slot.tenant_id ? rawTenantsById.get(slot.tenant_id) : null;
       return {
@@ -529,8 +529,39 @@ export function useClinicData() {
   };
 
   const rejectRentalRequest = async (slotId: string) => {
+    await supabase.from("tenant_blocked_slots").update({ status: 'cancelled' }).eq("id", slotId);
+    inv("tenant_blocked_slots");
+  };
+
+  const deleteRentalRequest = async (slotId: string) => {
     await supabase.from("tenant_blocked_slots").delete().eq("id", slotId);
     inv("tenant_blocked_slots");
+  };
+
+  const completeRentalSlot = async (slotId: string) => {
+    const slot = blockedSlots.find(s => s.id === slotId);
+    if (!slot) return;
+
+    // Update status to completed
+    await supabase.from("tenant_blocked_slots").update({ status: 'completed' }).eq("id", slotId);
+
+    // Create finance/sales entry
+    const tenant = slot.tenant_id ? rawTenantsById.get(slot.tenant_id) : null;
+    const tenantName = tenant ? `${tenant.first_name} ${tenant.last_name}` : `${slot.requester_first_name || ''} ${slot.requester_last_name || ''}`.trim() || 'Inquilino';
+    const rentalPrice = slot.rental_price || 0;
+
+    if (rentalPrice > 0) {
+      await supabase.from("finances").insert({
+        date: slot.date,
+        treatment_price_usd: rentalPrice,
+        doctor_pay_usd: 0,
+        materials_cost_usd: 0,
+        utility_usd: rentalPrice,
+        tasa_bcv: tasaBCV,
+      });
+    }
+
+    inv("tenant_blocked_slots", "finances");
   };
 
   const isLoading = loadingDoctors;
@@ -555,7 +586,7 @@ export function useClinicData() {
     // Tenant
     addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, updateBlockedSlot,
     // Rental Requests
-    rentalRequests, approveRentalRequest, rejectRentalRequest,
+    rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot,
     // State
     isLoading,
   };
