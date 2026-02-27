@@ -470,9 +470,9 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
-  // ─── Rental Requests (standalone blocked slots without tenant) ───
+  // ─── Rental Requests (standalone blocked slots without tenant — all statuses) ───
   const rentalRequests = blockedSlots
-    .filter((slot) => !slot.tenant_id && (slot.status === 'pending_review'))
+    .filter((slot) => !slot.tenant_id && (slot.status === 'pending_review' || slot.status === 'approved'))
     .map((slot) => ({
       id: slot.id,
       date: slot.date,
