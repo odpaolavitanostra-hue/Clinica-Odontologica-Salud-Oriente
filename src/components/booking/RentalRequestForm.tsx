@@ -281,7 +281,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
                     }`}
                   >
                     <Clock className="w-4 h-4" />
-                    Por Turno (USD)
+                    Por Turno
                   </button>
                   <button
                     type="button"

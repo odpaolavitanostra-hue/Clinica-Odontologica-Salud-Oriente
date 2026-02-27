@@ -422,12 +422,13 @@ export function useClinicData() {
 
   // ─── Tenant CRUD ───
   const addTenant = async (t: Omit<Tenant, 'id' | 'blockedSlots'>) => {
-    await supabase.from("tenants").insert({
+    const { data } = await supabase.from("tenants").insert({
       first_name: t.firstName, last_name: t.lastName, cov: t.cov,
       email: t.email, phone: t.phone, cedula: t.cedula,
       rental_mode: t.rentalMode, rental_price: t.rentalPrice,
-    });
+    }).select().single();
     inv("tenants");
+    return data;
   };
   const updateTenant = async (id: string, t: Partial<Tenant>) => {
     const mapped: any = {};
