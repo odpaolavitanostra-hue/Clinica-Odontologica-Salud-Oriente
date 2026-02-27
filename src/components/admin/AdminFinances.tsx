@@ -82,7 +82,7 @@ export const AdminFinances = () => {
   const filteredSales = sales.filter(s => inRange(s.date, start, end));
 
   // Rental income from blocked slots
-  const allBlockedSlots = tenants.flatMap(t => t.blockedSlots.map(sl => ({ ...sl, tenantName: `${t.firstName} ${t.lastName}` })));
+  const allBlockedSlots = tenants.flatMap(t => t.blockedSlots.map(sl => ({ ...sl, tenantFirstName: t.firstName, tenantLastName: t.lastName, tenantName: `${t.firstName} ${t.lastName}` })));
   const filteredRentals = allBlockedSlots.filter(sl => sl.status === "completed" && sl.rentalPrice && sl.rentalPrice > 0 && inRange(sl.date, start, end));
   const totalRentalIncomeUSD = filteredRentals.reduce((s, r) => s + (r.rentalPrice || 0), 0);
 
@@ -107,7 +107,9 @@ export const AdminFinances = () => {
 
     // Rentals
     const rentalData = filteredRentals.map(r => ({
-      Fecha: r.date, Inquilino: r.tenantName, Horario: r.allDay ? "Día completo" : `${r.startTime} - ${r.endTime}`,
+      Fecha: r.date, Nombre: r.tenantFirstName || '', Apellido: r.tenantLastName || '', Servicio: "Alquiler",
+      Horario: r.allDay ? "Día completo" : `${r.startTime} - ${r.endTime}`,
+      Tratamiento: r.treatment || '—',
       Modalidad: r.rentalMode === "turno" ? "Turno" : "Porcentaje", "Ingreso USD": (r.rentalPrice || 0).toFixed(2), "Ingreso VES": ((r.rentalPrice || 0) * tasaBCV).toFixed(2),
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rentalData), "Alquileres");
@@ -238,7 +240,9 @@ export const AdminFinances = () => {
                 {filteredRentals.map((r, i) => (
                   <div key={i} className="bg-card rounded-xl p-3 gold-border flex items-center justify-between text-sm">
                     <div>
-                      <span className="font-medium">{r.tenantName}</span>
+                      <span className="font-medium">{r.tenantFirstName} {r.tenantLastName}</span>
+                      <span className="text-muted-foreground ml-2">• Alquiler</span>
+                      {r.treatment && r.treatment !== "Revisión" && <span className="text-muted-foreground ml-1">({r.treatment})</span>}
                       <span className="text-muted-foreground ml-2">{r.date} • {r.allDay ? "Día completo" : `${r.startTime}-${r.endTime}`}</span>
                     </div>
                     <span className="font-semibold text-gold">${(r.rentalPrice || 0).toFixed(2)}</span>

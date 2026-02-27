@@ -79,6 +79,7 @@ export interface TenantBlockedSlot {
   requesterPhone?: string;
   rentalMode?: string;
   rentalPrice?: number;
+  treatment?: string;
 }
 
 export interface Tenant {
@@ -216,6 +217,7 @@ export function useClinicData() {
       requesterPhone: slot.requester_phone || undefined,
       rentalMode: slot.rental_mode || undefined,
       rentalPrice: slot.rental_price || undefined,
+      treatment: (slot as any).treatment || undefined,
     });
 
     return acc;
@@ -451,6 +453,7 @@ export function useClinicData() {
     await supabase.from("tenant_blocked_slots").insert({
       tenant_id: tenantId, date: slot.date, all_day: slot.allDay,
       start_time: slot.startTime, end_time: slot.endTime,
+      treatment: slot.treatment || 'Revisión',
     });
     inv("tenant_blocked_slots");
   };
@@ -459,13 +462,14 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
-  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string }) => {
+  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string; treatment?: string }) => {
     const mapped: any = {};
     if (updates.rentalMode !== undefined) mapped.rental_mode = updates.rentalMode;
     if (updates.rentalPrice !== undefined) mapped.rental_price = updates.rentalPrice;
     if (updates.date !== undefined) mapped.date = updates.date;
     if (updates.startTime !== undefined) mapped.start_time = updates.startTime;
     if (updates.endTime !== undefined) mapped.end_time = updates.endTime;
+    if (updates.treatment !== undefined) mapped.treatment = updates.treatment;
     await supabase.from("tenant_blocked_slots").update(mapped).eq("id", slotId);
     inv("tenant_blocked_slots");
   };
@@ -491,6 +495,7 @@ export function useClinicData() {
         requesterPhone: tenant?.phone || slot.requester_phone || '',
         rentalMode: slot.rental_mode || tenant?.rental_mode || 'turno',
         rentalPrice: slot.rental_price || tenant?.rental_price || 0,
+        treatment: (slot as any).treatment || 'Revisión',
       };
     });
 
@@ -499,7 +504,7 @@ export function useClinicData() {
     const slot = blockedSlots.find(s => s.id === slotId);
     if (!slot) return;
 
-    // Create tenant if not exists by cedula
+    // Create or find tenant by cedula
     const existingTenant = rawTenants.find(t => t.cedula === slot.requester_cedula);
     let tenantId: string;
 

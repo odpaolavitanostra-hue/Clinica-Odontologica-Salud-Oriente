@@ -6,14 +6,14 @@ import { toast } from "sonner";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
-  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot } = useClinicData();
+  const { tenants, treatments, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot } = useClinicData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
   const [requestEditForm, setRequestEditForm] = useState<{
-    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string;
-  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "" });
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión" });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   // Editing existing blocked slots
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -174,6 +174,7 @@ export const AdminTenants = () => {
     setRequestEditForm({
       rentalMode: req.rentalMode, rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
+      treatment: req.treatment || "Revisión",
     });
   };
 
@@ -186,6 +187,7 @@ export const AdminTenants = () => {
         date: requestEditForm.date,
         startTime: requestEditForm.startTime,
         endTime: requestEditForm.endTime,
+        treatment: requestEditForm.treatment,
       });
     }
     await approveRentalRequest(reqId);
@@ -424,9 +426,19 @@ export const AdminTenants = () => {
                         <input type="time" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.endTime} onChange={(e) => setRequestEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
                       </div>
                     </div>
+                    {requestEditForm.rentalMode === "percent" && (
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Tratamiento</label>
+                        <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.treatment} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatment: e.target.value }))}>
+                          {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                            <option key={t.name} value={t.name}>{t.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <button onClick={async () => {
-                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime });
+                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatment });
                         toast.success("Datos actualizados");
                         setEditingRequest(null);
                       }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar cambios</button>
@@ -444,6 +456,9 @@ export const AdminTenants = () => {
                     <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
                       {req.rentalMode === "turno" ? `$${(req.rentalPrice || 0).toFixed(2)} USD` : `${req.rentalPrice}%`}
                     </span>
+                    {req.rentalMode === "percent" && req.treatment && (
+                      <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
+                    )}
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
                       {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
                     </span>

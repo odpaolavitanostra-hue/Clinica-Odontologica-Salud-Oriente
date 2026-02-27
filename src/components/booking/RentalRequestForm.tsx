@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon } from "lucide-react";
+import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useClinicData } from "@/hooks/useClinicData";
@@ -13,7 +13,7 @@ interface RentalRequestFormProps {
 }
 
 const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
-  const { appointments, tenants } = useClinicData();
+  const { appointments, tenants, treatments } = useClinicData();
   const [submitting, setSubmitting] = useState(false);
   const [confirmationData, setConfirmationData] = useState<{ name: string; date: string; time: string } | null>(null);
   const [form, setForm] = useState({
@@ -27,44 +27,55 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     date: "",
     turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
+    treatment: "Revisión",
   });
 
   const update = (key: string, val: any) => setForm((p) => ({ ...p, [key]: val }));
+
+  // Auto-fill from existing tenant when cedula matches
+  useEffect(() => {
+    if (form.cedula.length >= 6) {
+      const existingTenant = tenants.find(t => t.cedula === form.cedula);
+      if (existingTenant) {
+        setForm(prev => ({
+          ...prev,
+          firstName: prev.firstName || existingTenant.firstName,
+          lastName: prev.lastName || existingTenant.lastName,
+          cov: prev.cov || existingTenant.cov,
+          email: prev.email || existingTenant.email,
+          phone: prev.phone || existingTenant.phone.replace(/^\+58/, ""),
+        }));
+        toast.info(`✅ Datos cargados de ${existingTenant.firstName} ${existingTenant.lastName}`);
+      }
+    }
+  }, [form.cedula, tenants]);
 
   const caracasToday = getCaracasToday();
   const caracasNow = getCaracasNow();
   const isToday = form.date === caracasToday;
   const currentHour = caracasNow.getHours();
 
-  // Check if a block (AM/PM) is fully free (no patient appointments and no tenant blocks)
   const isBlockAvailable = (block: "am" | "pm"): boolean => {
     if (!form.date) return false;
     const startH = block === "am" ? 8 : 13;
     const endH = block === "am" ? 12 : 17;
-
-    // Check day type - Saturday ends at 14
     const d = new Date(form.date + "T00:00:00");
     const day = d.getDay();
     if (day === 0) return false;
-    if (day === 6 && block === "pm") return false; // No PM on Saturday
-
+    if (day === 6 && block === "pm") return false;
     const actualEnd = day === 6 && block === "am" ? 14 : endH;
-
     for (let h = startH; h < actualEnd; h++) {
       if (isToday && h <= currentHour) continue;
       const time = `${h.toString().padStart(2, "0")}:00`;
-      // Check patient appointments
       const hasAppointment = appointments.some(
         (a) => a.date === form.date && a.status !== "cancelada" && parseInt(a.time.split(":")[0]) === h
       );
       if (hasAppointment) return false;
-      // Check tenant blocks
       if (isSlotBlockedByTenant(form.date, time, tenants).blocked) return false;
     }
     return true;
   };
 
-  // Get all available slots for percent mode (no smart filtering)
   const percentSlots = form.date && form.rentalMode === "percent"
     ? getAllAvailableSlots(form.date, appointments, tenants, isToday ? currentHour : undefined, isToday)
     : [];
@@ -78,7 +89,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     }));
   };
 
-  // Build hours for turno block
   const getTurnoHours = (block: "am" | "pm"): string[] => {
     const d = new Date(form.date + "T00:00:00");
     const day = d.getDay();
@@ -115,9 +125,24 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     setSubmitting(true);
     try {
       const formattedPhone = `+58${form.phone.replace(/^0/, "")}`;
+      const treatmentValue = form.rentalMode === "percent" ? (form.treatment || "Revisión") : "Revisión";
+
+      // Auto-save tenant data
+      const existingTenant = tenants.find(t => t.cedula === form.cedula.trim());
+      if (!existingTenant) {
+        await supabase.from("tenants").insert({
+          first_name: form.firstName.trim(),
+          last_name: form.lastName.trim(),
+          cedula: form.cedula.trim(),
+          cov: form.cov.trim(),
+          email: form.email.trim(),
+          phone: formattedPhone,
+          rental_mode: form.rentalMode,
+          rental_price: 0,
+        });
+      }
 
       if (form.rentalMode === "turno") {
-        // Block entire AM or PM range
         const hours = getTurnoHours(form.turnoBlock as "am" | "pm");
         const startTime = hours[0];
         const lastH = parseInt(hours[hours.length - 1]);
@@ -136,6 +161,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           requester_email: form.email.trim(),
           requester_phone: formattedPhone,
           rental_mode: form.rentalMode,
+          treatment: treatmentValue,
         });
         if (error) throw error;
 
@@ -146,7 +172,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           time: `${form.turnoBlock === "am" ? "Mañana" : "Tarde"} (${startTime} - ${endTime})`,
         });
       } else {
-        // Percent mode - individual hours
         const sorted = [...form.selectedHours].sort();
         const ranges: { start: string; end: string }[] = [];
         let rangeStart = sorted[0];
@@ -178,6 +203,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             requester_email: form.email.trim(),
             requester_phone: formattedPhone,
             rental_mode: form.rentalMode,
+            treatment: treatmentValue,
           });
           if (error) throw error;
         }
@@ -190,10 +216,9 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
         });
       }
 
-      // Reset form
       setForm({
         firstName: "", lastName: "", cedula: "", cov: "", email: "", phone: "",
-        rentalMode: "", date: "", turnoBlock: "", selectedHours: [],
+        rentalMode: "", date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión",
       });
     } catch (err) {
       toast.error("Error al enviar la solicitud. Intenta nuevamente.");
@@ -224,22 +249,22 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               <h3 className="text-sm font-semibold flex items-center gap-2"><User className="w-4 h-4 text-gold" /> Datos Personales</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
+                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cédula *</label>
+                  <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => update("cedula", e.target.value.replace(/[^0-9]/g, ""))} maxLength={20} placeholder="12345678 (auto-completa)" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV *</label>
+                  <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => update("cov", e.target.value)} maxLength={20} placeholder="COV-12345" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-xs font-medium mb-1">Nombre *</label>
                   <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.firstName} onChange={(e) => update("firstName", e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""))} maxLength={50} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1">Apellido *</label>
                   <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.lastName} onChange={(e) => update("lastName", e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""))} maxLength={50} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cédula *</label>
-                  <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => update("cedula", e.target.value.replace(/[^0-9]/g, ""))} maxLength={20} placeholder="12345678" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV *</label>
-                  <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => update("cov", e.target.value)} maxLength={20} placeholder="COV-12345" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -257,7 +282,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             </div>
 
-            {/* Step 1: Date */}
+            {/* Date */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold flex items-center gap-2"><Clock className="w-4 h-4 text-gold" /> Fecha y Horario</h3>
               <div>
@@ -266,80 +291,50 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             </div>
 
-            {/* Step 2: Rental mode (only after date) */}
+            {/* Rental mode */}
             {form.date && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modalidad de Alquiler</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { update("rentalMode", "turno"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${
-                      form.rentalMode === "turno"
-                        ? "bg-gold text-gold-foreground border-gold"
-                        : "bg-muted border-border hover:border-gold/50"
-                    }`}
-                  >
-                    <Clock className="w-4 h-4" />
-                    Por Turno
+                  <button type="button" onClick={() => { update("rentalMode", "turno"); update("turnoBlock", ""); update("selectedHours", []); }}
+                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    <Clock className="w-4 h-4" /> Por Turno
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => { update("rentalMode", "percent"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${
-                      form.rentalMode === "percent"
-                        ? "bg-gold text-gold-foreground border-gold"
-                        : "bg-muted border-border hover:border-gold/50"
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" />
-                    Por Porcentaje (%)
+                  <button type="button" onClick={() => { update("rentalMode", "percent"); update("turnoBlock", ""); update("selectedHours", []); }}
+                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    <Building2 className="w-4 h-4" /> Por Porcentaje (%)
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">El monto será acordado con la administración.</p>
               </div>
             )}
 
-            {/* Step 3a: Turno mode → AM/PM selection */}
+            {/* Treatment selector for % mode */}
+            {form.date && form.rentalMode === "percent" && (
+              <div>
+                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamiento a realizar</label>
+                <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.treatment} onChange={(e) => update("treatment", e.target.value)}>
+                  {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                    <option key={t.name} value={t.name}>{t.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">Si no desea compartir, seleccione "Revisión".</p>
+              </div>
+            )}
+
+            {/* Turno selection */}
             {form.date && form.rentalMode === "turno" && (
               <div className="space-y-3">
                 <p className="text-xs font-medium">Seleccione el turno:</p>
                 <div className="grid grid-cols-2 gap-3">
-                  {/* AM Block */}
-                  <button
-                    type="button"
-                    disabled={!amAvailable}
-                    onClick={() => update("turnoBlock", "am")}
-                    className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${
-                      !amAvailable
-                        ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed"
-                        : form.turnoBlock === "am"
-                          ? "bg-gold text-gold-foreground border-gold"
-                          : "bg-muted border-border hover:border-gold/50"
-                    }`}
-                  >
-                    <Sun className="w-5 h-5" />
-                    <span className="font-semibold">Mañana (AM)</span>
-                    <span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
+                  <button type="button" disabled={!amAvailable} onClick={() => update("turnoBlock", "am")}
+                    className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!amAvailable ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : form.turnoBlock === "am" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    <Sun className="w-5 h-5" /><span className="font-semibold">Mañana (AM)</span><span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
                     {!amAvailable && <span className="text-xs text-destructive">No disponible</span>}
                   </button>
-
-                  {/* PM Block */}
-                  <button
-                    type="button"
-                    disabled={!pmAvailable}
-                    onClick={() => update("turnoBlock", "pm")}
-                    className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${
-                      !pmAvailable
-                        ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed"
-                        : form.turnoBlock === "pm"
-                          ? "bg-gold text-gold-foreground border-gold"
-                          : "bg-muted border-border hover:border-gold/50"
-                    }`}
-                  >
-                    <Moon className="w-5 h-5" />
-                    <span className="font-semibold">Tarde (PM)</span>
-                    <span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
+                  <button type="button" disabled={!pmAvailable} onClick={() => update("turnoBlock", "pm")}
+                    className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!pmAvailable ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : form.turnoBlock === "pm" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    <Moon className="w-5 h-5" /><span className="font-semibold">Tarde (PM)</span><span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
                     {!pmAvailable && <span className="text-xs text-destructive">No disponible</span>}
                   </button>
                 </div>
@@ -349,30 +344,19 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             )}
 
-            {/* Step 3b: Percent mode → all available individual hours */}
+            {/* Percent hour selection */}
             {form.date && form.rentalMode === "percent" && (
               <div className="space-y-3">
                 {percentSlots.length > 0 ? (
                   <>
                     <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                      {percentSlots.map((slot) => {
-                        const isSelected = form.selectedHours.includes(slot);
-                        return (
-                          <button
-                            key={slot}
-                            type="button"
-                            onClick={() => toggleHour(slot)}
-                            className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${
-                              isSelected
-                                ? "bg-gold text-gold-foreground border-gold"
-                                : "bg-muted border-border hover:border-gold/50"
-                            }`}
-                          >
-                            {slot}
-                          </button>
-                        );
-                      })}
+                      {percentSlots.map((slot) => (
+                        <button key={slot} type="button" onClick={() => toggleHour(slot)}
+                          className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${form.selectedHours.includes(slot) ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                          {slot}
+                        </button>
+                      ))}
                     </div>
                     {form.selectedHours.length > 0 && (
                       <p className="text-xs text-muted-foreground">{form.selectedHours.length} hora(s) seleccionada(s)</p>
@@ -384,12 +368,8 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
+            <button type="button" onClick={handleSubmit} disabled={submitting}
+              className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
               <Send className="w-4 h-4" />
               {submitting ? "Enviando..." : "Enviar Solicitud de Pre-Reserva"}
             </button>

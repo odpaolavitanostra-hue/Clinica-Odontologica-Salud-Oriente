@@ -249,6 +249,7 @@ export type Database = {
           start_time: string | null
           status: string
           tenant_id: string | null
+          treatment: string | null
         }
         Insert: {
           all_day?: boolean
@@ -267,6 +268,7 @@ export type Database = {
           start_time?: string | null
           status?: string
           tenant_id?: string | null
+          treatment?: string | null
         }
         Update: {
           all_day?: boolean
@@ -285,6 +287,7 @@ export type Database = {
           start_time?: string | null
           status?: string
           tenant_id?: string | null
+          treatment?: string | null
         }
         Relationships: [
           {
