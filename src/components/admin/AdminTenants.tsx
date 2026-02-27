@@ -288,22 +288,32 @@ export const AdminTenants = () => {
 
   return (
     <div className="space-y-6">
-      {/* Rental Requests Section */}
-      {rentalRequests.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-            <Clock className="w-5 h-5 text-orange-400" /> Solicitudes de Alquiler
-            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{rentalRequests.length}</span>
-          </h3>
-          {rentalRequests.map((req) => {
+      {/* Rental Requests Section — Always visible */}
+      <div className="space-y-3">
+        <h3 className="font-display font-semibold text-lg flex items-center gap-2">
+          <Clock className="w-5 h-5 text-orange-400" /> Solicitudes de Alquiler
+          {rentalRequests.filter(r => r.status === 'pending_review').length > 0 && (
+            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{rentalRequests.filter(r => r.status === 'pending_review').length} pendiente(s)</span>
+          )}
+        </h3>
+        {rentalRequests.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-4">No hay solicitudes de alquiler</p>
+        ) : (
+          rentalRequests.map((req) => {
             const cleanPhone = req.requesterPhone.replace(/[^0-9+]/g, "");
             const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone;
             const isEditing = editingRequest === req.id;
+            const isPending = req.status === 'pending_review';
             return (
-              <div key={req.id} className="bg-card rounded-xl p-5 border border-orange-500/30 space-y-3">
+              <div key={req.id} className={`bg-card rounded-xl p-5 space-y-3 ${isPending ? "border border-orange-500/30" : "gold-border"}`}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isPending ? "bg-orange-500/20 text-orange-400" : "bg-clinic-green/20 text-clinic-green"}`}>
+                        {isPending ? "⏳ Por confirmar" : "✅ Confirmado"}
+                      </span>
+                    </div>
                     <p className="text-sm text-muted-foreground">COV: {req.requesterCov} • Cédula: {req.requesterCedula}</p>
                     <p className="text-sm text-muted-foreground">{req.requesterEmail} • {req.requesterPhone}</p>
                   </div>
@@ -315,15 +325,17 @@ export const AdminTenants = () => {
                       <a href={`mailto:${req.requesterEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
                     )}
                     <button onClick={() => isEditing ? setEditingRequest(null) : startEditRequest(req)} className={`p-1.5 rounded-lg ${isEditing ? "bg-gold/20 text-gold" : "bg-gold/10 text-gold hover:bg-gold/20"}`} title="Editar"><Edit className="w-4 h-4" /></button>
-                    <button onClick={() => handleApproveRequest(req.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
-                    <button onClick={async () => { await rejectRentalRequest(req.id); toast.info("Solicitud rechazada — Horario liberado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
+                    {isPending && (
+                      <button onClick={() => handleApproveRequest(req.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
+                    )}
+                    <button onClick={async () => { await rejectRentalRequest(req.id); toast.info(isPending ? "Solicitud rechazada — Horario liberado" : "Alquiler eliminado — Horario liberado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title={isPending ? "Rechazar" : "Eliminar"}><X className="w-4 h-4" /></button>
                   </div>
                 </div>
 
                 {/* Editable details */}
                 {isEditing ? (
                   <div className="bg-muted rounded-lg p-4 space-y-3">
-                    <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar antes de aprobar</p>
+                    <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar detalles</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium mb-1">Modalidad</label>
@@ -351,6 +363,17 @@ export const AdminTenants = () => {
                         <input type="time" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.endTime} onChange={(e) => setRequestEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
                       </div>
                     </div>
+                    <div className="flex gap-2">
+                      <button onClick={async () => {
+                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime });
+                        toast.success("Datos actualizados");
+                        setEditingRequest(null);
+                      }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar cambios</button>
+                      {isPending && (
+                        <button onClick={() => handleApproveRequest(req.id)} className="bg-clinic-green text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Guardar y Aprobar</button>
+                      )}
+                      <button onClick={() => setEditingRequest(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-3 text-sm">
@@ -364,9 +387,9 @@ export const AdminTenants = () => {
                 )}
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
       {/* Existing Tenants Section */}
       <div className="space-y-4">
