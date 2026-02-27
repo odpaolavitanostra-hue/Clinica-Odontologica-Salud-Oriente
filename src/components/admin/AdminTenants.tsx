@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
-import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X } from "lucide-react";
+import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { getCaracasToday } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
-  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot } = useClinicData();
+  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest } = useClinicData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
@@ -125,6 +125,7 @@ export const AdminTenants = () => {
       await addTenantBlockedSlot(tenantId, {
         date: blockForm.date,
         allDay: true,
+        status: 'approved',
       });
     } else {
       for (const range of ranges) {
@@ -133,6 +134,7 @@ export const AdminTenants = () => {
           allDay: false,
           startTime: range.start,
           endTime: range.end,
+          status: 'approved',
         });
       }
     }
@@ -144,7 +146,50 @@ export const AdminTenants = () => {
   const caracasToday = getCaracasToday();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Rental Requests Section */}
+      {rentalRequests.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-display font-semibold text-lg flex items-center gap-2">
+            <Clock className="w-5 h-5 text-orange-400" /> Solicitudes de Alquiler
+            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{rentalRequests.length}</span>
+          </h3>
+          {rentalRequests.map((req) => {
+            const cleanPhone = req.requesterPhone.replace(/[^0-9+]/g, "");
+            const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone;
+            return (
+              <div key={req.id} className="bg-card rounded-xl p-5 border border-orange-500/30 space-y-2">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
+                    <p className="text-sm text-muted-foreground">COV: {req.requesterCov} • Cédula: {req.requesterCedula}</p>
+                    <p className="text-sm text-muted-foreground">{req.requesterEmail} • {req.requesterPhone}</p>
+                    <p className="text-sm font-medium mt-1">
+                      {req.rentalMode === "turno" ? `Turno: $${(req.rentalPrice || 0).toFixed(2)} USD` : `Porcentaje: ${req.rentalPrice}%`}
+                    </p>
+                    <p className="text-sm text-gold font-medium mt-1">
+                      📅 {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {req.requesterPhone && (
+                      <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>
+                    )}
+                    {req.requesterEmail && (
+                      <a href={`mailto:${req.requesterEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
+                    )}
+                    <button onClick={async () => { await approveRentalRequest(req.id); toast.success("✅ Alquiler aprobado — Horario bloqueado permanentemente"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
+                    <button onClick={async () => { await rejectRentalRequest(req.id); toast.info("Solicitud rechazada — Horario liberado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Existing Tenants Section */}
+      <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-display font-semibold text-lg flex items-center gap-2">
           <Building2 className="w-5 h-5 text-gold" /> Alquiler de Consultorio
@@ -264,6 +309,7 @@ export const AdminTenants = () => {
           </div>
         ))
       )}
+      </div>
     </div>
   );
 };

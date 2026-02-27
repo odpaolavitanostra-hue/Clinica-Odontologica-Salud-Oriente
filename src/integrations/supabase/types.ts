@@ -238,8 +238,17 @@ export type Database = {
           date: string
           end_time: string | null
           id: string
+          rental_mode: string | null
+          rental_price: number | null
+          requester_cedula: string | null
+          requester_cov: string | null
+          requester_email: string | null
+          requester_first_name: string | null
+          requester_last_name: string | null
+          requester_phone: string | null
           start_time: string | null
-          tenant_id: string
+          status: string
+          tenant_id: string | null
         }
         Insert: {
           all_day?: boolean
@@ -247,8 +256,17 @@ export type Database = {
           date: string
           end_time?: string | null
           id?: string
+          rental_mode?: string | null
+          rental_price?: number | null
+          requester_cedula?: string | null
+          requester_cov?: string | null
+          requester_email?: string | null
+          requester_first_name?: string | null
+          requester_last_name?: string | null
+          requester_phone?: string | null
           start_time?: string | null
-          tenant_id: string
+          status?: string
+          tenant_id?: string | null
         }
         Update: {
           all_day?: boolean
@@ -256,8 +274,17 @@ export type Database = {
           date?: string
           end_time?: string | null
           id?: string
+          rental_mode?: string | null
+          rental_price?: number | null
+          requester_cedula?: string | null
+          requester_cov?: string | null
+          requester_email?: string | null
+          requester_first_name?: string | null
+          requester_last_name?: string | null
+          requester_phone?: string | null
           start_time?: string | null
-          tenant_id?: string
+          status?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {

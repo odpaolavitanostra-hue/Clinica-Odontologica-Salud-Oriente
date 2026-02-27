@@ -1,13 +1,13 @@
 
 import { useClinicData } from "@/hooks/useClinicData";
-import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, Building2 } from "lucide-react";
 
 interface AdminDashboardProps {
   onNavigate?: (tab: string) => void;
 }
 
 export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
-  const { appointments, patients, doctors, inventory, finances, tasaBCV } = useClinicData();
+  const { appointments, patients, doctors, inventory, finances, tasaBCV, rentalRequests } = useClinicData();
 
   const today = new Date().toISOString().split("T")[0];
   const todayApps = appointments.filter((a) => a.date === today);
@@ -42,6 +42,9 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         <StatCard icon={<Clock className="w-5 h-5" />} label="Pendientes" value={pendingApps.length} onClick={() => nav("calendar")} />
         <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Completadas" value={completedApps.length} onClick={() => nav("calendar")} />
         <StatCard icon={<Users className="w-5 h-5" />} label="Pacientes" value={patients.length} onClick={() => nav("patients")} />
+        {rentalRequests.length > 0 && (
+          <StatCard icon={<Building2 className="w-5 h-5" />} label="Solicitudes Alquiler" value={rentalRequests.length} accent onClick={() => nav("rentals")} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

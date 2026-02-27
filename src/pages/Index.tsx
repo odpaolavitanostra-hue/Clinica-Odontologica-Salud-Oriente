@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { MapPin, Phone, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import heroImage from "@/assets/hero-clinic.jpg";
 import serviceLimpieza from "@/assets/service-limpieza.jpg";
 import serviceResina from "@/assets/service-resina.jpg";
@@ -10,6 +12,8 @@ import serviceBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
 import serviceProtesis from "@/assets/service-protesis.jpg";
 
 const Index = () => {
+  const [rentalOpen, setRentalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Navbar */}
@@ -18,12 +22,20 @@ const Index = () => {
           <h1 className="font-display text-lg md:text-xl text-gold font-semibold tracking-wide">
             COSO
           </h1>
-          <Link
-            to="/reservar"
-            className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            Agendar Cita
-          </Link>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setRentalOpen(true)}
+              className="text-noir-foreground/40 hover:text-gold text-xs sm:text-sm font-medium transition-colors hidden sm:block"
+            >
+              Alquiler para Profesionales
+            </button>
+            <Link
+              to="/reservar"
+              className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Agendar Cita
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -150,6 +162,12 @@ const Index = () => {
           <p className="text-primary-foreground/60 text-sm text-center">
             © 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.
           </p>
+          <button
+            onClick={() => setRentalOpen(true)}
+            className="text-primary-foreground/40 text-xs hover:text-primary-foreground/60 transition-colors"
+          >
+            Alquiler Profesional
+          </button>
           <Link
             to="/login"
             className="text-primary-foreground/30 text-xs hover:text-primary-foreground/50 transition-colors"
@@ -158,6 +176,8 @@ const Index = () => {
           </Link>
         </div>
       </footer>
+
+      <RentalRequestForm open={rentalOpen} onOpenChange={setRentalOpen} />
     </div>
   );
 };

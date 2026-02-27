@@ -70,6 +70,15 @@ export interface TenantBlockedSlot {
   allDay: boolean;
   startTime?: string;
   endTime?: string;
+  status: string;
+  requesterFirstName?: string;
+  requesterLastName?: string;
+  requesterCedula?: string;
+  requesterCov?: string;
+  requesterEmail?: string;
+  requesterPhone?: string;
+  rentalMode?: string;
+  rentalPrice?: number;
 }
 
 export interface Tenant {
@@ -198,6 +207,15 @@ export function useClinicData() {
       allDay: slot.all_day,
       startTime: slot.start_time || undefined,
       endTime: slot.end_time || undefined,
+      status: slot.status || 'approved',
+      requesterFirstName: slot.requester_first_name || undefined,
+      requesterLastName: slot.requester_last_name || undefined,
+      requesterCedula: slot.requester_cedula || undefined,
+      requesterCov: slot.requester_cov || undefined,
+      requesterEmail: slot.requester_email || undefined,
+      requesterPhone: slot.requester_phone || undefined,
+      rentalMode: slot.rental_mode || undefined,
+      rentalPrice: slot.rental_price || undefined,
     });
 
     return acc;
@@ -440,6 +458,65 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
+  // ─── Rental Requests (standalone blocked slots without tenant) ───
+  const rentalRequests = blockedSlots
+    .filter((slot) => !slot.tenant_id && (slot.status === 'pending_review'))
+    .map((slot) => ({
+      id: slot.id,
+      date: slot.date,
+      allDay: slot.all_day,
+      startTime: slot.start_time || undefined,
+      endTime: slot.end_time || undefined,
+      status: slot.status || 'pending_review',
+      requesterFirstName: slot.requester_first_name || '',
+      requesterLastName: slot.requester_last_name || '',
+      requesterCedula: slot.requester_cedula || '',
+      requesterCov: slot.requester_cov || '',
+      requesterEmail: slot.requester_email || '',
+      requesterPhone: slot.requester_phone || '',
+      rentalMode: slot.rental_mode || 'turno',
+      rentalPrice: slot.rental_price || 0,
+    }));
+
+  const approveRentalRequest = async (slotId: string) => {
+    // Find the request data
+    const slot = blockedSlots.find(s => s.id === slotId);
+    if (!slot) return;
+
+    // Create tenant if not exists by cedula
+    const existingTenant = rawTenants.find(t => t.cedula === slot.requester_cedula);
+    let tenantId: string;
+
+    if (existingTenant) {
+      tenantId = existingTenant.id;
+    } else {
+      const { data } = await supabase.from("tenants").insert({
+        first_name: slot.requester_first_name || '',
+        last_name: slot.requester_last_name || '',
+        cedula: slot.requester_cedula || '',
+        cov: slot.requester_cov || '',
+        email: slot.requester_email || '',
+        phone: slot.requester_phone || '',
+        rental_mode: slot.rental_mode || 'turno',
+        rental_price: slot.rental_price || 0,
+      }).select("id").single();
+      tenantId = data?.id || '';
+    }
+
+    // Update the blocked slot: assign tenant_id and change status to approved
+    await supabase.from("tenant_blocked_slots").update({
+      tenant_id: tenantId,
+      status: 'approved',
+    }).eq("id", slotId);
+
+    inv("tenant_blocked_slots", "tenants");
+  };
+
+  const rejectRentalRequest = async (slotId: string) => {
+    await supabase.from("tenant_blocked_slots").delete().eq("id", slotId);
+    inv("tenant_blocked_slots");
+  };
+
   const isLoading = loadingDoctors;
 
   return {
@@ -461,6 +538,8 @@ export function useClinicData() {
     setTasaBCV,
     // Tenant
     addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot,
+    // Rental Requests
+    rentalRequests, approveRentalRequest, rejectRentalRequest,
     // State
     isLoading,
   };
