@@ -69,9 +69,9 @@ const Index = () => {
               </Link>
               <button
                 onClick={() => setRentalOpen(true)}
-                className="inline-flex items-center gap-2 border-2 border-gold text-gold px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gold hover:text-gold-foreground transition-all"
+                className="inline-flex items-center gap-2 bg-gold text-gold-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity"
               >
-                Alquiler Profesional <Building2 className="w-5 h-5" />
+                Alquiler para Profesionales <Building2 className="w-5 h-5" />
               </button>
             </div>
           </div>

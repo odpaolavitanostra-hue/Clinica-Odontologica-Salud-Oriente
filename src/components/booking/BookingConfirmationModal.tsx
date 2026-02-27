@@ -113,10 +113,12 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time, isPe
             </div>
           )}
 
-          {/* Hint */}
-          <p className="text-xs text-muted-foreground">
-            Por favor, llega <strong>5 minutos antes</strong> para tu ficha clínica.
-          </p>
+          {/* Hint - only for patients, not rental requests */}
+          {!isPendingConfirmation && (
+            <p className="text-xs text-muted-foreground">
+              Por favor, llega <strong>5 minutos antes</strong> para tu ficha clínica.
+            </p>
+          )}
 
           {/* CTA */}
           <Button

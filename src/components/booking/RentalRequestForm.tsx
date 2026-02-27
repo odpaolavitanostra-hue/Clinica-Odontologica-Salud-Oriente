@@ -24,7 +24,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     email: "",
     phone: "",
     rentalMode: "turno" as "turno" | "percent",
-    rentalPrice: "",
     date: "",
     selectedHours: [] as string[],
   });
@@ -56,10 +55,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     }
     if (!form.date || form.selectedHours.length === 0) {
       toast.error("Selecciona fecha y al menos una hora");
-      return;
-    }
-    if (!form.rentalPrice || parseFloat(form.rentalPrice) <= 0) {
-      toast.error("Indica el precio o porcentaje");
       return;
     }
 
@@ -100,7 +95,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           requester_email: form.email.trim(),
           requester_phone: formattedPhone,
           rental_mode: form.rentalMode,
-          rental_price: parseFloat(form.rentalPrice),
         });
         if (error) throw error;
       }
@@ -115,7 +109,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
       // Reset form
       setForm({
         firstName: "", lastName: "", cedula: "", cov: "", email: "", phone: "",
-        rentalMode: "turno", rentalPrice: "", date: "", selectedHours: [],
+        rentalMode: "turno", date: "", selectedHours: [],
       });
     } catch (err) {
       toast.error("Error al enviar la solicitud. Intenta nuevamente.");
@@ -176,21 +170,16 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             </div>
 
-            {/* Rental Config */}
+            {/* Rental mode selection only - price set by admin */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Configuración de Alquiler</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1">Modo de Alquiler *</label>
-                  <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => update("rentalMode", e.target.value)}>
-                    <option value="turno">Por Turno (USD)</option>
-                    <option value="percent">Por Porcentaje (%)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">{form.rentalMode === "turno" ? "Precio por Turno (USD) *" : "Comisión (%) *"}</label>
-                  <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalPrice} onChange={(e) => update("rentalPrice", e.target.value)} placeholder={form.rentalMode === "turno" ? "50.00" : "15"} />
-                </div>
+              <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modo de Alquiler</h3>
+              <div>
+                <label className="block text-xs font-medium mb-1">Modalidad Preferida *</label>
+                <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => update("rentalMode", e.target.value)}>
+                  <option value="turno">Por Turno (USD)</option>
+                  <option value="percent">Por Porcentaje (%)</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">El monto será acordado con la administración.</p>
               </div>
             </div>
 
