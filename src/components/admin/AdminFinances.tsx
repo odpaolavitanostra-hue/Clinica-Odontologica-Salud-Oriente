@@ -1,10 +1,10 @@
 
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
-import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Building2, Edit, Save, X } from "lucide-react";
+import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
-import { AdminTenants } from "./AdminTenants";
+
 
 interface AccountingEntry {
   id: string;
@@ -21,7 +21,7 @@ export const AdminFinances = () => {
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "alquileres">("resumen");
+  const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas">("resumen");
   const [purchases, setPurchases] = useState<AccountingEntry[]>(() => {
     const saved = localStorage.getItem("coso-purchases");
     return saved ? JSON.parse(saved) : [];
@@ -134,7 +134,6 @@ export const AdminFinances = () => {
           { key: "resumen" as const, label: "Resumen", icon: <BookOpen className="w-4 h-4" /> },
           { key: "compras" as const, label: "Compras", icon: <ShoppingCart className="w-4 h-4" /> },
           { key: "ventas" as const, label: "Ventas", icon: <Receipt className="w-4 h-4" /> },
-          { key: "alquileres" as const, label: "Alquileres", icon: <Building2 className="w-4 h-4" /> },
         ].map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
             {tab.icon} {tab.label}
@@ -202,7 +201,7 @@ export const AdminFinances = () => {
 
       {activeTab === "compras" && (<>{renderEntryForm("compras")}{renderEntries(purchases, "compras")}</>)}
       {activeTab === "ventas" && (<>{renderEntryForm("ventas")}{renderEntries(sales, "ventas")}</>)}
-      {activeTab === "alquileres" && <AdminTenants />}
+      
     </div>
   );
 };
