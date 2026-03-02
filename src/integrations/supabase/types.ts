@@ -23,6 +23,7 @@ export type Database = {
           id: string
           materials_used: Json | null
           notes: string
+          odontogram_data: Json | null
           patient_cedula: string | null
           patient_email: string | null
           patient_name: string
@@ -42,6 +43,7 @@ export type Database = {
           id?: string
           materials_used?: Json | null
           notes?: string
+          odontogram_data?: Json | null
           patient_cedula?: string | null
           patient_email?: string | null
           patient_name: string
@@ -61,6 +63,7 @@ export type Database = {
           id?: string
           materials_used?: Json | null
           notes?: string
+          odontogram_data?: Json | null
           patient_cedula?: string | null
           patient_email?: string | null
           patient_name?: string

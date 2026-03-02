@@ -1,17 +1,19 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope } from "lucide-react";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { printRecipe } from "@/components/admin/RecipeGenerator";
+import OdontogramChart from "@/components/odontogram/OdontogramChart";
+import { useOdontogram, createEmptyOdontogram, type OdontogramData } from "@/hooks/useOdontogram";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { appointments, doctors, finances, tasaBCV, patients, inventory, completeAppointment, updatePatient } = useClinicData();
+  const { appointments, doctors, finances, tasaBCV, patients, inventory, completeAppointment, updatePatient, updateAppointment } = useClinicData();
   const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "inventario" | "recipe">("agenda");
   const [completing, setCompleting] = useState<string | null>(null);
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
@@ -29,6 +31,11 @@ const DoctorPanel = () => {
 
   // Recipe state
   const [recipeForm, setRecipeForm] = useState({ patientId: "", patientName: "", patientCedula: "", diagnosis: "", content: "" });
+
+  // Odontogram state
+  const [odontogramAppId, setOdontogramAppId] = useState<string | null>(null);
+  const [odontogramNotes, setOdontogramNotes] = useState("");
+  const odontogram = useOdontogram();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
@@ -116,6 +123,45 @@ const DoctorPanel = () => {
   const handlePrintRecipe = () => {
     if (!doctor) return;
     printRecipe(doctor, recipeForm.patientName, recipeForm.patientCedula, recipeForm.diagnosis, recipeForm.content);
+  };
+
+  // Odontogram handlers
+  const toggleOdontogram = (appId: string) => {
+    if (odontogramAppId === appId) {
+      setOdontogramAppId(null);
+      return;
+    }
+    const app = myAppointments.find(a => a.id === appId);
+    if (app?.odontogramData) {
+      odontogram.loadState(app.odontogramData as OdontogramData);
+      setOdontogramNotes((app.odontogramData as any)?._notes || "");
+    } else {
+      // Check if there's a previous appointment for this patient with odontogram data
+      const prevApps = myAppointments
+        .filter(a => a.patientName === app?.patientName && a.id !== appId && a.odontogramData)
+        .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
+      
+      if (prevApps.length > 0) {
+        const loadPrev = window.confirm("¿Desea cargar el estado del odontograma de la cita anterior?");
+        if (loadPrev) {
+          odontogram.loadState(prevApps[0].odontogramData as OdontogramData);
+          setOdontogramNotes((prevApps[0].odontogramData as any)?._notes || "");
+        } else {
+          odontogram.loadState(createEmptyOdontogram());
+          setOdontogramNotes("");
+        }
+      } else {
+        odontogram.loadState(createEmptyOdontogram());
+        setOdontogramNotes("");
+      }
+    }
+    setOdontogramAppId(appId);
+  };
+
+  const saveOdontogram = async (appId: string) => {
+    const stateToSave = { ...odontogram.data, _notes: odontogramNotes };
+    await updateAppointment(appId, { odontogramData: stateToSave });
+    toast.success("Odontograma guardado");
   };
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Cargando...</p></div>;
@@ -246,6 +292,41 @@ const DoctorPanel = () => {
                         <button onClick={() => setCompleting(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs">Cancelar</button>
                       </div>
                     </div>
+                  )}
+
+                  {/* Herramientas Clínicas */}
+                  <div className="mt-3 border-t border-border pt-2">
+                    <button
+                      onClick={() => toggleOdontogram(app.id)}
+                      className="flex items-center gap-2 text-xs font-semibold text-gold hover:text-gold/80 transition-colors w-full justify-between"
+                    >
+                      <span className="flex items-center gap-1.5">🦷 Herramientas Clínicas — Odontograma</span>
+                      {odontogramAppId === app.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+
+                    {odontogramAppId === app.id && (
+                      <div className="mt-3 animate-fade-in space-y-3">
+                        <OdontogramChart
+                          data={odontogram.data}
+                          onSurfaceChange={(tooth, surface, status) => odontogram.setSurface(tooth, surface as any, status)}
+                          onOverallChange={(tooth, status) => odontogram.setOverall(tooth, status)}
+                          onResetTooth={(tooth) => odontogram.resetTooth(tooth)}
+                          notes={odontogramNotes}
+                          onNotesChange={setOdontogramNotes}
+                        />
+                        <button
+                          onClick={() => saveOdontogram(app.id)}
+                          className="w-full bg-gold text-gold-foreground py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                        >
+                          <Save className="w-4 h-4" /> Guardar Odontograma
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* View historical odontogram for completed appointments */}
+                  {app.odontogramData && odontogramAppId !== app.id && (
+                    <p className="text-[10px] text-muted-foreground mt-1">✅ Odontograma registrado</p>
                   )}
                 </div>
               ))

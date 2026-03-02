@@ -56,6 +56,7 @@ export interface Appointment {
   finalPrice?: number;
   paymentMethod?: string;
   paymentReference?: string;
+  odontogramData?: any;
 }
 
 export interface Transaction {
@@ -155,6 +156,7 @@ export function useClinicData() {
         finalPrice: (a as any).final_price || 0,
         paymentMethod: (a as any).payment_method || '',
         paymentReference: (a as any).payment_reference || '',
+        odontogramData: (a as any).odontogram_data || null,
       })) as Appointment[];
     },
     refetchInterval: 5000,
@@ -385,6 +387,7 @@ export function useClinicData() {
     if (app.finalPrice !== undefined) mapped.final_price = app.finalPrice;
     if (app.paymentMethod !== undefined) mapped.payment_method = app.paymentMethod;
     if (app.paymentReference !== undefined) mapped.payment_reference = app.paymentReference;
+    if (app.odontogramData !== undefined) mapped.odontogram_data = app.odontogramData;
     await supabase.from("appointments").update(mapped).eq("id", id);
     inv("appointments");
   };
