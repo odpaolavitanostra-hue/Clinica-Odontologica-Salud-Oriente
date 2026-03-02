@@ -3,11 +3,13 @@ import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
 import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import PaymentModal from "./PaymentModal";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
-  const { tenants, treatments, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot } = useClinicData();
+  const { tenants, treatments, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot, tasaBCV, addTransaction } = useClinicData();
   const [showForm, setShowForm] = useState(false);
+  const [payingRentalId, setPayingRentalId] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
@@ -380,9 +382,9 @@ export const AdminTenants = () => {
                     {isPending && (
                       <button onClick={() => handleApproveRequest(req.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
                     )}
-                    {/* Complete - only approved */}
+                    {/* Complete with payment - only approved */}
                     {isApproved && (
-                      <button onClick={async () => { await completeRentalSlot(req.id); toast.success("✔️ Alquiler completado — Registrado en contabilidad"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Completar"><Check className="w-4 h-4" /></button>
+                      <button onClick={() => setPayingRentalId(req.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Procesar Pago y Completar"><DollarSign className="w-4 h-4" /></button>
                     )}
                     {/* Cancel - pending or approved */}
                     {(isPending || isApproved) && (
@@ -635,6 +637,43 @@ export const AdminTenants = () => {
         ))
       )}
       </div>
+
+      {/* Payment Modal for Rentals */}
+      {payingRentalId && (() => {
+        const req = rentalRequests.find(r => r.id === payingRentalId);
+        if (!req) return null;
+        const tenantName = `${req.requesterFirstName} ${req.requesterLastName}`.trim();
+        return (
+          <PaymentModal
+            open={!!payingRentalId}
+            onOpenChange={(v) => !v && setPayingRentalId(null)}
+            entityName={tenantName}
+            treatment={`Alquiler — ${req.rentalMode === 'turno' ? 'Por Turno' : 'Por %'}`}
+            defaultPrice={req.rentalPrice || 0}
+            tasaBCV={tasaBCV}
+            onConfirm={async (finalPrice, paymentMethod, paymentReference) => {
+              // Update slot with payment info and new price
+              await updateBlockedSlot(req.id, { rentalPrice: finalPrice });
+              await completeRentalSlot(req.id);
+              // Create transaction
+              await addTransaction({
+                date: req.date,
+                type: 'tenant',
+                entityName: tenantName,
+                rentalSlotId: req.id,
+                amountUSD: finalPrice,
+                amountVES: finalPrice * tasaBCV,
+                tasaBCV,
+                paymentMethod,
+                paymentReference,
+                description: `Alquiler — ${tenantName} (${req.date})`,
+              });
+              toast.success("💳 Pago de alquiler procesado");
+              setPayingRentalId(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };

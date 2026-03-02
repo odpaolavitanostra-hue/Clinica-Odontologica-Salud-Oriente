@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { useClinicData } from "@/hooks/useClinicData";
-import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays, FileText, Stethoscope } from "lucide-react";
+import { useClinicData, Transaction } from "@/hooks/useClinicData";
+import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays, FileText, Stethoscope, Search, Hash, CreditCard } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import InvoiceGenerator from "./InvoiceGenerator";
@@ -43,12 +43,12 @@ const getDateRange = (filter: PeriodFilter, customDate?: string): { start: strin
 const inRange = (date: string, start: string, end: string) => date >= start && date <= end;
 
 export const AdminFinances = () => {
-  const { finances, appointments, doctors, patients, tenants, tasaBCV, setTasaBCV, updateFinance } = useClinicData();
+  const { finances, appointments, doctors, patients, tenants, tasaBCV, setTasaBCV, updateFinance, transactions } = useClinicData();
   const [invoiceData, setInvoiceData] = useState<{ appointment: any; doctor: any; finance: any } | null>(null);
   const [recipeOpen, setRecipeOpen] = useState(false);
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
-  const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas">("resumen");
+  const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion">("resumen");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("mes");
   const [customDate, setCustomDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -214,6 +214,7 @@ export const AdminFinances = () => {
       <div className="flex gap-2 mb-6 flex-wrap">
         {[
           { key: "resumen" as const, label: "Resumen", icon: <BookOpen className="w-4 h-4" /> },
+          { key: "conciliacion" as const, label: "Conciliación", icon: <CreditCard className="w-4 h-4" /> },
           { key: "compras" as const, label: "Compras", icon: <ShoppingCart className="w-4 h-4" /> },
           { key: "ventas" as const, label: "Ventas", icon: <Receipt className="w-4 h-4" /> },
         ].map((tab) => (
@@ -307,6 +308,8 @@ export const AdminFinances = () => {
       {activeTab === "compras" && (<>{renderEntryForm("compras")}{renderEntries(filteredPurchases, "compras")}</>)}
       {activeTab === "ventas" && (<>{renderEntryForm("ventas")}{renderEntries(filteredSales, "ventas")}</>)}
 
+      {activeTab === "conciliacion" && <ReconciliationView transactions={transactions} start={start} end={end} tasaBCV={tasaBCV} />}
+
       <InvoiceGenerator
         open={!!invoiceData}
         onOpenChange={(v) => !v && setInvoiceData(null)}
@@ -333,3 +336,75 @@ const SummaryCard = ({ label, value, sub, highlight }: { label: string; value: s
     <p className="text-xs text-muted-foreground">{sub}</p>
   </div>
 );
+
+const METHOD_LABELS: Record<string, string> = {
+  pago_movil: "Pago Móvil", transferencia: "Transferencia", zelle: "Zelle",
+  binance: "Binance", efectivo_ves: "Efectivo VES", efectivo_usd: "Efectivo USD",
+};
+
+const ReconciliationView = ({ transactions, start, end, tasaBCV }: { transactions: Transaction[]; start: string; end: string; tasaBCV: number }) => {
+  const [methodFilter, setMethodFilter] = useState("");
+  const [refSearch, setRefSearch] = useState("");
+
+  const filtered = transactions
+    .filter(t => t.date >= start && t.date <= end)
+    .filter(t => !methodFilter || t.paymentMethod === methodFilter)
+    .filter(t => !refSearch || t.paymentReference.toLowerCase().includes(refSearch.toLowerCase()))
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+
+  const totalUSD = filtered.reduce((s, t) => s + t.amountUSD, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 flex-wrap items-end">
+        <div className="flex-1 min-w-[150px]">
+          <label className="block text-xs font-semibold mb-1">Método de Pago</label>
+          <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={methodFilter} onChange={(e) => setMethodFilter(e.target.value)}>
+            <option value="">Todos</option>
+            {Object.entries(METHOD_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-semibold mb-1 flex items-center gap-1"><Hash className="w-3 h-3 text-gold" /> Buscar Referencia</label>
+          <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" placeholder="Número de referencia..." value={refSearch} onChange={(e) => setRefSearch(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="bg-card rounded-xl p-3 gold-border flex items-center justify-between">
+        <span className="text-sm font-semibold">{filtered.length} transacción(es)</span>
+        <span className="text-sm font-bold text-gold">${totalUSD.toFixed(2)} USD</span>
+      </div>
+
+      <div className="space-y-2">
+        {filtered.length === 0 ? (
+          <p className="text-muted-foreground text-center py-12 text-sm">No hay transacciones registradas en este período</p>
+        ) : (
+          filtered.map((t) => (
+            <div key={t.id} className="bg-card rounded-xl p-4 gold-border">
+              <div className="flex items-start justify-between flex-wrap gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{t.entityName}</p>
+                  <p className="text-xs text-muted-foreground">{t.description}</p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${t.type === 'patient' ? 'bg-gold/20 text-gold' : 'bg-blue-500/20 text-blue-400'}`}>
+                      {t.type === 'patient' ? 'Paciente' : 'Inquilino'}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted font-medium">{METHOD_LABELS[t.paymentMethod] || t.paymentMethod}</span>
+                    {t.paymentReference && (
+                      <span className="text-[10px] text-muted-foreground font-mono">Ref: {t.paymentReference}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-sm">${t.amountUSD.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground">Bs. {t.amountVES.toFixed(2)}</p>
+                  <p className="text-[10px] text-muted-foreground">{t.date}</p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};

@@ -1,6 +1,7 @@
 
 import { useState, useMemo } from "react";
 import { useClinicData, Appointment } from "@/hooks/useClinicData";
+import PaymentModal from "./PaymentModal";
 import { isSlotBlockedByTenant, validateSlot, validateSchedule, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
 import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ export const AdminCalendar = () => {
     appointments, doctors, patients, treatments, tenants,
     updateAppointment, deleteAppointment, completeAppointment,
     addAppointment, addPatient, inventory, finances, updateFinance,
+    tasaBCV, addTransaction, addFinance,
   } = useClinicData();
 
   const [view, setView] = useState<CalView>("month");
@@ -33,6 +35,7 @@ export const AdminCalendar = () => {
     doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "",
     customPrice: "" as string, otrosMotivo: "",
   });
+  const [payingAppId, setPayingAppId] = useState<string | null>(null);
 
   const navigate = (dir: number) => {
     if (view === "month") setCurrentDate(addMonths(currentDate, dir));
@@ -170,10 +173,11 @@ export const AdminCalendar = () => {
         <div className="flex items-center gap-2">
           <span className={`text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap ${
             app.status === "pendiente" ? "bg-gold/20 text-gold"
+              : app.status === "pagada" ? "bg-blue-500/20 text-blue-400"
               : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green"
               : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400"
               : "bg-destructive/20 text-destructive"
-          }`}>{app.status === "pendiente_confirmacion" ? "Por confirmar" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
+          }`}>{app.status === "pendiente_confirmacion" ? "Por confirmar" : app.status === "pagada" ? "Pagada" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
           {app.status === "pendiente_confirmacion" && (
             <div className="flex gap-1">
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
@@ -184,8 +188,15 @@ export const AdminCalendar = () => {
           {app.status === "pendiente" && (
             <div className="flex gap-1">
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
-              <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Completar"><Check className="w-4 h-4" /></button>
+              <button onClick={() => setPayingAppId(app.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Procesar Pago"><DollarSign className="w-4 h-4" /></button>
+              <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Completar sin pago"><Check className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita cancelada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Cancelar"><X className="w-4 h-4" /></button>
+            </div>
+          )}
+          {app.status === "pagada" && (
+            <div className="flex gap-1 items-center">
+              <span className="text-[10px] text-muted-foreground">{app.paymentMethod?.replace('_', ' ')}{app.paymentReference ? ` • Ref: ${app.paymentReference}` : ''}</span>
+              <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Completar"><Check className="w-4 h-4" /></button>
             </div>
           )}
           {app.status === "completada" && (
@@ -328,8 +339,8 @@ export const AdminCalendar = () => {
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">
-        {["all", "pendiente", "pendiente_confirmacion", "completada", "cancelada"].map((f) => {
-          const label = f === "all" ? "Todas" : f === "pendiente_confirmacion" ? "⏳ Por confirmar" : f.charAt(0).toUpperCase() + f.slice(1);
+        {["all", "pendiente", "pendiente_confirmacion", "pagada", "completada", "cancelada"].map((f) => {
+          const label = f === "all" ? "Todas" : f === "pendiente_confirmacion" ? "⏳ Por confirmar" : f === "pagada" ? "💳 Pagada" : f.charAt(0).toUpperCase() + f.slice(1);
           const count = f === "pendiente_confirmacion" ? appointments.filter(a => a.status === "pendiente_confirmacion").length : 0;
           return (
             <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${filter === f ? "bg-gold text-gold-foreground" : f === "pendiente_confirmacion" && count > 0 ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 animate-pulse" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
@@ -387,7 +398,7 @@ export const AdminCalendar = () => {
                     return (
                       <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? (blocked.status === 'pending_review' ? "bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.15)_4px,rgba(245,158,11,0.15)_8px)]" : blocked.status === 'completed' ? "bg-clinic-green/15" : "bg-card border-gold/30") : ""}`}>
                         {app && (
-                          <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400" : "bg-destructive/20 text-destructive"}`}>
+                          <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "pagada" ? "bg-blue-500/20 text-blue-400" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400" : "bg-destructive/20 text-destructive"}`}>
                             {app.patientName.split(" ")[0]}
                           </div>
                         )}
@@ -446,6 +457,47 @@ export const AdminCalendar = () => {
           }
         </div>
       )}
+
+      {/* Payment Modal */}
+      {payingAppId && (() => {
+        const app = appointments.find(a => a.id === payingAppId);
+        if (!app) return null;
+        return (
+          <PaymentModal
+            open={!!payingAppId}
+            onOpenChange={(v) => !v && setPayingAppId(null)}
+            entityName={app.patientName}
+            treatment={app.treatment}
+            defaultPrice={app.priceUSD}
+            tasaBCV={tasaBCV}
+            onConfirm={async (finalPrice, paymentMethod, paymentReference) => {
+              // Update appointment with payment info
+              await updateAppointment(app.id, {
+                status: 'pagada' as any,
+                finalPrice,
+                paymentMethod,
+                paymentReference,
+                priceUSD: finalPrice,
+              });
+              // Create transaction for reconciliation
+              await addTransaction({
+                date: app.date,
+                type: 'patient',
+                entityName: app.patientName,
+                appointmentId: app.id,
+                amountUSD: finalPrice,
+                amountVES: finalPrice * tasaBCV,
+                tasaBCV,
+                paymentMethod,
+                paymentReference,
+                description: `${app.treatment} — ${app.patientName}`,
+              });
+              toast.success("💳 Pago procesado y registrado");
+              setPayingAppId(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };

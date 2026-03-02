@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           date: string
           doctor_id: string | null
+          final_price: number | null
           id: string
           materials_used: Json | null
           notes: string
@@ -26,6 +27,8 @@ export type Database = {
           patient_email: string | null
           patient_name: string
           patient_phone: string
+          payment_method: string | null
+          payment_reference: string | null
           price_usd: number
           status: string
           time: string
@@ -35,6 +38,7 @@ export type Database = {
           created_at?: string
           date: string
           doctor_id?: string | null
+          final_price?: number | null
           id?: string
           materials_used?: Json | null
           notes?: string
@@ -42,6 +46,8 @@ export type Database = {
           patient_email?: string | null
           patient_name: string
           patient_phone: string
+          payment_method?: string | null
+          payment_reference?: string | null
           price_usd?: number
           status?: string
           time: string
@@ -51,6 +57,7 @@ export type Database = {
           created_at?: string
           date?: string
           doctor_id?: string | null
+          final_price?: number | null
           id?: string
           materials_used?: Json | null
           notes?: string
@@ -58,6 +65,8 @@ export type Database = {
           patient_email?: string | null
           patient_name?: string
           patient_phone?: string
+          payment_method?: string | null
+          payment_reference?: string | null
           price_usd?: number
           status?: string
           time?: string
@@ -244,6 +253,8 @@ export type Database = {
           date: string
           end_time: string | null
           id: string
+          payment_method: string | null
+          payment_reference: string | null
           rental_mode: string | null
           rental_price: number | null
           requester_cedula: string | null
@@ -263,6 +274,8 @@ export type Database = {
           date: string
           end_time?: string | null
           id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
           rental_mode?: string | null
           rental_price?: number | null
           requester_cedula?: string | null
@@ -282,6 +295,8 @@ export type Database = {
           date?: string
           end_time?: string | null
           id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
           rental_mode?: string | null
           rental_price?: number | null
           requester_cedula?: string | null
@@ -341,6 +356,54 @@ export type Database = {
           phone?: string
           rental_mode?: string
           rental_price?: number
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount_usd: number
+          amount_ves: number
+          appointment_id: string | null
+          created_at: string
+          date: string
+          description: string
+          entity_name: string
+          id: string
+          payment_method: string
+          payment_reference: string
+          rental_slot_id: string | null
+          tasa_bcv: number
+          type: string
+        }
+        Insert: {
+          amount_usd?: number
+          amount_ves?: number
+          appointment_id?: string | null
+          created_at?: string
+          date: string
+          description?: string
+          entity_name?: string
+          id?: string
+          payment_method?: string
+          payment_reference?: string
+          rental_slot_id?: string | null
+          tasa_bcv?: number
+          type?: string
+        }
+        Update: {
+          amount_usd?: number
+          amount_ves?: number
+          appointment_id?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          entity_name?: string
+          id?: string
+          payment_method?: string
+          payment_reference?: string
+          rental_slot_id?: string | null
+          tasa_bcv?: number
+          type?: string
         }
         Relationships: []
       }

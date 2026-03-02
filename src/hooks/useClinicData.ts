@@ -50,9 +50,28 @@ export interface Appointment {
   time: string;
   treatment: string;
   priceUSD: number;
-  status: 'pendiente' | 'completada' | 'cancelada' | 'pendiente_confirmacion';
+  status: 'pendiente' | 'completada' | 'cancelada' | 'pendiente_confirmacion' | 'pagada';
   materialsUsed?: { itemId: string; qty: number }[];
   notes: string;
+  finalPrice?: number;
+  paymentMethod?: string;
+  paymentReference?: string;
+}
+
+export interface Transaction {
+  id: string;
+  date: string;
+  type: 'patient' | 'tenant';
+  entityName: string;
+  appointmentId?: string;
+  rentalSlotId?: string;
+  amountUSD: number;
+  amountVES: number;
+  tasaBCV: number;
+  paymentMethod: string;
+  paymentReference: string;
+  description: string;
+  createdAt: string;
 }
 
 export interface FinanceRecord {
@@ -133,6 +152,9 @@ export function useClinicData() {
         doctorId: a.doctor_id || '', date: a.date, time: a.time, treatment: a.treatment,
         priceUSD: a.price_usd, status: a.status as Appointment['status'],
         materialsUsed: a.materials_used as any, notes: a.notes,
+        finalPrice: (a as any).final_price || 0,
+        paymentMethod: (a as any).payment_method || '',
+        paymentReference: (a as any).payment_reference || '',
       })) as Appointment[];
     },
     refetchInterval: 5000,
@@ -172,6 +194,21 @@ export function useClinicData() {
         doctorPayUSD: f.doctor_pay_usd, materialsCostUSD: f.materials_cost_usd,
         utilityUSD: f.utility_usd, tasaBCV: f.tasa_bcv,
       })) as FinanceRecord[];
+    },
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: async () => {
+      const { data } = await supabase.from("transactions").select("*");
+      return (data || []).map(t => ({
+        id: t.id, date: t.date, type: t.type as 'patient' | 'tenant',
+        entityName: t.entity_name, appointmentId: t.appointment_id || undefined,
+        rentalSlotId: t.rental_slot_id || undefined, amountUSD: t.amount_usd,
+        amountVES: t.amount_ves, tasaBCV: t.tasa_bcv,
+        paymentMethod: t.payment_method, paymentReference: t.payment_reference,
+        description: t.description, createdAt: t.created_at,
+      })) as Transaction[];
     },
   });
 
@@ -345,6 +382,9 @@ export function useClinicData() {
     if (app.materialsUsed !== undefined) mapped.materials_used = app.materialsUsed;
     if (app.notes !== undefined) mapped.notes = app.notes;
     if (app.priceUSD !== undefined) mapped.price_usd = app.priceUSD;
+    if (app.finalPrice !== undefined) mapped.final_price = app.finalPrice;
+    if (app.paymentMethod !== undefined) mapped.payment_method = app.paymentMethod;
+    if (app.paymentReference !== undefined) mapped.payment_reference = app.paymentReference;
     await supabase.from("appointments").update(mapped).eq("id", id);
     inv("appointments");
   };
@@ -398,6 +438,18 @@ export function useClinicData() {
   const updateTreatment = async (name: string, priceUSD: number) => {
     await supabase.from("treatments").update({ price_usd: priceUSD }).eq("name", name);
     inv("treatments");
+  };
+
+  // ─── Transaction ───
+  const addTransaction = async (t: Omit<Transaction, 'id' | 'createdAt'>) => {
+    await supabase.from("transactions").insert({
+      date: t.date, type: t.type, entity_name: t.entityName,
+      appointment_id: t.appointmentId || null, rental_slot_id: t.rentalSlotId || null,
+      amount_usd: t.amountUSD, amount_ves: t.amountVES, tasa_bcv: t.tasaBCV,
+      payment_method: t.paymentMethod, payment_reference: t.paymentReference,
+      description: t.description,
+    });
+    inv("transactions");
   };
 
   // ─── Finance ───
@@ -579,7 +631,7 @@ export function useClinicData() {
 
   return {
     // Data
-    doctors, treatments, appointments, patients, inventory, finances, tenants, tasaBCV,
+    doctors, treatments, appointments, patients, inventory, finances, tenants, tasaBCV, transactions,
     // Doctor
     addDoctor, updateDoctor, deleteDoctor,
     // Patient
@@ -591,7 +643,7 @@ export function useClinicData() {
     // Treatment
     updateTreatment,
     // Finance
-    addFinance, updateFinance,
+    addFinance, updateFinance, addTransaction,
     // Settings
     setTasaBCV,
     // Tenant
