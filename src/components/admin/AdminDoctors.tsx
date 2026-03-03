@@ -27,7 +27,7 @@ export const AdminDoctors = () => {
       });
       if (res.error || res.data?.error) throw new Error(res.data?.error || "Error al crear cuenta");
 
-      await addDoctor({ name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate, phone: form.phone, cov: form.cov });
+      await addDoctor({ name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate, phone: form.phone, cov: form.cov, signatureImg: '', sealImg: '' });
       setAdding(false);
       setForm({ name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "", phone: "", cov: "" });
       toast.success("Doctor agregado con cuenta de acceso");

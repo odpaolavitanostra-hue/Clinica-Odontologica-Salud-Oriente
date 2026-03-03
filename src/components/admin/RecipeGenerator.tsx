@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Stethoscope, Printer } from "lucide-react";
+import { Stethoscope, Printer, MessageCircle, Mail } from "lucide-react";
 import type { Doctor, Patient } from "@/hooks/useClinicData";
 
 interface RecipeGeneratorProps {
@@ -17,7 +17,11 @@ const CLINIC_INFO = {
   phone: "0422-7180013",
 };
 
-export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: string, diagnosis: string, content: string) => {
+export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: string, diagnosis: string, content: string, patientPhone?: string) => {
+  if (!doctor.signatureImg) {
+    alert("Por favor, cargue su firma digital en su perfil antes de generar documentos.");
+    return;
+  }
   const today = new Date().toLocaleDateString("es-VE", { day: "numeric", month: "long", year: "numeric" });
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
@@ -42,6 +46,8 @@ export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: 
       .diagnosis-label { color: #c4973b; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
       .signature { margin-top: 80px; text-align: center; }
       .signature-line { border-top: 1px solid #1a1a1a; width: 250px; margin: 0 auto; padding-top: 8px; }
+      .sig-img { max-height: 60px; margin-bottom: 8px; }
+      .seal-img { max-height: 70px; margin-top: 4px; opacity: 0.8; }
       .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 16px; }
       .date { text-align: right; font-size: 13px; color: #666; margin-bottom: 16px; }
       @media print { body { padding: 20px; } }
@@ -80,6 +86,8 @@ export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: 
       <div class="content-area">${content || ""}</div>
 
       <div class="signature">
+        ${doctor.signatureImg ? `<img src="${doctor.signatureImg}" class="sig-img" alt="Firma"/>` : ''}
+        ${doctor.sealImg ? `<img src="${doctor.sealImg}" class="seal-img" alt="Sello"/>` : ''}
         <div class="signature-line">
           Dr(a). ${doctor.name}<br>
           <span style="font-size: 11px; color: #888;">${doctor.specialty}${doctor.cov ? ` — COV: ${doctor.cov}` : ''}</span>
@@ -94,6 +102,15 @@ export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: 
     </body></html>
   `);
   printWindow.document.close();
+
+  // Return WhatsApp helper
+  return { patientPhone };
+};
+
+export const sendRecipeWhatsApp = (patientName: string, patientPhone: string) => {
+  const phone = patientPhone.replace(/^0/, "58").replace(/\D/g, "");
+  const text = encodeURIComponent(`Hola ${patientName}, adjuntamos su Recipe Médico de Clínica Salud Oriente. ¡Feliz día!`);
+  window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
 };
 
 const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGeneratorProps) => {
@@ -102,6 +119,7 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
     patientId: "",
     patientName: "",
     patientCedula: "",
+    patientPhone: "",
     content: "",
     diagnosis: "",
   });
@@ -113,7 +131,7 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
   const handlePatientSelect = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
-      setForm(prev => ({ ...prev, patientId, patientName: patient.name, patientCedula: patient.cedula }));
+      setForm(prev => ({ ...prev, patientId, patientName: patient.name, patientCedula: patient.cedula, patientPhone: patient.phone }));
     }
   };
 
@@ -164,6 +182,11 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
           </div>
 
           <div>
+            <label className="block text-xs font-medium mb-1">Teléfono (para WhatsApp)</label>
+            <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.patientPhone} onChange={(e) => update("patientPhone", e.target.value)} placeholder="04XX-XXXXXXX" />
+          </div>
+
+          <div>
             <label className="block text-xs font-medium mb-1">Diagnóstico</label>
             <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.diagnosis} onChange={(e) => update("diagnosis", e.target.value)} placeholder="Diagnóstico del paciente" />
           </div>
@@ -173,10 +196,19 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
             <textarea className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none resize-none" rows={6} value={form.content} onChange={(e) => update("content", e.target.value)} placeholder="Escriba las indicaciones médicas, medicamentos, dosis, etc." />
           </div>
 
-          <button onClick={handlePrint} disabled={!selectedDoctor || !form.content}
-            className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
-            <Printer className="w-4 h-4" /> Imprimir Recipe
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button onClick={handlePrint} disabled={!selectedDoctor || !form.content}
+              className="bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
+              <Printer className="w-4 h-4" /> Imprimir
+            </button>
+            <button onClick={() => { if (form.patientPhone) sendRecipeWhatsApp(form.patientName, form.patientPhone); }} disabled={!form.content || !form.patientPhone}
+              className="bg-clinic-green text-clinic-green-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
+              <MessageCircle className="w-4 h-4" /> WhatsApp
+            </button>
+            <button disabled className="bg-muted text-muted-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+              <Mail className="w-4 h-4" /> Email
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

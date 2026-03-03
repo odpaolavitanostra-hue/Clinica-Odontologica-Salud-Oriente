@@ -1,20 +1,22 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp } from "lucide-react";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { printRecipe } from "@/components/admin/RecipeGenerator";
+import { printRecipe, sendRecipeWhatsApp } from "@/components/admin/RecipeGenerator";
 import OdontogramChart from "@/components/odontogram/OdontogramChart";
 import { useOdontogram, createEmptyOdontogram, type OdontogramData } from "@/hooks/useOdontogram";
+import DoctorProfileEditor from "@/components/admin/DoctorProfileEditor";
+import BudgetGenerator from "@/components/admin/BudgetGenerator";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { appointments, doctors, finances, tasaBCV, patients, inventory, completeAppointment, updatePatient, updateAppointment } = useClinicData();
-  const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "inventario" | "recipe">("agenda");
+  const { appointments, doctors, finances, tasaBCV, patients, inventory, treatments, completeAppointment, updatePatient, updateAppointment, updateDoctor } = useClinicData();
+  const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "inventario" | "recipe" | "presupuesto" | "perfil">("agenda");
   const [completing, setCompleting] = useState<string | null>(null);
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
@@ -30,7 +32,8 @@ const DoctorPanel = () => {
   const initialized = useRef(false);
 
   // Recipe state
-  const [recipeForm, setRecipeForm] = useState({ patientId: "", patientName: "", patientCedula: "", diagnosis: "", content: "" });
+  const [recipeForm, setRecipeForm] = useState({ patientId: "", patientName: "", patientCedula: "", patientPhone: "", diagnosis: "", content: "" });
+  const [showBudget, setShowBudget] = useState(false);
 
   // Odontogram state
   const [odontogramAppId, setOdontogramAppId] = useState<string | null>(null);
@@ -117,7 +120,7 @@ const DoctorPanel = () => {
 
   const handleRecipePatientSelect = (patientId: string) => {
     const p = patients.find(pt => pt.id === patientId);
-    if (p) setRecipeForm(prev => ({ ...prev, patientId, patientName: p.name, patientCedula: p.cedula }));
+    if (p) setRecipeForm(prev => ({ ...prev, patientId, patientName: p.name, patientCedula: p.cedula, patientPhone: p.phone }));
   };
 
   const handlePrintRecipe = () => {
@@ -234,8 +237,10 @@ const DoctorPanel = () => {
           {[
             { key: "agenda" as const, label: "Agenda", icon: <CalendarDays className="w-4 h-4" /> },
             { key: "pacientes" as const, label: "Pacientes", icon: <Users className="w-4 h-4" /> },
-            { key: "inventario" as const, label: "Inventario", icon: <Package className="w-4 h-4" /> },
             { key: "recipe" as const, label: "Recipe", icon: <Stethoscope className="w-4 h-4" /> },
+            { key: "presupuesto" as const, label: "Presupuesto", icon: <FileText className="w-4 h-4" /> },
+            { key: "inventario" as const, label: "Inventario", icon: <Package className="w-4 h-4" /> },
+            { key: "perfil" as const, label: "Perfil", icon: <User className="w-4 h-4" /> },
           ].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab.key ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
               {tab.icon} {tab.label}
@@ -459,6 +464,10 @@ const DoctorPanel = () => {
                 </div>
               </div>
               <div>
+                <label className="block text-xs font-medium mb-1">Teléfono (para WhatsApp)</label>
+                <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={recipeForm.patientPhone} onChange={(e) => setRecipeForm(f => ({ ...f, patientPhone: e.target.value }))} placeholder="04XX-XXXXXXX" />
+              </div>
+              <div>
                 <label className="block text-xs font-medium mb-1">Diagnóstico</label>
                 <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={recipeForm.diagnosis} onChange={(e) => setRecipeForm(f => ({ ...f, diagnosis: e.target.value }))} placeholder="Diagnóstico del paciente" />
               </div>
@@ -466,10 +475,47 @@ const DoctorPanel = () => {
                 <label className="block text-xs font-medium mb-1">Indicaciones / Prescripción *</label>
                 <textarea className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border resize-none" rows={5} value={recipeForm.content} onChange={(e) => setRecipeForm(f => ({ ...f, content: e.target.value }))} placeholder="Medicamentos, dosis, indicaciones..." />
               </div>
-              <button onClick={handlePrintRecipe} disabled={!recipeForm.content} className="w-full bg-gold text-gold-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
-                <FileText className="w-4 h-4" /> Imprimir Recipe
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button onClick={handlePrintRecipe} disabled={!recipeForm.content} className="bg-gold text-gold-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
+                  <FileText className="w-4 h-4" /> Imprimir/PDF
+                </button>
+                <button onClick={() => { if (recipeForm.patientPhone) sendRecipeWhatsApp(recipeForm.patientName, recipeForm.patientPhone); else toast.error("Ingrese teléfono"); }} disabled={!recipeForm.content}
+                  className="bg-clinic-green text-clinic-green-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
+                  <MessageCircle className="w-4 h-4" /> WhatsApp
+                </button>
+                <button disabled className="bg-muted text-muted-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 opacity-50 text-sm cursor-not-allowed">
+                  <DollarSign className="w-4 h-4" /> Email
+                </button>
+              </div>
             </div>
+          </div>
+        )}
+
+        {/* PRESUPUESTO */}
+        {activeTab === "presupuesto" && (
+          <div className="space-y-4">
+            <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+              <FileText className="w-5 h-5 text-gold" /> Presupuesto Odontológico
+            </h3>
+            <button onClick={() => setShowBudget(true)} className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-sm">
+              <FileText className="w-4 h-4" /> Crear Presupuesto
+            </button>
+            <BudgetGenerator open={showBudget} onOpenChange={setShowBudget} doctors={doctors} patients={myPatients} treatments={treatments} tasaBCV={tasaBCV} currentDoctor={doctor} />
+          </div>
+        )}
+
+        {/* PERFIL */}
+        {activeTab === "perfil" && (
+          <div className="space-y-4">
+            <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+              <User className="w-5 h-5 text-gold" /> Mi Perfil
+            </h3>
+            <div className="bg-card rounded-xl p-4 gold-border space-y-2">
+              <p className="font-semibold">{doctor.name}</p>
+              <p className="text-sm text-muted-foreground">{doctor.specialty}{doctor.cov ? ` • COV: ${doctor.cov}` : ''}</p>
+              <p className="text-sm text-muted-foreground">{doctor.email}{doctor.phone ? ` • Tel: ${doctor.phone}` : ''}</p>
+            </div>
+            <DoctorProfileEditor doctor={doctor} onUpdate={updateDoctor} />
           </div>
         )}
       </div>
