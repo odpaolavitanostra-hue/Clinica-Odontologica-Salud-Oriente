@@ -12,6 +12,8 @@ export interface Doctor {
   rate: number;
   phone: string;
   cov: string;
+  signatureImg: string;
+  sealImg: string;
 }
 
 export interface Patient {
@@ -129,6 +131,7 @@ export function useClinicData() {
         id: d.id, email: d.email, name: d.name, specialty: d.specialty,
         payModel: d.pay_model as 'fixed' | 'percent', rate: d.rate,
         phone: (d as any).phone || '', cov: (d as any).cov || '',
+        signatureImg: (d as any).signature_img || '', sealImg: (d as any).seal_img || '',
       })) as Doctor[];
     },
   });
@@ -310,6 +313,8 @@ export function useClinicData() {
     if (doc.rate !== undefined) mapped.rate = doc.rate;
     if (doc.phone !== undefined) mapped.phone = doc.phone;
     if (doc.cov !== undefined) mapped.cov = doc.cov;
+    if (doc.signatureImg !== undefined) mapped.signature_img = doc.signatureImg;
+    if (doc.sealImg !== undefined) mapped.seal_img = doc.sealImg;
     await supabase.from("doctors").update(mapped).eq("id", id);
     inv("doctors");
   };

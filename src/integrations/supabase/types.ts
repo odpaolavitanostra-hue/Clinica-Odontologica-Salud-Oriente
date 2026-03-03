@@ -95,6 +95,8 @@ export type Database = {
           pay_model: string
           phone: string
           rate: number
+          seal_img: string
+          signature_img: string
           specialty: string
         }
         Insert: {
@@ -106,6 +108,8 @@ export type Database = {
           pay_model?: string
           phone?: string
           rate?: number
+          seal_img?: string
+          signature_img?: string
           specialty?: string
         }
         Update: {
@@ -117,6 +121,8 @@ export type Database = {
           pay_model?: string
           phone?: string
           rate?: number
+          seal_img?: string
+          signature_img?: string
           specialty?: string
         }
         Relationships: []
