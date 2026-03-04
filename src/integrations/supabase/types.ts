@@ -85,6 +85,104 @@ export type Database = {
           },
         ]
       }
+      clinical_histories: {
+        Row: {
+          address: string | null
+          age: number | null
+          birth_date: string | null
+          bleeding: string | null
+          conditions_matrix: Json | null
+          consent_signature: string | null
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          followup_1_date: string | null
+          followup_1_notes: string | null
+          followup_2_date: string | null
+          followup_2_notes: string | null
+          followup_3_date: string | null
+          followup_3_notes: string | null
+          id: string
+          is_locked: boolean | null
+          locked_at: string | null
+          medical_triage: Json | null
+          occupation: string | null
+          pain_description: string | null
+          patient_id: string
+          sensitivity_cold: boolean | null
+          sensitivity_heat: boolean | null
+          sensitivity_sweet: boolean | null
+          sex: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          birth_date?: string | null
+          bleeding?: string | null
+          conditions_matrix?: Json | null
+          consent_signature?: string | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          followup_1_date?: string | null
+          followup_1_notes?: string | null
+          followup_2_date?: string | null
+          followup_2_notes?: string | null
+          followup_3_date?: string | null
+          followup_3_notes?: string | null
+          id?: string
+          is_locked?: boolean | null
+          locked_at?: string | null
+          medical_triage?: Json | null
+          occupation?: string | null
+          pain_description?: string | null
+          patient_id: string
+          sensitivity_cold?: boolean | null
+          sensitivity_heat?: boolean | null
+          sensitivity_sweet?: boolean | null
+          sex?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          birth_date?: string | null
+          bleeding?: string | null
+          conditions_matrix?: Json | null
+          consent_signature?: string | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          followup_1_date?: string | null
+          followup_1_notes?: string | null
+          followup_2_date?: string | null
+          followup_2_notes?: string | null
+          followup_3_date?: string | null
+          followup_3_notes?: string | null
+          id?: string
+          is_locked?: boolean | null
+          locked_at?: string | null
+          medical_triage?: Json | null
+          occupation?: string | null
+          pain_description?: string | null
+          patient_id?: string
+          sensitivity_cold?: boolean | null
+          sensitivity_heat?: boolean | null
+          sensitivity_sweet?: boolean | null
+          sex?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_histories_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctors: {
         Row: {
           cov: string
