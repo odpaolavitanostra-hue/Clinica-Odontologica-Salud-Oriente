@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check, UserCog } from "lucide-react";
+import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check, UserCog, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
+import ClinicalHistoryForm from "@/components/clinical/ClinicalHistoryForm";
 
 export const AdminPatients = () => {
   const { patients, appointments, addPatient, updatePatient, deletePatient, updateAppointment, doctors } = useClinicData();
@@ -17,6 +18,7 @@ export const AdminPatients = () => {
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [editingDoctorId, setEditingDoctorId] = useState<string | null>(null);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
+  const [clinicalHistoryPatient, setClinicalHistoryPatient] = useState<Patient | null>(null);
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
@@ -176,6 +178,7 @@ export const AdminPatients = () => {
                   {p.email && (
                     <a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
                   )}
+                  <button onClick={() => setClinicalHistoryPatient(p)} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica"><ClipboardList className="w-4 h-4" /></button>
                   <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Fotos"><Camera className="w-4 h-4" /></button>
                   <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
                   <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
@@ -234,6 +237,13 @@ export const AdminPatients = () => {
           ))
         )}
       </div>
+      {clinicalHistoryPatient && (
+        <ClinicalHistoryForm
+          patient={clinicalHistoryPatient}
+          open={!!clinicalHistoryPatient}
+          onOpenChange={(open) => { if (!open) setClinicalHistoryPatient(null); }}
+        />
+      )}
     </div>
   );
 };

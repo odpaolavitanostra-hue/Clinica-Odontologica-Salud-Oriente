@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User } from "lucide-react";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User, ClipboardList } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,8 @@ import OdontogramChart from "@/components/odontogram/OdontogramChart";
 import { useOdontogram, createEmptyOdontogram, type OdontogramData } from "@/hooks/useOdontogram";
 import DoctorProfileEditor from "@/components/admin/DoctorProfileEditor";
 import BudgetGenerator from "@/components/admin/BudgetGenerator";
+import ClinicalHistoryForm from "@/components/clinical/ClinicalHistoryForm";
+import { type Patient } from "@/hooks/useClinicData";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
@@ -34,6 +36,7 @@ const DoctorPanel = () => {
   // Recipe state
   const [recipeForm, setRecipeForm] = useState({ patientId: "", patientName: "", patientCedula: "", patientPhone: "", diagnosis: "", content: "" });
   const [showBudget, setShowBudget] = useState(false);
+  const [clinicalHistoryPatient, setClinicalHistoryPatient] = useState<Patient | null>(null);
 
   // Odontogram state
   const [odontogramAppId, setOdontogramAppId] = useState<string | null>(null);
@@ -368,9 +371,14 @@ const DoctorPanel = () => {
                           <p className="text-xs sm:text-sm text-muted-foreground truncate">{p.email || "—"}</p>
                           {p.notes && <p className="text-xs text-muted-foreground mt-1">📝 {p.notes}</p>}
                         </div>
-                        <button onClick={() => startEditPatient(p)} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20 flex-shrink-0" title="Editar">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button onClick={() => setClinicalHistoryPatient(p)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica">
+                            <ClipboardList className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => startEditPatient(p)} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Photos */}
@@ -519,6 +527,14 @@ const DoctorPanel = () => {
           </div>
         )}
       </div>
+
+      {clinicalHistoryPatient && (
+        <ClinicalHistoryForm
+          patient={clinicalHistoryPatient}
+          open={!!clinicalHistoryPatient}
+          onOpenChange={(open) => { if (!open) setClinicalHistoryPatient(null); }}
+        />
+      )}
     </div>
   );
 };
