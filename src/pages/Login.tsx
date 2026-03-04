@@ -52,7 +52,7 @@ const Login = () => {
             <label className="block text-noir-foreground/70 text-sm mb-1">Contraseña</label>
             <input type="password" className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-primary focus:outline-none" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={50} />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="w-full btn-gold py-3 flex items-center justify-center gap-2 disabled:opacity-50">
             {loading ? "Cargando..." : (<><LogIn className="w-4 h-4" />Ingresar</>)}
           </button>
         </form>

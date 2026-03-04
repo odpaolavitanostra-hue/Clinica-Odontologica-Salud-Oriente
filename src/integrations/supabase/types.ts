@@ -85,6 +85,36 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          author_email: string
+          author_name: string
+          changes: Json | null
+          created_at: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          action?: string
+          author_email?: string
+          author_name?: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          action?: string
+          author_email?: string
+          author_name?: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: []
+      }
       clinical_histories: {
         Row: {
           address: string | null

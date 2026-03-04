@@ -244,7 +244,7 @@ const DoctorPanel = () => {
             { key: "inventario" as const, label: "Inventario", icon: <Package className="w-4 h-4" /> },
             { key: "perfil" as const, label: "Perfil", icon: <User className="w-4 h-4" /> },
           ].map((tab) => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab.key ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab.key ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
               {tab.icon} {tab.label}
             </button>
           ))}
