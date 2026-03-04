@@ -2,13 +2,15 @@
 import { useState } from "react";
 import { useClinicData, Doctor } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Stethoscope, Plus, Trash2, Edit, Save, X, Key, Mail, Phone } from "lucide-react";
+import { Stethoscope, Plus, Trash2, Edit, Save, X, Key, Mail, Phone, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import DoctorProfileEditor from "./DoctorProfileEditor";
 
 export const AdminDoctors = () => {
   const { doctors, addDoctor, updateDoctor, deleteDoctor } = useClinicData();
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [expandedProfile, setExpandedProfile] = useState<string | null>(null);
   const [form, setForm] = useState<{ name: string; email: string; specialty: string; payModel: 'fixed' | 'percent'; rate: number; password: string; phone: string; cov: string }>({
     name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "", phone: "", cov: "",
   });
@@ -114,6 +116,7 @@ export const AdminDoctors = () => {
                 {d.phone && <a href={`tel:${d.phone}`} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Llamar"><Phone className="w-4 h-4" /></a>}
                 <a href={`mailto:${d.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Enviar correo"><Mail className="w-4 h-4" /></a>
                 <button onClick={() => setChangingPw(changingPw === d.id ? null : d.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar contraseña"><Key className="w-4 h-4" /></button>
+                <button onClick={() => setExpandedProfile(expandedProfile === d.id ? null : d.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Firma y Sello">{expandedProfile === d.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button>
                 <button onClick={() => startEdit(d)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
                 <button onClick={async () => { await deleteDoctor(d.id); toast.info("Doctor eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
               </div>
@@ -123,6 +126,9 @@ export const AdminDoctors = () => {
                 <input type="password" placeholder="Nueva contraseña" className="bg-muted rounded-lg px-3 py-2 text-sm border border-border flex-1" value={newPw} onChange={(e) => setNewPw(e.target.value)} minLength={6} />
                 <button onClick={() => handleChangePw(d.email)} className="bg-gold text-gold-foreground px-3 py-2 rounded-lg text-xs font-semibold">Actualizar</button>
               </div>
+            )}
+            {expandedProfile === d.id && (
+              <DoctorProfileEditor doctor={d} onUpdate={updateDoctor} />
             )}
           </div>
         ))}
