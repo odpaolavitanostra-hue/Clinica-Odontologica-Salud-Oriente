@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useClinicData, Transaction } from "@/hooks/useClinicData";
 import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays, FileText, Stethoscope, Search, Hash, CreditCard } from "lucide-react";
@@ -85,7 +84,6 @@ export const AdminFinances = () => {
   const filteredPurchases = purchases.filter(p => inRange(p.date, start, end));
   const filteredSales = sales.filter(s => inRange(s.date, start, end));
 
-  // Rental income from blocked slots
   const allBlockedSlots = tenants.flatMap(t => t.blockedSlots.map(sl => ({ ...sl, tenantFirstName: t.firstName, tenantLastName: t.lastName, tenantName: `${t.firstName} ${t.lastName}` })));
   const filteredRentals = allBlockedSlots.filter(sl => sl.status === "completed" && sl.rentalPrice && sl.rentalPrice > 0 && inRange(sl.date, start, end));
   const totalRentalIncomeUSD = filteredRentals.reduce((s, r) => s + (r.rentalPrice || 0), 0);
@@ -101,15 +99,12 @@ export const AdminFinances = () => {
 
   const exportXLSX = () => {
     const wb = XLSX.utils.book_new();
-    // Fiscal report (filtered)
     const fiscalData = filteredFinances.map((f) => {
       const app = appointments.find((a) => a.id === f.appointmentId);
       const doctor = app ? doctors.find((d) => d.id === app.doctorId) : null;
       return { Fecha: f.date, Paciente: app?.patientName || "N/A", Tratamiento: app?.treatment || "N/A", Doctor: doctor?.name || "N/A", "Ingreso USD": f.treatmentPriceUSD.toFixed(2), "Ingreso VES": (f.treatmentPriceUSD * f.tasaBCV).toFixed(2), "Pago Doctor USD": f.doctorPayUSD.toFixed(2), "Pago Doctor VES": (f.doctorPayUSD * f.tasaBCV).toFixed(2), "Materiales USD": f.materialsCostUSD.toFixed(2), "Materiales VES": (f.materialsCostUSD * f.tasaBCV).toFixed(2), "Utilidad USD": f.utilityUSD.toFixed(2), "Utilidad VES": (f.utilityUSD * f.tasaBCV).toFixed(2), "Tasa BCV": f.tasaBCV.toFixed(2) };
     });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fiscalData), "Pacientes");
-
-    // Rentals
     const rentalData = filteredRentals.map(r => ({
       Fecha: r.date, Nombre: r.tenantFirstName || '', Apellido: r.tenantLastName || '', Servicio: "Alquiler",
       Horario: r.allDay ? "Día completo" : `${r.startTime} - ${r.endTime}`,
@@ -117,16 +112,10 @@ export const AdminFinances = () => {
       Modalidad: r.rentalMode === "turno" ? "Turno" : "Porcentaje", "Ingreso USD": (r.rentalPrice || 0).toFixed(2), "Ingreso VES": ((r.rentalPrice || 0) * tasaBCV).toFixed(2),
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rentalData), "Alquileres");
-
-    // Purchases
     const purchaseData = filteredPurchases.map((p) => ({ Fecha: p.date, Descripción: p.description, Referencia: p.reference, "Monto USD": p.amountUSD.toFixed(2), "Monto VES": (p.amountUSD * tasaBCV).toFixed(2) }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchaseData), "Libro de Compras");
-
-    // Sales
     const salesData = filteredSales.map((s) => ({ Fecha: s.date, Descripción: s.description, Referencia: s.reference, "Monto USD": s.amountUSD.toFixed(2), "Monto VES": (s.amountUSD * tasaBCV).toFixed(2) }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(salesData), "Libro de Ventas");
-
-    // Summary sheet
     const summaryData = [
       { Concepto: "Ingresos Pacientes", "USD": totalIncomeUSD.toFixed(2), "VES": (totalIncomeUSD * tasaBCV).toFixed(2) },
       { Concepto: "Ingresos Alquileres", "USD": totalRentalIncomeUSD.toFixed(2), "VES": (totalRentalIncomeUSD * tasaBCV).toFixed(2) },
@@ -138,7 +127,6 @@ export const AdminFinances = () => {
       { Concepto: "Total Ventas", "USD": totalSalesUSD.toFixed(2), "VES": (totalSalesUSD * tasaBCV).toFixed(2) },
     ];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryData), "Resumen");
-
     XLSX.writeFile(wb, `contabilidad_COSO_${periodLabel}_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
@@ -154,7 +142,7 @@ export const AdminFinances = () => {
       <input type="text" placeholder="Descripción" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={newEntry.description} onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })} />
       <div className="flex gap-3">
         <input type="number" step="0.01" placeholder="Monto USD" className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border" value={newEntry.amountUSD} onChange={(e) => setNewEntry({ ...newEntry, amountUSD: e.target.value })} />
-        <button onClick={() => addEntry(type)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Plus className="w-4 h-4" /> Añadir</button>
+        <button onClick={() => addEntry(type)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Plus className="w-4 h-4" /> Añadir</button>
       </div>
     </div>
   );
@@ -186,22 +174,22 @@ export const AdminFinances = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="font-display text-2xl font-bold flex items-center gap-2"><DollarSign className="w-6 h-6 text-gold" /> Finanzas</h2>
+        <h2 className="font-display text-2xl font-bold flex items-center gap-2"><DollarSign className="w-6 h-6 text-primary" /> Finanzas</h2>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 gold-border">
             <span className="text-sm font-medium">Tasa BCV:</span>
             <input type="number" step="0.01" className="w-24 bg-muted rounded px-2 py-1 text-sm border border-border text-center" value={tasaBCV} onChange={(e) => handleSetTasaBCV(parseFloat(e.target.value) || 0)} />
           </div>
-          <button onClick={exportXLSX} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
-          <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-gold" /> Recipe</button>
+          <button onClick={exportXLSX} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
+          <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-primary" /> Recipe</button>
         </div>
       </div>
 
       {/* Period filter */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <CalendarDays className="w-4 h-4 text-gold" />
+        <CalendarDays className="w-4 h-4 text-primary" />
         {(["dia", "semana", "mes", "todo"] as PeriodFilter[]).map((p) => (
-          <button key={p} onClick={() => setPeriodFilter(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${periodFilter === p ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+          <button key={p} onClick={() => setPeriodFilter(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${periodFilter === p ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-muted"}`}>
             {p === "dia" ? "Día" : p === "semana" ? "Semana" : p === "mes" ? "Mes" : "Todo"}
           </button>
         ))}
@@ -218,7 +206,7 @@ export const AdminFinances = () => {
           { key: "compras" as const, label: "Compras", icon: <ShoppingCart className="w-4 h-4" /> },
           { key: "ventas" as const, label: "Ventas", icon: <Receipt className="w-4 h-4" /> },
         ].map((tab) => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-muted"}`}>
             {tab.icon} {tab.label}
           </button>
         ))}
@@ -241,7 +229,7 @@ export const AdminFinances = () => {
           {/* Rental income details */}
           {filteredRentals.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-semibold mb-2 text-gold">Ingresos por Alquileres</h3>
+              <h3 className="text-sm font-semibold mb-2 text-primary">Ingresos por Alquileres</h3>
               <div className="space-y-2">
                 {filteredRentals.map((r, i) => (
                   <div key={i} className="bg-card rounded-xl p-3 gold-border flex items-center justify-between text-sm">
@@ -251,7 +239,7 @@ export const AdminFinances = () => {
                       {r.treatment && r.treatment !== "Revisión" && <span className="text-muted-foreground ml-1">({r.treatment})</span>}
                       <span className="text-muted-foreground ml-2">{r.date} • {r.allDay ? "Día completo" : `${r.startTime}-${r.endTime}`}</span>
                     </div>
-                    <span className="font-semibold text-gold">${(r.rentalPrice || 0).toFixed(2)}</span>
+                    <span className="font-semibold text-primary">${(r.rentalPrice || 0).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -271,11 +259,11 @@ export const AdminFinances = () => {
                       <div><p className="font-semibold">{app?.patientName} — {app?.treatment}</p><p className="text-sm text-muted-foreground">{f.date} • {doctor?.name}</p></div>
                       <div className="text-right flex items-center gap-2">
                         <div>
-                          <p className="font-semibold text-gold">${f.utilityUSD.toFixed(2)} USD</p>
+                          <p className="font-semibold text-primary">${f.utilityUSD.toFixed(2)} USD</p>
                           <p className="text-xs text-muted-foreground">Bs. {(f.utilityUSD * f.tasaBCV).toFixed(2)}</p>
                         </div>
-                        <button onClick={() => { setEditingFinance(editingFinance === f.id ? null : f.id); setEditDoctorPay(f.doctorPayUSD.toString()); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar pago doctor"><Edit className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => setInvoiceData({ appointment: app, doctor, finance: f })} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Generar factura"><FileText className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => { setEditingFinance(editingFinance === f.id ? null : f.id); setEditDoctorPay(f.doctorPayUSD.toString()); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar pago doctor"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setInvoiceData({ appointment: app, doctor, finance: f })} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Generar factura"><FileText className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
@@ -292,7 +280,7 @@ export const AdminFinances = () => {
                             await updateFinance(f.appointmentId, { doctorPayUSD: newPay, utilityUSD: newUtility });
                             toast.success("Pago actualizado");
                             setEditingFinance(null);
-                          }} className="bg-gold text-gold-foreground px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                          }} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
                           <button onClick={() => setEditingFinance(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
                         </div>
                       </div>
@@ -332,7 +320,7 @@ export const AdminFinances = () => {
 const SummaryCard = ({ label, value, sub, highlight }: { label: string; value: string; sub: string; highlight?: boolean }) => (
   <div className={`bg-card rounded-xl p-4 text-center ${highlight ? "gold-border gold-glow" : "gold-border"}`}>
     <p className="text-xs text-muted-foreground mb-1">{label}</p>
-    <p className={`text-lg font-bold ${highlight ? "text-gold" : ""}`}>{value}</p>
+    <p className={`text-lg font-bold ${highlight ? "text-primary" : ""}`}>{value}</p>
     <p className="text-xs text-muted-foreground">{sub}</p>
   </div>
 );
@@ -365,14 +353,14 @@ const ReconciliationView = ({ transactions, start, end, tasaBCV }: { transaction
           </select>
         </div>
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-semibold mb-1 flex items-center gap-1"><Hash className="w-3 h-3 text-gold" /> Buscar Referencia</label>
-          <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" placeholder="Número de referencia..." value={refSearch} onChange={(e) => setRefSearch(e.target.value)} />
+          <label className="block text-xs font-semibold mb-1 flex items-center gap-1"><Hash className="w-3 h-3 text-primary" /> Buscar Referencia</label>
+          <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder="Número de referencia..." value={refSearch} onChange={(e) => setRefSearch(e.target.value)} />
         </div>
       </div>
 
       <div className="bg-card rounded-xl p-3 gold-border flex items-center justify-between">
         <span className="text-sm font-semibold">{filtered.length} transacción(es)</span>
-        <span className="text-sm font-bold text-gold">${totalUSD.toFixed(2)} USD</span>
+        <span className="text-sm font-bold text-primary">${totalUSD.toFixed(2)} USD</span>
       </div>
 
       <div className="space-y-2">
@@ -386,7 +374,7 @@ const ReconciliationView = ({ transactions, start, end, tasaBCV }: { transaction
                   <p className="font-semibold text-sm truncate">{t.entityName}</p>
                   <p className="text-xs text-muted-foreground">{t.description}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${t.type === 'patient' ? 'bg-gold/20 text-gold' : 'bg-blue-500/20 text-blue-400'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${t.type === 'patient' ? 'bg-primary/20 text-primary' : 'bg-blue-500/20 text-blue-400'}`}>
                       {t.type === 'patient' ? 'Paciente' : 'Inquilino'}
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted font-medium">{METHOD_LABELS[t.paymentMethod] || t.paymentMethod}</span>

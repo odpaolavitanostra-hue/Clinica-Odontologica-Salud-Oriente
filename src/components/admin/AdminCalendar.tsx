@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useClinicData, Appointment } from "@/hooks/useClinicData";
 import PaymentModal from "./PaymentModal";
@@ -48,7 +47,7 @@ export const AdminCalendar = () => {
     tenants.forEach((t) => {
       t.blockedSlots.forEach((sl) => {
         if (sl.date !== dateStr) return;
-        if (sl.status === 'cancelled') return; // Skip cancelled
+        if (sl.status === 'cancelled') return;
         const status = sl.status || 'approved';
         if (sl.allDay) {
           for (let h = 8; h < 17; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
@@ -180,16 +179,16 @@ export const AdminCalendar = () => {
           }`}>{app.status === "pendiente_confirmacion" ? "Por confirmar" : app.status === "pagada" ? "Pagada" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
           {app.status === "pendiente_confirmacion" && (
             <div className="flex gap-1">
-              <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
+              <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar cita"><Check className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar cita"><X className="w-4 h-4" /></button>
             </div>
           )}
           {app.status === "pendiente" && (
             <div className="flex gap-1">
-              <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
+              <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
               <button onClick={() => setPayingAppId(app.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Procesar Pago"><DollarSign className="w-4 h-4" /></button>
-              <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Completar sin pago"><Check className="w-4 h-4" /></button>
+              <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Completar sin pago"><Check className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita cancelada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Cancelar"><X className="w-4 h-4" /></button>
             </div>
           )}
@@ -200,7 +199,7 @@ export const AdminCalendar = () => {
             </div>
           )}
           {app.status === "completada" && (
-            <button onClick={() => { const fin = finances.find((f) => f.appointmentId === app.id); setEditingPay(app.id); setCustomDoctorPay(fin?.doctorPayUSD || 0); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar pago"><DollarSign className="w-4 h-4" /></button>
+            <button onClick={() => { const fin = finances.find((f) => f.appointmentId === app.id); setEditingPay(app.id); setCustomDoctorPay(fin?.doctorPayUSD || 0); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar pago"><DollarSign className="w-4 h-4" /></button>
           )}
           <button onClick={async () => { await deleteAppointment(app.id); toast.info("Cita eliminada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
         </div>
@@ -213,7 +212,7 @@ export const AdminCalendar = () => {
             {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
           <div className="flex gap-2">
-            <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctor(null); toast.success("Doctor reasignado"); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
+            <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctor(null); toast.success("Doctor reasignado"); }} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => setEditingDoctor(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
           </div>
         </div>
@@ -231,7 +230,7 @@ export const AdminCalendar = () => {
               }
               setEditingPay(null);
               toast.success("Pago actualizado");
-            }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
+            }} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => setEditingPay(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
           </div>
         </div>
@@ -253,7 +252,7 @@ export const AdminCalendar = () => {
             );
           })}
           <div className="flex gap-2 pt-2">
-            <button onClick={() => handleComplete(app.id)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold">Confirmar</button>
+            <button onClick={() => handleComplete(app.id)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">Confirmar</button>
             <button onClick={() => setCompleting(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
           </div>
         </div>
@@ -265,9 +264,9 @@ export const AdminCalendar = () => {
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <CalendarDays className="w-6 h-6 text-gold" /> Agenda
+          <CalendarDays className="w-6 h-6 text-primary" /> Agenda
         </h2>
-        <button onClick={() => { setShowBooking(!showBooking); if (!showBooking) setBookingForm((p) => ({ ...p, date: selectedDate || todayStr })); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+        <button onClick={() => { setShowBooking(!showBooking); if (!showBooking) setBookingForm((p) => ({ ...p, date: selectedDate || todayStr })); }} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agendar Cita
         </button>
       </div>
@@ -277,7 +276,7 @@ export const AdminCalendar = () => {
           <h3 className="font-semibold text-lg">Nueva Cita (Admin)</h3>
           <div className="relative">
             <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Search className="w-4 h-4" /> Buscar paciente existente</label>
-            <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" placeholder="Nombre, cédula o teléfono..." value={patientSearch} onChange={(e) => setPatientSearch(e.target.value)} />
+            <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none" placeholder="Nombre, cédula o teléfono..." value={patientSearch} onChange={(e) => setPatientSearch(e.target.value)} />
             {filteredPatients.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-auto">
                 {filteredPatients.map((p) => (
@@ -299,11 +298,11 @@ export const AdminCalendar = () => {
             <div><label className="block text-sm font-medium mb-1">Tratamiento</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.treatment || treatments[0]?.name} onChange={(e) => setBookingForm((p) => ({ ...p, treatment: e.target.value, customPrice: "" }))}>{[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}</select></div>
           </div>
           {(bookingForm.treatment || treatments[0]?.name) === "Otros" && (
-            <div><label className="block text-sm font-medium mb-1">Motivo de consulta *</label><input type="text" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" placeholder="Describa el motivo de la consulta" value={bookingForm.otrosMotivo} onChange={(e) => setBookingForm((p) => ({ ...p, otrosMotivo: e.target.value }))} maxLength={200} /></div>
+            <div><label className="block text-sm font-medium mb-1">Motivo de consulta *</label><input type="text" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder="Describa el motivo de la consulta" value={bookingForm.otrosMotivo} onChange={(e) => setBookingForm((p) => ({ ...p, otrosMotivo: e.target.value }))} maxLength={200} /></div>
           )}
           <div>
             <label className="block text-sm font-medium mb-1">Precio USD (editable)</label>
-            <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" placeholder={`Estándar: $${(treatments.find(t => t.name === (bookingForm.treatment || treatments[0]?.name))?.priceUSD || 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
+            <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder={`Estándar: $${(treatments.find(t => t.name === (bookingForm.treatment || treatments[0]?.name))?.priceUSD || 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
             <p className="text-xs text-muted-foreground mt-1">Deja vacío para usar el precio estándar</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -312,7 +311,7 @@ export const AdminCalendar = () => {
           </div>
           <textarea className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border resize-none" rows={2} placeholder="Notas (opcional)" value={bookingForm.notes} onChange={(e) => setBookingForm((p) => ({ ...p, notes: e.target.value }))} />
           <div className="flex gap-2">
-            <button onClick={handleBookingSubmit} className="bg-gold text-gold-foreground px-6 py-2 rounded-lg text-sm font-semibold">Agendar</button>
+            <button onClick={handleBookingSubmit} className="bg-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-semibold">Agendar</button>
             <button onClick={() => setShowBooking(false)} className="bg-muted text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
           </div>
         </div>
@@ -327,11 +326,11 @@ export const AdminCalendar = () => {
             {view === "day" && format(currentDate, "EEEE d MMMM yyyy", { locale: es })}
           </h3>
           <button onClick={() => navigate(1)} className="p-2 rounded-lg bg-muted hover:bg-muted/80"><ChevronRight className="w-4 h-4" /></button>
-          <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1.5 rounded-lg bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/20">Hoy</button>
+          <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20">Hoy</button>
         </div>
         <div className="flex gap-1">
           {(["month", "week", "day"] as CalView[]).map((v) => (
-            <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${view === v ? "bg-gold text-gold-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+            <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${view === v ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               {v === "month" ? "Mes" : v === "week" ? "Semana" : "Día"}
             </button>
           ))}
@@ -343,7 +342,7 @@ export const AdminCalendar = () => {
           const label = f === "all" ? "Todas" : f === "pendiente_confirmacion" ? "⏳ Por confirmar" : f === "pagada" ? "💳 Pagada" : f.charAt(0).toUpperCase() + f.slice(1);
           const count = f === "pendiente_confirmacion" ? appointments.filter(a => a.status === "pendiente_confirmacion").length : 0;
           return (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${filter === f ? "bg-gold text-gold-foreground" : f === "pendiente_confirmacion" && count > 0 ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 animate-pulse" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${filter === f ? "bg-primary text-primary-foreground" : f === "pendiente_confirmacion" && count > 0 ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 animate-pulse" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
               {label}{f === "pendiente_confirmacion" && count > 0 && <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{count}</span>}
             </button>
           );
@@ -366,9 +365,9 @@ export const AdminCalendar = () => {
               const isToday = isSameDay(day, new Date());
               const isSelected = selectedDate === dateStr;
               return (
-                <button key={dateStr} onClick={() => { setSelectedDate(dateStr); setView("day"); setCurrentDate(day); }} className={`min-h-[70px] p-1 rounded-lg text-left transition-all border ${isSelected ? "border-gold bg-gold/10" : "border-transparent hover:bg-muted"} ${!isCurrentMonth ? "opacity-30" : ""} ${isToday ? "ring-1 ring-gold/50" : ""}`}>
-                  <span className={`text-xs font-semibold ${isToday ? "text-gold" : ""}`}>{format(day, "d")}</span>
-                  {dayApps.length > 0 && <div className="mt-1"><span className="text-[10px] bg-gold/20 text-gold px-1.5 py-0.5 rounded-full font-semibold">{dayApps.length}</span></div>}
+                <button key={dateStr} onClick={() => { setSelectedDate(dateStr); setView("day"); setCurrentDate(day); }} className={`min-h-[70px] p-1 rounded-lg text-left transition-all border ${isSelected ? "border-primary bg-primary/10" : "border-transparent hover:bg-muted"} ${!isCurrentMonth ? "opacity-30" : ""} ${isToday ? "ring-1 ring-primary/50" : ""}`}>
+                  <span className={`text-xs font-semibold ${isToday ? "text-primary" : ""}`}>{format(day, "d")}</span>
+                  {dayApps.length > 0 && <div className="mt-1"><span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-semibold">{dayApps.length}</span></div>}
                   {blocked.length > 0 && <div className="mt-0.5"><span className="text-[10px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full">🔒</span></div>}
                 </button>
               );
@@ -383,7 +382,7 @@ export const AdminCalendar = () => {
             <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-px">
               <div className="text-xs text-muted-foreground p-1"></div>
               {weekDays.map((day) => (
-                <div key={day.toISOString()} className={`text-center text-xs font-semibold p-2 rounded-t-lg ${isSameDay(day, new Date()) ? "bg-gold/10 text-gold" : "text-muted-foreground"}`}>
+                <div key={day.toISOString()} className={`text-center text-xs font-semibold p-2 rounded-t-lg ${isSameDay(day, new Date()) ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                   {format(day, "EEE d", { locale: es })}
                 </div>
               ))}
@@ -396,14 +395,14 @@ export const AdminCalendar = () => {
                     const app = appointments.find((a) => a.date === dateStr && a.time === time && (filter === "all" || a.status === filter));
                     const blocked = getBlockedForDate(dateStr).find((b) => b.time === time);
                     return (
-                      <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? (blocked.status === 'pending_review' ? "bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.15)_4px,rgba(245,158,11,0.15)_8px)]" : blocked.status === 'completed' ? "bg-clinic-green/15" : "bg-card border-gold/30") : ""}`}>
+                      <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? (blocked.status === 'pending_review' ? "bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.15)_4px,rgba(245,158,11,0.15)_8px)]" : blocked.status === 'completed' ? "bg-clinic-green/15" : "bg-card border-primary/30") : ""}`}>
                         {app && (
-                          <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "pagada" ? "bg-blue-500/20 text-blue-400" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400" : "bg-destructive/20 text-destructive"}`}>
+                          <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-amber/20 text-amber" : app.status === "pagada" ? "bg-blue-500/20 text-blue-400" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400" : "bg-destructive/20 text-destructive"}`}>
                             {app.patientName.split(" ")[0]}
                           </div>
                         )}
                         {blocked && !app && (
-                          <span className={`${blocked.status === 'pending_review' ? "text-amber-500" : blocked.status === 'completed' ? "text-clinic-green" : "text-gold"}`}>
+                          <span className={`${blocked.status === 'pending_review' ? "text-amber-500" : blocked.status === 'completed' ? "text-clinic-green" : "text-primary"}`}>
                             {blocked.status === 'pending_review' ? "⏳" : blocked.status === 'completed' ? "✔️" : "🔒"} {blocked.tenant.split(" ")[0]}
                           </span>
                         )}
@@ -432,13 +431,13 @@ export const AdminCalendar = () => {
                     <div className={`text-xs rounded px-2 py-1 mb-1 ${
                       blocked.status === 'pending_review' ? "text-amber-500 bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.1)_4px,rgba(245,158,11,0.1)_8px)]"
                       : blocked.status === 'completed' ? "text-clinic-green bg-clinic-green/10"
-                      : "text-gold bg-gold/10"
+                      : "text-primary bg-primary/10"
                     }`}>
                       {blocked.status === 'pending_review' ? "⏳ Por confirmar" : blocked.status === 'completed' ? "✔️ Completado" : "🔒 Reservado"}: {blocked.tenant}
                     </div>
                   )}
                   {dayApps.length === 0 && !blocked && (
-                    <button onClick={() => { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); }} className="text-xs text-muted-foreground hover:text-gold">+ Agendar</button>
+                    <button onClick={() => { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); }} className="text-xs text-muted-foreground hover:text-primary">+ Agendar</button>
                   )}
                   {dayApps.map((app) => renderAppCard(app))}
                 </div>
@@ -471,7 +470,6 @@ export const AdminCalendar = () => {
             defaultPrice={app.priceUSD}
             tasaBCV={tasaBCV}
             onConfirm={async (finalPrice, paymentMethod, paymentReference) => {
-              // Update appointment with payment info
               await updateAppointment(app.id, {
                 status: 'pagada' as any,
                 finalPrice,
@@ -479,7 +477,6 @@ export const AdminCalendar = () => {
                 paymentReference,
                 priceUSD: finalPrice,
               });
-              // Create transaction for reconciliation
               await addTransaction({
                 date: app.date,
                 type: 'patient',

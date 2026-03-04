@@ -49,22 +49,22 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #1a1a1a; max-width: 800px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #c4973b; padding-bottom: 20px; margin-bottom: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #435A53; padding-bottom: 20px; margin-bottom: 30px; }
         .clinic-name { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: bold; color: #1a1a1a; }
         .clinic-info { font-size: 11px; color: #666; margin-top: 4px; line-height: 1.6; }
-        .invoice-title { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; color: #c4973b; text-align: right; }
+        .invoice-title { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; color: #435A53; text-align: right; }
         .invoice-number { font-size: 14px; color: #666; text-align: right; margin-top: 4px; }
         .section { margin-bottom: 24px; }
-        .section-title { font-size: 12px; font-weight: 600; color: #c4973b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .section-title { font-size: 12px; font-weight: 600; color: #435A53; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .info-item { font-size: 13px; }
         .info-label { color: #888; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th { background: #1a1a1a; color: #c4973b; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+        th { background: #2C2F2D; color: #435A53; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .totals { text-align: right; margin-top: 20px; }
         .total-row { display: flex; justify-content: flex-end; gap: 40px; padding: 6px 0; font-size: 14px; }
-        .total-row.grand { font-size: 18px; font-weight: bold; color: #c4973b; border-top: 2px solid #1a1a1a; padding-top: 12px; margin-top: 8px; }
+        .total-row.grand { font-size: 18px; font-weight: bold; color: #435A53; border-top: 2px solid #2C2F2D; padding-top: 12px; margin-top: 8px; }
         .footer { margin-top: 60px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
         @media print { body { padding: 20px; } }
       </style></head>
@@ -131,7 +131,7 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gold" /> Generar Factura
+            <FileText className="w-5 h-5 text-primary" /> Generar Factura
           </DialogTitle>
         </DialogHeader>
 
@@ -152,7 +152,7 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
           <div className="bg-card rounded-lg p-4 gold-border">
             <div className="flex justify-between items-center text-sm">
               <span>Total USD</span>
-              <span className="font-bold text-gold">${finance.treatmentPriceUSD.toFixed(2)}</span>
+              <span className="font-bold text-primary">${finance.treatmentPriceUSD.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-sm mt-1">
               <span>Total VES</span>
@@ -166,7 +166,7 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
             <input type="number" className="w-28 bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={invoiceNumber} onChange={(e) => setInvoiceNumber(parseInt(e.target.value) || 1)} />
           </div>
 
-          <button onClick={handlePrint} className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          <button onClick={handlePrint} className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
             <Printer className="w-4 h-4" /> Imprimir Factura
           </button>
         </div>

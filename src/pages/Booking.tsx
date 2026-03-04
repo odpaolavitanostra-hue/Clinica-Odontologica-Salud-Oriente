@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard, HelpCircle } from "lucide-react";
@@ -29,7 +28,6 @@ const Booking = () => {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [confirmationData, setConfirmationData] = useState<{ name: string; date: string; time: string } | null>(null);
 
-  // Update doctorId when doctors load
   const effectiveDoctorId = form.doctorId || doctors[0]?.id || "";
   const effectiveTreatment = form.treatment || treatments[0]?.name || "";
 
@@ -140,19 +138,11 @@ const Booking = () => {
 
   const getTimeSlots = () => {
     if (!form.date) return [];
-
     const caracasNow = getCaracasNow();
     const todayStr = getCaracasToday();
     const isToday = form.date === todayStr;
     const currentHour = caracasNow.getHours();
-
-    return getSmartTimeSlots(
-      form.date,
-      appointments,
-      tenants,
-      isToday ? currentHour : undefined,
-      isToday
-    );
+    return getSmartTimeSlots(form.date, appointments, tenants, isToday ? currentHour : undefined, isToday);
   };
 
   const caracasToday = getCaracasToday();
@@ -161,10 +151,10 @@ const Booking = () => {
     <div className="min-h-screen bg-background font-body">
       <header className="noir-gradient py-4">
         <div className="container mx-auto px-4 flex items-center gap-4">
-          <Link to="/" className="text-noir-foreground hover:text-gold transition-colors">
+          <Link to="/" className="text-noir-foreground hover:text-primary transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="font-display text-xl text-gold font-semibold">Agendar Cita</h1>
+          <h1 className="font-display text-xl text-primary font-semibold">Agendar Cita</h1>
         </div>
       </header>
 
@@ -173,37 +163,37 @@ const Booking = () => {
           {/* Patient Info */}
           <div className="bg-card rounded-xl p-5 gold-border space-y-4">
             <h2 className="font-display text-lg font-semibold flex items-center gap-2">
-              <User className="w-5 h-5 text-gold" /> Datos del Paciente
+              <User className="w-5 h-5 text-primary" /> Datos del Paciente
             </h2>
             <div>
               <label className="block text-sm font-medium mb-1">Nombre completo *</label>
-              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientName} onChange={(e) => { const val = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""); update("patientName", val); }} required maxLength={100} />
+              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none transition-colors" value={form.patientName} onChange={(e) => { const val = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""); update("patientName", val); }} required maxLength={100} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><CreditCard className="w-4 h-4" /> Cédula *</label>
-              <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientCedula} onChange={(e) => { const val = e.target.value.replace(/[^0-9]/g, ""); update("patientCedula", val); }} required maxLength={20} placeholder="12345678" />
+              <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none transition-colors" value={form.patientCedula} onChange={(e) => { const val = e.target.value.replace(/[^0-9]/g, ""); update("patientCedula", val); }} required maxLength={20} placeholder="12345678" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Phone className="w-4 h-4" /> Teléfono *</label>
               <div className="flex">
                 <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-border rounded-l-lg text-sm text-muted-foreground font-medium">+58</span>
-                <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-r-lg rounded-l-none px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); update("patientPhone", val); }} required maxLength={10} placeholder="4121234567" />
+                <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-r-lg rounded-l-none px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); update("patientPhone", val); }} required maxLength={10} placeholder="4121234567" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Mail className="w-4 h-4" /> Email *</label>
-              <input type="email" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientEmail} onChange={(e) => update("patientEmail", e.target.value)} required maxLength={100} placeholder="correo@ejemplo.com" />
+              <input type="email" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none transition-colors" value={form.patientEmail} onChange={(e) => update("patientEmail", e.target.value)} required maxLength={100} placeholder="correo@ejemplo.com" />
             </div>
           </div>
 
           {/* Appointment Details */}
           <div className="bg-card rounded-xl p-5 gold-border space-y-4">
             <h2 className="font-display text-lg font-semibold flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-gold" /> Detalles de la Cita
+              <CalendarDays className="w-5 h-5 text-primary" /> Detalles de la Cita
             </h2>
             <div>
               <label className="block text-sm font-medium mb-1">Doctor *</label>
-              <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={effectiveDoctorId} onChange={(e) => update("doctorId", e.target.value)}>
+              <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none" value={effectiveDoctorId} onChange={(e) => update("doctorId", e.target.value)}>
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
@@ -211,7 +201,7 @@ const Booking = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-4 h-4" /> Tratamiento *</label>
-              <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={effectiveTreatment} onChange={(e) => update("treatment", e.target.value)}>
+              <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none" value={effectiveTreatment} onChange={(e) => update("treatment", e.target.value)}>
                 {[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => (
                   <option key={t.name} value={t.name}>{t.name}</option>
                 ))}
@@ -220,11 +210,11 @@ const Booking = () => {
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex-1 min-w-0">
                 <label className="block text-sm font-medium mb-1">Fecha *</label>
-                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none appearance-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("time", ""); }} required />
+                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none appearance-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("time", ""); }} required />
               </div>
               <div className="flex-1 min-w-0">
                 <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Clock className="w-4 h-4" /> Hora *</label>
-                <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={form.time} onChange={(e) => update("time", e.target.value)} required>
+                <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none" value={form.time} onChange={(e) => update("time", e.target.value)} required>
                   <option value="">Seleccionar</option>
                   {getTimeSlots().map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -245,19 +235,19 @@ const Booking = () => {
                   }
                   setWaitlistOpen(true);
                 }}
-                className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors py-3 border border-dashed border-border rounded-lg hover:border-gold/50"
+                className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors py-3 border border-dashed border-border rounded-lg hover:border-primary/50"
               >
                 <HelpCircle className="w-4 h-4" />
-                <span className="text-center">¿No encuentras un horario que te sirva? <strong className="text-gold">Solicitar uno personalizado</strong></span>
+                <span className="text-center">¿No encuentras un horario que te sirva? <strong className="text-primary">Solicitar uno personalizado</strong></span>
               </button>
             )}
             <div>
               <label className="block text-sm font-medium mb-1">Notas (opcional)</label>
-              <textarea className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none resize-none" rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} maxLength={500} />
+              <textarea className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none resize-none" rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} maxLength={500} />
             </div>
           </div>
 
-          <button type="submit" className="w-full bg-gold text-gold-foreground py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity">
+          <button type="submit" className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity">
             Confirmar Cita
           </button>
         </form>

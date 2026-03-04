@@ -113,7 +113,7 @@ const WaitlistDialog = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gold" /> Solicitar horario especial
+              <Clock className="w-5 h-5 text-primary" /> Solicitar horario especial
             </DialogTitle>
             <DialogDescription>
               Tus datos ya están capturados. Solo elige tu horario preferido y envía la solicitud.
@@ -140,8 +140,8 @@ const WaitlistDialog = ({
                       onClick={() => { setSelectedTime(slot); setCustomTime(""); }}
                       className={`py-2.5 rounded-lg text-sm font-medium transition-all border ${
                         selectedTime === slot
-                          ? "bg-gold text-gold-foreground border-gold"
-                          : "bg-muted border-border hover:border-gold/50"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted border-border hover:border-primary/50"
                       }`}
                     >
                       {slot}
@@ -154,7 +154,7 @@ const WaitlistDialog = ({
                 <input
                   type="text"
                   placeholder="O escribe tu horario preferido (ej: 10:30 AM)"
-                  className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
+                  className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-primary focus:outline-none transition-colors"
                   value={customTime}
                   onChange={(e) => { setCustomTime(e.target.value); setSelectedTime(""); }}
                 />
@@ -165,7 +165,7 @@ const WaitlistDialog = ({
               type="button"
               onClick={handleSubmit}
               disabled={submitting || !finalTime}
-              className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               {submitting ? "Enviando..." : "Enviar solicitud de cita especial"}

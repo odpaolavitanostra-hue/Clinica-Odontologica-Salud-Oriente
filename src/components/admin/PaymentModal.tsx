@@ -63,9 +63,9 @@ export default function PaymentModal({ open, onOpenChange, entityName, treatment
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="bg-card border-gold/30 max-w-md mx-auto">
+      <DialogContent className="bg-card border-primary/30 max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-gold flex items-center gap-2">
+          <DialogTitle className="font-display text-primary flex items-center gap-2">
             <Banknote className="w-5 h-5" /> Procesar Pago
           </DialogTitle>
         </DialogHeader>
@@ -82,7 +82,7 @@ export default function PaymentModal({ open, onOpenChange, entityName, treatment
             <label className="block text-xs font-semibold mb-1.5">Monto de Consulta (USD)</label>
             <input
               type="number" step="0.01" min="0"
-              className="w-full bg-muted rounded-lg px-4 py-3 text-lg font-bold border border-border focus:border-gold focus:outline-none text-center"
+              className="w-full bg-muted rounded-lg px-4 py-3 text-lg font-bold border border-border focus:border-primary focus:outline-none text-center"
               value={finalPrice}
               onChange={(e) => setFinalPrice(parseFloat(e.target.value) || 0)}
             />
@@ -104,8 +104,8 @@ export default function PaymentModal({ open, onOpenChange, entityName, treatment
                     onClick={() => setPaymentMethod(m.value)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all border ${
                       paymentMethod === m.value
-                        ? "bg-gold text-gold-foreground border-gold"
-                        : "bg-muted border-border hover:border-gold/50"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted border-border hover:border-primary/50"
                     }`}
                   >
                     <m.icon className="w-4 h-4" />
@@ -123,8 +123,8 @@ export default function PaymentModal({ open, onOpenChange, entityName, treatment
                     onClick={() => { setPaymentMethod(m.value); setReference(""); }}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all border ${
                       paymentMethod === m.value
-                        ? "bg-gold text-gold-foreground border-gold"
-                        : "bg-muted border-border hover:border-gold/50"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted border-border hover:border-primary/50"
                     }`}
                   >
                     <m.icon className="w-4 h-4" />
@@ -139,11 +139,11 @@ export default function PaymentModal({ open, onOpenChange, entityName, treatment
           {isDigital(paymentMethod) && (
             <div>
               <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1">
-                <Hash className="w-3.5 h-3.5 text-gold" /> Ingrese Referencia para Conciliación *
+                <Hash className="w-3.5 h-3.5 text-primary" /> Ingrese Referencia para Conciliación *
               </label>
               <input
                 type="text"
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-gold/50 focus:border-gold focus:outline-none"
+                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-primary/50 focus:border-primary focus:outline-none"
                 placeholder="Número de referencia bancaria"
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
@@ -164,7 +164,7 @@ export default function PaymentModal({ open, onOpenChange, entityName, treatment
           <button
             onClick={handleConfirm}
             disabled={loading || !paymentMethod}
-            className="w-full bg-gold text-gold-foreground py-3 rounded-lg font-semibold text-sm disabled:opacity-50 transition-all hover:opacity-90"
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold text-sm disabled:opacity-50 transition-all hover:opacity-90"
           >
             {loading ? "Procesando..." : "Confirmar Pago"}
           </button>

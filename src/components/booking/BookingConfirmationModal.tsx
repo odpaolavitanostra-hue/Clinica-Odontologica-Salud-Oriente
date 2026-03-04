@@ -9,7 +9,6 @@ interface BookingConfirmationModalProps {
   patientName: string;
   date: string;
   time: string;
-  /** If true, shows "pending confirmation" variant instead of confirmed */
   isPendingConfirmation?: boolean;
 }
 
@@ -42,8 +41,8 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time, isPe
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-md rounded-3xl border-none bg-card p-0 overflow-hidden shadow-2xl">
-        {/* Gold accent bar */}
-        <div className="h-2 w-full bg-gradient-to-r from-gold via-gold-muted to-gold" />
+        {/* Accent bar */}
+        <div className="h-2 w-full bg-gradient-to-r from-primary via-primary/70 to-primary" />
 
         <div className="flex flex-col items-center text-center px-8 pt-8 pb-10 gap-5">
           {/* Animated icon */}
@@ -81,14 +80,14 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time, isPe
           {/* Date & Time cards */}
           <div className="w-full flex flex-col sm:flex-row gap-3">
             <div className="flex-1 flex items-center gap-3 bg-secondary rounded-2xl px-5 py-4">
-              <CalendarDays className="w-7 h-7 text-gold shrink-0" />
+              <CalendarDays className="w-7 h-7 text-primary shrink-0" />
               <div className="text-left">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha</p>
                 <p className="font-semibold text-foreground capitalize">{formattedDate}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-secondary rounded-2xl px-5 py-4 sm:min-w-[140px]">
-              <Clock className="w-7 h-7 text-gold shrink-0" />
+              <Clock className="w-7 h-7 text-primary shrink-0" />
               <div className="text-left">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Hora</p>
                 <p className="font-semibold text-foreground text-lg">{time}</p>
@@ -128,7 +127,7 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time, isPe
           {/* CTA */}
           <Button
             onClick={onClose}
-            className="w-full mt-2 h-14 rounded-2xl text-lg font-semibold bg-gold text-gold-foreground hover:opacity-90 transition-opacity"
+            className="w-full mt-2 h-14 rounded-2xl text-lg font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
           >
             Entendido
           </Button>

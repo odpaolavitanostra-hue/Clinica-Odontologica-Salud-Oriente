@@ -64,7 +64,6 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
   const totalUSD = items.reduce((s, i) => s + i.priceUSD * i.qty, 0);
   const totalVES = totalUSD * tasaBCV;
 
-  // Canvas signature
   const startDraw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
     const canvas = canvasRef.current;
@@ -133,10 +132,10 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
     <style>
       *{margin:0;padding:0;box-sizing:border-box}
       body{font-family:'Inter',Arial,sans-serif;padding:40px;color:#1a1a1a;max-width:800px;margin:0 auto}
-      .header{display:flex;justify-content:space-between;border-bottom:3px solid #c4973b;padding-bottom:20px;margin-bottom:24px}
+      .header{display:flex;justify-content:space-between;border-bottom:3px solid #435A53;padding-bottom:20px;margin-bottom:24px}
       .clinic-name{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:bold}
       .clinic-info{font-size:11px;color:#666;margin-top:4px;line-height:1.6}
-      .title{font-family:'Playfair Display',Georgia,serif;font-size:26px;color:#c4973b;text-align:center;margin-bottom:24px}
+      .title{font-family:'Playfair Display',Georgia,serif;font-size:26px;color:#435A53;text-align:center;margin-bottom:24px}
       .date{text-align:right;font-size:13px;color:#666;margin-bottom:16px}
       .doctor-info{background:#f5f5f0;padding:16px;border-radius:8px;margin-bottom:20px}
       .doctor-name{font-size:16px;font-weight:bold}
@@ -145,7 +144,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
       .patient-info span{color:#888}
       table{width:100%;border-collapse:collapse;margin-bottom:20px}
       th{background:#f5f5f0;padding:10px 8px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#888}
-      .total-row{font-weight:bold;font-size:16px;border-top:2px solid #c4973b}
+      .total-row{font-weight:bold;font-size:16px;border-top:2px solid #435A53}
       .total-row td{padding:12px 8px}
       .contract{background:#f9f9f5;border:1px solid #eee;border-radius:8px;padding:16px;margin:24px 0;font-size:12px;line-height:1.6}
       .signatures{display:flex;justify-content:space-between;margin-top:60px;gap:40px}
@@ -217,7 +216,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gold" /> Presupuesto Odontológico
+            <FileText className="w-5 h-5 text-primary" /> Presupuesto Odontológico
           </DialogTitle>
         </DialogHeader>
 
@@ -225,7 +224,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
           {!currentDoctor && (
             <div>
               <label className="block text-xs font-medium mb-1">Doctor *</label>
-              <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.doctorId} onChange={(e) => setForm(p => ({ ...p, doctorId: e.target.value }))}>
+              <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={form.doctorId} onChange={(e) => setForm(p => ({ ...p, doctorId: e.target.value }))}>
                 <option value="">Seleccionar doctor</option>
                 {doctors.map(d => <option key={d.id} value={d.id}>{d.name} — {d.specialty}</option>)}
               </select>
@@ -234,7 +233,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
 
           <div>
             <label className="block text-xs font-medium mb-1">Paciente</label>
-            <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.patientId} onChange={(e) => handlePatientSelect(e.target.value)}>
+            <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={form.patientId} onChange={(e) => handlePatientSelect(e.target.value)}>
               <option value="">Seleccionar paciente</option>
               {patients.map(p => <option key={p.id} value={p.id}>{p.name} — C.I. {p.cedula}</option>)}
             </select>
@@ -270,7 +269,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
                 {items.length > 1 && <button onClick={() => removeItem(i)} className="text-destructive text-xs">✕</button>}
               </div>
             ))}
-            <button onClick={addItem} className="text-xs text-gold hover:underline">+ Agregar tratamiento</button>
+            <button onClick={addItem} className="text-xs text-primary hover:underline">+ Agregar tratamiento</button>
           </div>
 
           <div className="bg-muted rounded-lg p-3 text-center">
@@ -294,7 +293,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
                 onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={endDraw} />
               <div className="flex gap-2 mt-1">
                 <button onClick={clearSignature} className="text-xs text-muted-foreground hover:underline">Limpiar</button>
-                <button onClick={confirmSignature} className="text-xs text-gold hover:underline font-semibold">Confirmar Firma</button>
+                <button onClick={confirmSignature} className="text-xs text-primary hover:underline font-semibold">Confirmar Firma</button>
               </div>
             </div>
           ) : (
@@ -306,7 +305,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
           {/* Actions */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button onClick={generateAndPrint} disabled={!selectedDoctor || items.every(i => !i.treatment)}
-              className="bg-gold text-gold-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
+              className="bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
               <Download className="w-4 h-4" /> Descargar
             </button>
             <button onClick={sendWhatsApp} disabled={!form.patientPhone}
