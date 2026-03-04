@@ -32,7 +32,7 @@ const Index = () => {
         <img src={heroImage} alt="Consultorio dental moderno" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 hero-overlay" />
         
-        <div className="relative z-10 container mx-auto px-4 pt-20">
+        <div className="relative z-10 container mx-auto px-4 pt-20 lg:pt-32 pb-16 lg:pb-24">
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-gold text-sm md:text-base font-semibold tracking-[0.3em] uppercase mb-6 animate-fade-up">
               Odontología de Excelencia
@@ -60,10 +60,10 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16 max-w-4xl mx-auto animate-fade-up-delay-3">
-            <InfoCard icon={<MapPin className="w-5 h-5 text-primary" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui" />
-            <InfoCard icon={<Phone className="w-5 h-5 text-primary" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
-            <InfoCard icon={<Clock className="w-5 h-5 text-primary" />} title="Horario" text="Lun-Vie 8:00-17:00 • Sáb 8:00-14:00" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 lg:mt-20 max-w-4xl mx-auto animate-fade-up-delay-3">
+            <InfoCard icon={<MapPin className="w-5 h-5 text-accent" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui" />
+            <InfoCard icon={<Phone className="w-5 h-5 text-accent" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
+            <InfoCard icon={<Clock className="w-5 h-5 text-accent" />} title="Horario" text="Lun-Vie 8:00-17:00 • Sáb 8:00-14:00" />
           </div>
         </div>
       </section>
@@ -71,7 +71,7 @@ const Index = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="font-display text-3xl md:text-4xl text-center font-bold mb-4">
-            Nuestros <span className="text-primary">Servicios</span>
+            Nuestros <span className="text-accent">Servicios</span>
           </h2>
           <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
             Ofrecemos tratamientos odontológicos de alta calidad con tecnología moderna.
@@ -119,10 +119,10 @@ const Index = () => {
         </div>
       </section>
 
-      <footer className="bg-primary py-8">
+      <footer className="bg-accent py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-          <p className="text-primary-foreground/60 text-sm text-center">© 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.</p>
-          <Link to="/login" className="text-primary-foreground/30 text-xs hover:text-primary-foreground/50 transition-colors">Acceso</Link>
+          <p className="text-accent-foreground/60 text-sm text-center">© 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.</p>
+          <Link to="/login" className="text-accent-foreground/30 text-xs hover:text-accent-foreground/50 transition-colors">Acceso</Link>
         </div>
       </footer>
 

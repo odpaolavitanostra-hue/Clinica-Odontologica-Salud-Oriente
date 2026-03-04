@@ -228,10 +228,10 @@ const DoctorPanel = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 max-w-4xl space-y-4">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <StatCard icon={<CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />} label="Pendientes" value={pendingCount.toString()} />
+          <StatCard icon={<CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />} label="Pendientes" value={pendingCount.toString()} />
           <StatCard icon={<CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-clinic-green" />} label="Completadas" value={completedCount.toString()} />
-          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />} label="Ganado USD" value={`$${totalEarnedUSD.toFixed(2)}`} />
-          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />} label="Ganado VES" value={`Bs. ${formatVES(totalEarnedUSD * tasaBCV)}`} />
+          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />} label="Ganado USD" value={`$${totalEarnedUSD.toFixed(2)}`} />
+          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />} label="Ganado VES" value={`Bs. ${formatVES(totalEarnedUSD * tasaBCV)}`} />
         </div>
 
         {/* Tabs */}
@@ -305,7 +305,7 @@ const DoctorPanel = () => {
                   <div className="mt-3 border-t border-border pt-2">
                     <button
                       onClick={() => toggleOdontogram(app.id)}
-                      className="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors w-full justify-between"
+                      className="flex items-center gap-2 text-xs font-semibold text-accent hover:text-accent/80 transition-colors w-full justify-between"
                     >
                       <span className="flex items-center gap-1.5">🦷 Herramientas Clínicas — Odontograma</span>
                       {odontogramAppId === app.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -447,7 +447,7 @@ const DoctorPanel = () => {
         {activeTab === "recipe" && (
           <div className="space-y-4">
             <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-primary" /> Emitir Recipe Médico
+              <Stethoscope className="w-5 h-5 text-accent" /> Emitir Recipe Médico
             </h3>
             <div className="bg-card rounded-xl p-4 sm:p-5 gold-border space-y-3">
               <div>
@@ -501,7 +501,7 @@ const DoctorPanel = () => {
         {activeTab === "presupuesto" && (
           <div className="space-y-4">
             <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" /> Presupuesto Odontológico
+              <FileText className="w-5 h-5 text-accent" /> Presupuesto Odontológico
             </h3>
             <button onClick={() => setShowBudget(true)} className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-sm">
               <FileText className="w-4 h-4" /> Crear Presupuesto
@@ -514,7 +514,7 @@ const DoctorPanel = () => {
         {activeTab === "perfil" && (
           <div className="space-y-4">
             <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" /> Mi Perfil
+              <User className="w-5 h-5 text-accent" /> Mi Perfil
             </h3>
             <div className="bg-card rounded-xl p-4 gold-border space-y-2">
               <p className="font-semibold">{doctor.name}</p>

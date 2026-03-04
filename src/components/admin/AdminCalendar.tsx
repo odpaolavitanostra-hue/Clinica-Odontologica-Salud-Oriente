@@ -264,7 +264,7 @@ export const AdminCalendar = () => {
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <CalendarDays className="w-6 h-6 text-primary" /> Agenda
+          <CalendarDays className="w-6 h-6 text-accent" /> Agenda
         </h2>
         <button onClick={() => { setShowBooking(!showBooking); if (!showBooking) setBookingForm((p) => ({ ...p, date: selectedDate || todayStr })); }} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agendar Cita

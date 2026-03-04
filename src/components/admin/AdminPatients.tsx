@@ -1,10 +1,12 @@
-
 import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check, UserCog, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import ClinicalHistoryForm from "@/components/clinical/ClinicalHistoryForm";
+import OdontogramChart from "@/components/odontogram/OdontogramChart";
+import { useOdontogram, createEmptyOdontogram, type OdontogramData } from "@/hooks/useOdontogram";
+import { useClinicalHistory } from "@/hooks/useClinicalHistory";
 
 export const AdminPatients = () => {
   const { patients, appointments, addPatient, updatePatient, deletePatient, updateAppointment, doctors } = useClinicData();
@@ -19,6 +21,7 @@ export const AdminPatients = () => {
   const [editingDoctorId, setEditingDoctorId] = useState<string | null>(null);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [clinicalHistoryPatient, setClinicalHistoryPatient] = useState<Patient | null>(null);
+  const [odontogramPatientId, setOdontogramPatientId] = useState<string | null>(null);
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
@@ -64,9 +67,9 @@ export const AdminPatients = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary" /> Pacientes
+          <Users className="w-6 h-6 text-accent" /> Pacientes
         </h2>
-        <button onClick={() => setAdding(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+        <button onClick={() => setAdding(true)} className="btn-gold px-4 py-2 text-sm flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agregar
         </button>
       </div>
@@ -82,7 +85,7 @@ export const AdminPatients = () => {
           </div>
           <textarea className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border resize-none" placeholder="Notas" rows={2} value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} maxLength={500} />
           <div className="flex gap-2">
-            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
+            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="btn-gold px-4 py-2 text-sm flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => { setAdding(false); setEditing(null); }} className="bg-muted text-foreground px-4 py-2 rounded-lg text-sm flex items-center gap-1"><X className="w-4 h-4" /> Cancelar</button>
           </div>
         </div>
@@ -111,7 +114,7 @@ export const AdminPatients = () => {
                     <div className="flex gap-1 flex-wrap">
                       {app.patientPhone && (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>)}
                       {app.patientEmail && (<a href={`mailto:${app.patientEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
-                      <button onClick={() => { setEditingDoctorId(editingDoctorId === app.id ? null : app.id); setSelectedDoctorId(app.doctorId || doctors[0]?.id || ""); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Asignar doctor"><UserCog className="w-4 h-4" /></button>
+                      <button onClick={() => { setEditingDoctorId(editingDoctorId === app.id ? null : app.id); setSelectedDoctorId(app.doctorId || doctors[0]?.id || ""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Asignar doctor"><UserCog className="w-4 h-4" /></button>
                       <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
                       <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
                     </div>
@@ -123,7 +126,7 @@ export const AdminPatients = () => {
                         {doctors.map((d) => <option key={d.id} value={d.id}>{d.name} — {d.specialty}</option>)}
                       </select>
                       <div className="flex gap-2">
-                        <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctorId(null); toast.success("Doctor asignado"); }} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                        <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctorId(null); toast.success("Doctor asignado"); }} className="btn-gold px-3 py-1.5 text-xs flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
                         <button onClick={() => setEditingDoctorId(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs">Cancelar</button>
                       </div>
                     </div>
@@ -140,72 +143,145 @@ export const AdminPatients = () => {
           <p className="text-muted-foreground text-center py-12">No hay pacientes registrados</p>
         ) : (
           patients.map((p) => (
-            <div key={p.id} className="bg-card rounded-xl p-4 gold-border space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">{p.cedula || "Sin cédula"} • {p.phone || "Sin teléfono"}</p>
-                  <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
-                  {p.notes && <p className="text-xs text-muted-foreground">📝 {p.notes}</p>}
-                </div>
-                <div className="flex gap-1 flex-wrap">
-                  {p.phone && (() => {
-                    const phoneClean = p.phone.replace(/[^0-9]/g, "");
-                    const waPhone = phoneClean.startsWith("58") ? phoneClean : `58${phoneClean}`;
-                    return (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>);
-                  })()}
-                  {p.email && (<a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
-                  <button onClick={() => setClinicalHistoryPatient(p)} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica"><ClipboardList className="w-4 h-4" /></button>
-                  <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Fotos"><Camera className="w-4 h-4" /></button>
-                  <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar"><Edit className="w-4 h-4" /></button>
-                  <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
-                {p.clinicalHistoryUrl ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-primary hover:underline">{viewingPdf === p.id ? "Cerrar visor" : "Ver PDF"}</button>
-                      <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
-                    </div>
-                    {viewingPdf === p.id && (<iframe src={p.clinicalHistoryUrl} className="w-full h-96 rounded-lg border border-border" title={`HC ${p.name}`} />)}
-                  </div>
-                ) : (<p className="text-xs text-muted-foreground">Sin historia clínica</p>)}
-                <label className={`inline-flex items-center gap-1 text-xs text-primary cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
-                  <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
-                  <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) handlePdfUpload(p.id, e.target.files[0]); }} />
-                </label>
-              </div>
-
-              {viewingPhotos === p.id && (
-                <div className="bg-muted rounded-lg p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold">Fotos del Proceso ({(p.photos || []).length})</h4>
-                    <label className={`bg-primary text-primary-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer ${uploadingPhoto ? 'opacity-50' : ''}`}>
-                      <Plus className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar"}
-                      <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(p.id, e.target.files[0]); }} />
-                    </label>
-                  </div>
-                  {(p.photos || []).length === 0 ? (<p className="text-xs text-muted-foreground text-center py-4">Sin fotos aún</p>) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {(p.photos || []).map((photo, i) => (
-                        <div key={i} className="relative group rounded-lg overflow-hidden aspect-square">
-                          <img src={photo} alt={`Proceso ${i + 1}`} className="w-full h-full object-cover cursor-pointer" onClick={() => window.open(photo, "_blank")} />
-                          <button onClick={() => removePhoto(p.id, i)} className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <PatientCard
+              key={p.id}
+              patient={p}
+              appointments={appointments}
+              doctors={doctors}
+              onEdit={startEdit}
+              onDelete={async (id) => { await deletePatient(id); toast.info("Paciente eliminado"); }}
+              onPhotoUpload={handlePhotoUpload}
+              onPdfUpload={handlePdfUpload}
+              onRemovePhoto={removePhoto}
+              onClinicalHistory={setClinicalHistoryPatient}
+              onViewOdontogram={(id) => setOdontogramPatientId(odontogramPatientId === id ? null : id)}
+              showOdontogram={odontogramPatientId === p.id}
+              viewingPhotos={viewingPhotos === p.id}
+              onTogglePhotos={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)}
+              viewingPdf={viewingPdf === p.id}
+              onTogglePdf={() => setViewingPdf(viewingPdf === p.id ? null : p.id)}
+              uploadingPhoto={uploadingPhoto}
+              uploadingPdf={uploadingPdf}
+              updatePatient={updatePatient}
+            />
           ))
         )}
       </div>
       {clinicalHistoryPatient && (
         <ClinicalHistoryForm patient={clinicalHistoryPatient} open={!!clinicalHistoryPatient} onOpenChange={(open) => { if (!open) setClinicalHistoryPatient(null); }} />
+      )}
+    </div>
+  );
+};
+
+/* Patient card with age + odontogram */
+const PatientCard = ({ patient: p, appointments, doctors, onEdit, onDelete, onPhotoUpload, onPdfUpload, onRemovePhoto, onClinicalHistory, onViewOdontogram, showOdontogram, viewingPhotos, onTogglePhotos, viewingPdf, onTogglePdf, uploadingPhoto, uploadingPdf, updatePatient }: any) => {
+  const { history } = useClinicalHistory(p.id);
+  
+  // Get odontogram snapshots from appointments
+  const patientApps = appointments.filter((a: any) => a.patientName === p.name && a.odontogramData);
+  const sortedSnapshots = patientApps.sort((a: any, b: any) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
+  const [selectedSnapshot, setSelectedSnapshot] = useState(0);
+  
+  const age = history?.age;
+
+  return (
+    <div className="bg-card rounded-xl p-4 gold-border space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{p.name}</p>
+            {age && age > 0 && (
+              <span className="text-xs bg-accent/15 text-accent px-2 py-0.5 rounded-full font-medium">{age} años</span>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">{p.cedula || "Sin cédula"} • {p.phone || "Sin teléfono"}</p>
+          <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
+          {p.notes && <p className="text-xs text-muted-foreground">📝 {p.notes}</p>}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {p.phone && (() => {
+            const phoneClean = p.phone.replace(/[^0-9]/g, "");
+            const waPhone = phoneClean.startsWith("58") ? phoneClean : `58${phoneClean}`;
+            return (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>);
+          })()}
+          {p.email && (<a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
+          <button onClick={() => onClinicalHistory(p)} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica"><ClipboardList className="w-4 h-4" /></button>
+          <button onClick={() => onViewOdontogram(p.id)} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Odontograma">🦷</button>
+          <button onClick={() => onTogglePhotos()} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Fotos"><Camera className="w-4 h-4" /></button>
+          <button onClick={() => onEdit(p)} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Editar"><Edit className="w-4 h-4" /></button>
+          <button onClick={() => onDelete(p.id)} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
+        </div>
+      </div>
+
+      {/* Odontogram Archive */}
+      {showOdontogram && (
+        <div className="bg-muted rounded-lg p-3 space-y-3">
+          <h4 className="text-sm font-semibold flex items-center gap-2">🦷 Archivo de Odontogramas ({sortedSnapshots.length})</h4>
+          {sortedSnapshots.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Sin odontogramas registrados. Se crean desde las citas del doctor.</p>
+          ) : (
+            <>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {sortedSnapshots.map((snap: any, i: number) => (
+                  <button key={snap.id} onClick={() => setSelectedSnapshot(i)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                      selectedSnapshot === i ? "bg-gold text-gold-foreground" : "bg-card border border-border hover:bg-muted"
+                    }`}>
+                    {snap.date} {snap.time}
+                  </button>
+                ))}
+              </div>
+              <OdontogramChart
+                data={sortedSnapshots[selectedSnapshot]?.odontogramData as any}
+                onSurfaceChange={() => {}}
+                onOverallChange={() => {}}
+                onResetTooth={() => {}}
+                readOnly
+                notes={(sortedSnapshots[selectedSnapshot]?.odontogramData as any)?._notes}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
+        {p.clinicalHistoryUrl ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <button onClick={onTogglePdf} className="text-xs text-accent hover:underline">{viewingPdf ? "Cerrar visor" : "Ver PDF"}</button>
+              <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
+            </div>
+            {viewingPdf && (<iframe src={p.clinicalHistoryUrl} className="w-full h-96 rounded-lg border border-border" title={`HC ${p.name}`} />)}
+          </div>
+        ) : (<p className="text-xs text-muted-foreground">Sin historia clínica</p>)}
+        <label className={`inline-flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
+          <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
+          <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) onPdfUpload(p.id, e.target.files[0]); }} />
+        </label>
+      </div>
+
+      {viewingPhotos && (
+        <div className="bg-muted rounded-lg p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Fotos del Proceso ({(p.photos || []).length})</h4>
+            <label className={`btn-gold px-3 py-1 text-xs flex items-center gap-1 cursor-pointer ${uploadingPhoto ? 'opacity-50' : ''}`}>
+              <Plus className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar"}
+              <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) onPhotoUpload(p.id, e.target.files[0]); }} />
+            </label>
+          </div>
+          {(p.photos || []).length === 0 ? (<p className="text-xs text-muted-foreground text-center py-4">Sin fotos aún</p>) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {(p.photos || []).map((photo: string, i: number) => (
+                <div key={i} className="relative group rounded-lg overflow-hidden aspect-square">
+                  <img src={photo} alt={`Proceso ${i + 1}`} className="w-full h-full object-cover cursor-pointer" onClick={() => window.open(photo, "_blank")} />
+                  <button onClick={() => onRemovePhoto(p.id, i)} className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
