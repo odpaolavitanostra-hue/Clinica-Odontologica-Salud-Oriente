@@ -58,12 +58,12 @@ export const AdminInventory = () => {
 
       <div className="space-y-3">
         {inventory.map((item) => (
-          <div key={item.id} className={`bg-card rounded-xl p-4 flex items-center justify-between flex-wrap gap-3 ${item.stock <= item.minStock ? "border-2 border-gold gold-glow" : "gold-border"}`}>
+          <div key={item.id} className={`bg-card rounded-xl p-4 flex items-center justify-between flex-wrap gap-3 ${item.stock <= item.minStock ? "border-2 border-amber" : "gold-border"}`}>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="font-semibold">{item.name}</p>
                 {item.stock <= item.minStock && (
-                  <span className="flex items-center gap-1 text-xs text-gold font-semibold"><AlertTriangle className="w-3 h-3" /> Stock bajo</span>
+                  <span className="flex items-center gap-1 text-xs text-amber font-semibold"><AlertTriangle className="w-3 h-3" /> Stock bajo</span>
                 )}
               </div>
               <p className="text-sm text-muted-foreground">Stock: {item.stock} • Mín: {item.minStock} • ${item.priceUSD.toFixed(2)} USD</p>

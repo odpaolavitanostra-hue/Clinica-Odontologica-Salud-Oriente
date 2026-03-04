@@ -264,7 +264,7 @@ const DoctorPanel = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold text-sm sm:text-base truncate">{app.patientName}</p>
                         <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
-                          app.status === "pendiente" ? "bg-gold/20 text-gold"
+                          app.status === "pendiente" ? "bg-amber/20 text-amber"
                             : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green"
                             : "bg-destructive/20 text-destructive"
                         }`}>{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
@@ -437,7 +437,7 @@ const DoctorPanel = () => {
                   <p className="text-xs text-muted-foreground">${item.priceUSD.toFixed(2)} • Mín: {item.minStock}</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className={`text-sm font-bold ${item.stock <= item.minStock ? "text-gold" : ""}`}>{item.stock}</span>
+                  <span className={`text-sm font-bold ${item.stock <= item.minStock ? "text-amber" : ""}`}>{item.stock}</span>
                   <span className="text-xs text-muted-foreground">stock</span>
                 </div>
               </div>

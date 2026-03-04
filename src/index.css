@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +6,70 @@
 
 @layer base {
   :root {
-    --background: 0 0% 96%;
-    --foreground: 0 0% 7%;
+    --background: 150 5% 95%;
+    --foreground: 150 10% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
+    --card: 40 20% 98%;
+    --card-foreground: 150 10% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
+    --popover: 40 20% 98%;
+    --popover-foreground: 150 10% 12%;
 
-    --primary: 0 0% 7%;
-    --primary-foreground: 40 30% 95%;
+    --primary: 160 20% 45%;
+    --primary-foreground: 40 30% 97%;
 
-    --secondary: 40 20% 94%;
-    --secondary-foreground: 0 0% 7%;
+    --secondary: 160 8% 92%;
+    --secondary-foreground: 150 10% 12%;
 
-    --muted: 40 10% 93%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 150 6% 91%;
+    --muted-foreground: 150 5% 40%;
 
-    --accent: 43 72% 55%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 160 20% 45%;
+    --accent-foreground: 150 10% 12%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 10% 88%;
-    --input: 40 10% 88%;
-    --ring: 43 72% 55%;
+    --border: 150 8% 85%;
+    --input: 150 8% 85%;
+    --ring: 160 20% 45%;
 
     --radius: 0.75rem;
 
-    --gold: 43 72% 55%;
-    --gold-foreground: 0 0% 7%;
-    --gold-muted: 43 40% 78%;
+    /* JADE PRIMARY (Deep Jade #435A53 lightened for versatility) */
+    --gold: 160 20% 45%;
+    --gold-foreground: 40 30% 97%;
+    --gold-muted: 160 12% 60%;
 
-    --noir: 0 0% 7%;
-    --noir-light: 0 0% 14%;
-    --noir-foreground: 40 30% 95%;
+    /* AMBER ALERT (Original Gold #E8C056 — alerts & warnings ONLY) */
+    --amber: 43 72% 55%;
+    --amber-foreground: 0 0% 7%;
+
+    --noir: 155 5% 12%;
+    --noir-light: 155 5% 18%;
+    --noir-foreground: 40 30% 96%;
 
     --pearl: 40 30% 97%;
-    --pearl-foreground: 0 0% 15%;
+    --pearl-foreground: 150 10% 15%;
 
-    --clinic-green: 145 40% 45%;
+    --clinic-green: 160 28% 50%;
     --clinic-green-foreground: 0 0% 100%;
 
-    --success: 145 63% 42%;
+    --success: 160 40% 42%;
     --warning: 43 72% 55%;
     --info: 210 60% 50%;
 
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 40 30% 95%;
-    --sidebar-primary: 43 72% 55%;
-    --sidebar-primary-foreground: 0 0% 7%;
-    --sidebar-accent: 0 0% 14%;
-    --sidebar-accent-foreground: 40 30% 95%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 43 72% 55%;
+    --sidebar-background: 155 5% 12%;
+    --sidebar-foreground: 40 30% 96%;
+    --sidebar-primary: 160 20% 45%;
+    --sidebar-primary-foreground: 40 30% 97%;
+    --sidebar-accent: 155 5% 18%;
+    --sidebar-accent-foreground: 40 30% 96%;
+    --sidebar-border: 155 5% 24%;
+    --sidebar-ring: 160 20% 45%;
 
     --font-display: 'Playfair Display', serif;
-    --font-body: 'Inter', sans-serif;
+    --font-body: 'Montserrat', sans-serif;
 
     --glass-bg: 0 0% 100% / 0.12;
     --glass-border: 0 0% 100% / 0.2;

@@ -106,13 +106,13 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       </div>
 
       {lowStockItems.length > 0 && (
-        <div className="bg-card rounded-xl p-5 border border-gold/50 space-y-3">
-          <h3 className="font-display font-semibold flex items-center gap-2 text-gold"><AlertTriangle className="w-5 h-5" /> Alertas de Stock Bajo</h3>
+        <div className="bg-card rounded-xl p-5 border border-amber/50 space-y-3">
+          <h3 className="font-display font-semibold flex items-center gap-2 text-amber"><AlertTriangle className="w-5 h-5" /> Alertas de Stock Bajo</h3>
           <div className="space-y-2">
             {lowStockItems.map((item) => (
               <div key={item.id} className="flex items-center justify-between bg-muted rounded-lg px-4 py-2">
                 <span className="text-sm font-medium">{item.name}</span>
-                <span className="text-sm font-bold text-gold">{item.stock} / mín {item.minStock}</span>
+                <span className="text-sm font-bold text-amber">{item.stock} / mín {item.minStock}</span>
               </div>
             ))}
           </div>
@@ -131,7 +131,7 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
                   <p className="text-sm font-semibold">{app.patientName}</p>
                   <p className="text-xs text-muted-foreground">{app.time} • {app.treatment} • {doctors.find((d) => d.id === app.doctorId)?.name}</p>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full font-semibold ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : "bg-destructive/20 text-destructive"}`}>
+                <span className={`text-xs px-2 py-1 rounded-full font-semibold ${app.status === "pendiente" ? "bg-amber/20 text-amber" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : "bg-destructive/20 text-destructive"}`}>
                   {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                 </span>
               </div>

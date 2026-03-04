@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         display: ['Playfair Display', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        body: ['Montserrat', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -68,6 +68,10 @@ export default {
         clinic: {
           green: "hsl(var(--clinic-green))",
           "green-foreground": "hsl(var(--clinic-green-foreground))",
+        },
+        amber: {
+          DEFAULT: "hsl(var(--amber))",
+          foreground: "hsl(var(--amber-foreground))",
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",

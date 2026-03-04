@@ -172,7 +172,7 @@ export const AdminCalendar = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap ${
-            app.status === "pendiente" ? "bg-gold/20 text-gold"
+            app.status === "pendiente" ? "bg-amber/20 text-amber"
               : app.status === "pagada" ? "bg-blue-500/20 text-blue-400"
               : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green"
               : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400"
