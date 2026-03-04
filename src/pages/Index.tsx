@@ -61,9 +61,9 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 lg:mt-20 max-w-4xl mx-auto animate-fade-up-delay-3">
-            <InfoCard icon={<MapPin className="w-5 h-5 text-accent" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui" />
-            <InfoCard icon={<Phone className="w-5 h-5 text-accent" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
-            <InfoCard icon={<Clock className="w-5 h-5 text-accent" />} title="Horario" text="Lun-Vie 8:00-17:00 • Sáb 8:00-14:00" />
+            <InfoCard icon={<MapPin className="w-5 h-5 text-gold" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui" />
+            <InfoCard icon={<Phone className="w-5 h-5 text-gold" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
+            <InfoCard icon={<Clock className="w-5 h-5 text-gold" />} title="Horario" text="Lun-Vie 8:00-17:00 • Sáb 8:00-14:00" />
           </div>
         </div>
       </section>
@@ -71,7 +71,7 @@ const Index = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="font-display text-3xl md:text-4xl text-center font-bold mb-4">
-            Nuestros <span className="text-accent">Servicios</span>
+            Nuestros <span className="text-gold">Servicios</span>
           </h2>
           <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
             Ofrecemos tratamientos odontológicos de alta calidad con tecnología moderna.
@@ -119,10 +119,10 @@ const Index = () => {
         </div>
       </section>
 
-      <footer className="bg-accent py-8">
+      <footer className="noir-gradient py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-          <p className="text-accent-foreground/60 text-sm text-center">© 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.</p>
-          <Link to="/login" className="text-accent-foreground/30 text-xs hover:text-accent-foreground/50 transition-colors">Acceso</Link>
+          <p className="text-noir-foreground/60 text-sm text-center">© 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.</p>
+          <Link to="/login" className="text-noir-foreground/30 text-xs hover:text-noir-foreground/50 transition-colors">Acceso</Link>
         </div>
       </footer>
 

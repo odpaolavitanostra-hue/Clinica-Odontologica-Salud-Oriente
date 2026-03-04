@@ -15,7 +15,7 @@ export const AdminPatients = () => {
   const [adding, setAdding] = useState(false);
   const [viewingPhotos, setViewingPhotos] = useState<string | null>(null);
   const [viewingPdf, setViewingPdf] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", cedula: "", phone: "", email: "", notes: "" });
+  const [form, setForm] = useState({ name: "", cedula: "", phone: "", email: "", notes: "", age: "" });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [editingDoctorId, setEditingDoctorId] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export const AdminPatients = () => {
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
     await addPatient({ ...form, photos: [], clinicalHistoryUrl: "" });
-    setAdding(false); setForm({ name: "", cedula: "", phone: "", email: "", notes: "" });
+    setAdding(false); setForm({ name: "", cedula: "", phone: "", email: "", notes: "", age: "" });
     toast.success("Paciente agregado");
   };
 
@@ -34,7 +34,7 @@ export const AdminPatients = () => {
 
   const startEdit = (p: Patient) => {
     setEditing(p.id);
-    setForm({ name: p.name, cedula: p.cedula, phone: p.phone, email: p.email, notes: p.notes });
+    setForm({ name: p.name, cedula: p.cedula, phone: p.phone, email: p.email, notes: p.notes, age: "" });
   };
 
   const handlePhotoUpload = async (patientId: string, file: File) => {
@@ -77,9 +77,10 @@ export const AdminPatients = () => {
       {(adding || editing) && (
         <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
           <h3 className="font-semibold">{adding ? "Nuevo Paciente" : "Editar Paciente"}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Nombre" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} maxLength={100} />
             <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Cédula" value={form.cedula} onChange={(e) => setForm((p) => ({ ...p, cedula: e.target.value }))} maxLength={20} />
+            <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Edad" value={form.age} onChange={(e) => setForm((p) => ({ ...p, age: e.target.value.replace(/\D/g, '') }))} maxLength={3} type="text" inputMode="numeric" />
             <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Teléfono" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} maxLength={20} />
             <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} maxLength={100} />
           </div>
