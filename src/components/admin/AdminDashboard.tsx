@@ -1,5 +1,5 @@
 import { useClinicData } from "@/hooks/useClinicData";
-import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, Building2 } from "lucide-react";
+import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, Building2, MessageCircle, Stethoscope } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { formatVES } from "@/lib/formatVES";
 
@@ -99,6 +99,43 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
           )}
         </div>
       </div>
+
+      {/* Post-Operative Follow-up */}
+      {(() => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yStr = yesterday.toISOString().split("T")[0];
+        const invasive = ["Endodoncia", "Extracción", "Cirugía"];
+        const postOpPatients = appointments.filter(
+          a => a.date === yStr && a.status === "completada" && invasive.some(t => a.treatment.toLowerCase().includes(t.toLowerCase()))
+        );
+        if (postOpPatients.length === 0) return null;
+        return (
+          <div className="bg-card rounded-xl p-5 gold-border space-y-3">
+            <h3 className="font-display font-semibold flex items-center gap-2">
+              <Stethoscope className="w-5 h-5 text-gold" /> Seguimiento Post-Operatorio (Ayer)
+            </h3>
+            <div className="space-y-2">
+              {postOpPatients.map(app => (
+                <div key={app.id} className="flex items-center justify-between bg-muted rounded-lg px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold">{app.patientName}</p>
+                    <p className="text-xs text-muted-foreground">{app.treatment} • {app.date}</p>
+                  </div>
+                  <a
+                    href={`https://wa.me/${(app.patientPhone || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${app.patientName}, somos de Clínica Salud Oriente. ¿Cómo se siente después de su ${app.treatment}? ¡Su sonrisa merece lo mejor!`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold px-3 py-2 text-xs flex items-center gap-1"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {lowStockItems.length > 0 && (
         <div className="bg-card rounded-xl p-5 border border-amber/50 space-y-3">

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useClinicData, Transaction } from "@/hooks/useClinicData";
-import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays, FileText, Stethoscope, Search, Hash, CreditCard } from "lucide-react";
+import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays, FileText, Stethoscope, Search, Hash, CreditCard, Landmark } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import InvoiceGenerator from "./InvoiceGenerator";
 import RecipeGenerator from "./RecipeGenerator";
 import { formatVES } from "@/lib/formatVES";
+import CierreCaja from "./CierreCaja";
 
 interface AccountingEntry {
   id: string;
@@ -48,7 +49,7 @@ export const AdminFinances = () => {
   const [recipeOpen, setRecipeOpen] = useState(false);
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
-  const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion">("resumen");
+  const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion" | "cierre">("resumen");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("mes");
   const [customDate, setCustomDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -143,7 +144,7 @@ export const AdminFinances = () => {
       <input type="text" placeholder="Descripción" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={newEntry.description} onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })} />
       <div className="flex gap-3">
         <input type="number" step="0.01" placeholder="Monto USD" className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border" value={newEntry.amountUSD} onChange={(e) => setNewEntry({ ...newEntry, amountUSD: e.target.value })} />
-        <button onClick={() => addEntry(type)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Plus className="w-4 h-4" /> Añadir</button>
+        <button onClick={() => addEntry(type)} className="btn-gold px-4 py-2 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Añadir</button>
       </div>
     </div>
   );
@@ -181,8 +182,8 @@ export const AdminFinances = () => {
             <span className="text-sm font-medium">Tasa BCV:</span>
             <input type="number" step="0.01" className="w-24 bg-muted rounded px-2 py-1 text-sm border border-border text-center" value={tasaBCV} onChange={(e) => handleSetTasaBCV(parseFloat(e.target.value) || 0)} />
           </div>
-          <button onClick={exportXLSX} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
-          <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-primary" /> Recipe</button>
+          <button onClick={exportXLSX} className="btn-gold px-4 py-2 text-sm flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
+          <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-primary" /> Recipe</button>
         </div>
       </div>
 
@@ -190,7 +191,7 @@ export const AdminFinances = () => {
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <CalendarDays className="w-4 h-4 text-primary" />
         {(["dia", "semana", "mes", "todo"] as PeriodFilter[]).map((p) => (
-          <button key={p} onClick={() => setPeriodFilter(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${periodFilter === p ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+          <button key={p} onClick={() => setPeriodFilter(p)} className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${periodFilter === p ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
             {p === "dia" ? "Día" : p === "semana" ? "Semana" : p === "mes" ? "Mes" : "Todo"}
           </button>
         ))}
@@ -203,11 +204,12 @@ export const AdminFinances = () => {
       <div className="flex gap-2 mb-6 flex-wrap">
         {[
           { key: "resumen" as const, label: "Resumen", icon: <BookOpen className="w-4 h-4" /> },
+          { key: "cierre" as const, label: "Cierre de Caja", icon: <Landmark className="w-4 h-4" /> },
           { key: "conciliacion" as const, label: "Conciliación", icon: <CreditCard className="w-4 h-4" /> },
           { key: "compras" as const, label: "Compras", icon: <ShoppingCart className="w-4 h-4" /> },
           { key: "ventas" as const, label: "Ventas", icon: <Receipt className="w-4 h-4" /> },
         ].map((tab) => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-4 py-2 rounded text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
             {tab.icon} {tab.label}
           </button>
         ))}
@@ -296,6 +298,8 @@ export const AdminFinances = () => {
 
       {activeTab === "compras" && (<>{renderEntryForm("compras")}{renderEntries(filteredPurchases, "compras")}</>)}
       {activeTab === "ventas" && (<>{renderEntryForm("ventas")}{renderEntries(filteredSales, "ventas")}</>)}
+
+      {activeTab === "cierre" && <CierreCaja date={customDate} transactions={transactions} tasaBCV={tasaBCV} />}
 
       {activeTab === "conciliacion" && <ReconciliationView transactions={transactions} start={start} end={end} tasaBCV={tasaBCV} />}
 

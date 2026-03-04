@@ -133,6 +133,56 @@
     background-color: hsl(var(--gold));
   }
 
+  /* ─── Gold CTA Button ─── */
+  .btn-gold {
+    background-color: hsl(var(--gold));
+    color: hsl(155, 5%, 12%);
+    border-radius: 4px;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .btn-gold:hover {
+    box-shadow: 0 0 20px hsla(43, 78%, 62%, 0.4);
+  }
+  .btn-gold::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, hsla(0, 0%, 100%, 0.25), transparent);
+    transform: skewX(-20deg);
+    transition: none;
+    pointer-events: none;
+  }
+  .btn-gold:hover::after {
+    animation: shimmer 0.8s ease forwards;
+  }
+
+  @keyframes shimmer {
+    from { left: -100%; }
+    to { left: 200%; }
+  }
+
+  /* ─── Luxury Backdrop Blur for modals ─── */
+  .backdrop-luxury {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* ─── Module transition ─── */
+  .module-enter {
+    animation: fade-slide 0.4s ease-out forwards;
+  }
+
+  @keyframes fade-slide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }

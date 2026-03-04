@@ -170,9 +170,9 @@ const Admin = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-gold text-gold-foreground"
                     : "text-noir-foreground/60 hover:text-noir-foreground"
                 }`}
               >
@@ -194,9 +194,9 @@ const Admin = () => {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setMenuOpen(false); }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left text-base font-medium transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded text-left text-base font-medium transition-all ${
                     activeTab === tab.id
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-gold text-gold-foreground"
                       : "text-noir-foreground/70 hover:text-noir-foreground"
                   }`}
                 >
@@ -211,7 +211,9 @@ const Admin = () => {
       )}
 
       <main className="container mx-auto px-4 py-6 max-w-6xl">
-        {renderContent()}
+        <div key={activeTab} className="module-enter">
+          {renderContent()}
+        </div>
       </main>
     </div>
   );

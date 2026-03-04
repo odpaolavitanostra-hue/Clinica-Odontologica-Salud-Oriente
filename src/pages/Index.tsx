@@ -47,13 +47,13 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
               <button
                 onClick={() => { setBookingTreatment(""); setBookingOpen(true); }}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity"
+                className="btn-gold inline-flex items-center gap-2 px-8 py-4 text-lg"
               >
                 Agendar Cita <ArrowRight className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setRentalOpen(true)}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity"
+                className="btn-gold inline-flex items-center gap-2 px-8 py-4 text-lg"
               >
                 Alquiler para Profesionales <Building2 className="w-5 h-5" />
               </button>

@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useClinicalHistory, TRIAGE_QUESTIONS, CONDITIONS, type ClinicalHistory } from "@/hooks/useClinicalHistory";
 import { type Patient } from "@/hooks/useClinicData";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, Lock, FileText, Heart, AlertTriangle, ClipboardList, PenTool, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +28,7 @@ const emptyForm = (): Omit<ClinicalHistory, "id" | "patientId"> => ({
 
 export default function ClinicalHistoryForm({ patient, open, onOpenChange }: Props) {
   const { history, isLoading, save } = useClinicalHistory(patient.id);
+  const { user } = useAuth();
   const [form, setForm] = useState(emptyForm());
   const [signing, setSigning] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -63,6 +66,14 @@ export default function ClinicalHistoryForm({ patient, open, onOpenChange }: Pro
     setSaving(true);
     try {
       await save(patient.id, form);
+      // Audit log
+      await supabase.from("audit_logs").insert({
+        patient_id: patient.id,
+        action: "edit",
+        author_email: user?.email || "unknown",
+        author_name: user?.email || "unknown",
+        changes: { summary: "Historia clínica editada" },
+      });
       toast.success("Historia clínica guardada");
     } catch {
       toast.error("Error al guardar");
