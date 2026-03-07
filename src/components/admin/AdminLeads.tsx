@@ -225,14 +225,14 @@ export const AdminLeads = () => {
         {STATUSES.map(status => {
           const columnLeads = filtered.filter(l => l.status === status.id);
           return (
-            <div key={status.id} className="bg-card/50 rounded-xl p-3 gold-border min-h-[300px] space-y-3">
+            <div key={status.id} className="bg-card/50 rounded-xl p-4 gold-border min-h-[300px] space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                <h4 className="font-display text-base font-semibold flex items-center gap-1.5">
                   <span>{status.emoji}</span> {status.label}
                 </h4>
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{columnLeads.length}</span>
+                <span className="text-sm bg-muted px-2 py-0.5 rounded-full">{columnLeads.length}</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">{status.desc}</p>
+              <p className="text-xs text-muted-foreground">{status.desc}</p>
 
               {/* Campaign button for cold leads */}
               {status.id === "cold" && columnLeads.length > 0 && (
@@ -251,11 +251,11 @@ export const AdminLeads = () => {
 
               <div className="space-y-2">
                 {columnLeads.map(lead => (
-                  <div key={lead.id} className="bg-card rounded-lg p-3 border border-border/50 space-y-2 hover:border-primary/30 transition-all">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {lead.isHighValue && <Star className="w-3.5 h-3.5 text-primary fill-primary" />}
-                        <p className="text-sm font-semibold leading-tight">{lead.name}</p>
+                  <div key={lead.id} className="bg-card rounded-lg p-4 border border-border/50 space-y-2 hover:border-primary/30 transition-all">
+                     <div className="flex items-start justify-between">
+                       <div className="flex items-center gap-1.5">
+                         {lead.isHighValue && <Star className="w-4 h-4 text-primary fill-primary" />}
+                         <p className="font-display text-base font-semibold leading-tight">{lead.name}</p>
                       </div>
                       <div className="flex gap-1">
                         <button onClick={() => editLead(lead)} className="text-muted-foreground hover:text-primary"><Edit2 className="w-3 h-3" /></button>

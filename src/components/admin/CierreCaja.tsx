@@ -42,17 +42,17 @@ export default function CierreCaja({ date, transactions, tasaBCV }: Props) {
         <p className="text-muted-foreground text-sm text-center py-6">No hay pagos confirmados para este día</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {Object.entries(byMethod).map(([method, data]) => {
               const cfg = METHOD_CONFIG[method] || { label: method, icon: <DollarSign className="w-4 h-4" /> };
               return (
-                <div key={method} className="bg-muted rounded-lg p-3 space-y-1">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <div key={method} className="bg-muted rounded-lg p-4 space-y-1" style={{ minHeight: '60px' }}>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                     {cfg.icon} {cfg.label}
                   </div>
-                  <p className="text-sm font-bold">${data.totalUSD.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Bs. {formatVES(data.totalVES)}</p>
-                  <p className="text-[10px] text-muted-foreground">{data.count} pago(s)</p>
+                  <p className="text-base font-bold">${data.totalUSD.toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground">Bs. {formatVES(data.totalVES)}</p>
+                  <p className="text-xs text-muted-foreground">{data.count} pago(s)</p>
                 </div>
               );
             })}

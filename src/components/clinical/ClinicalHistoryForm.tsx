@@ -148,7 +148,7 @@ export default function ClinicalHistoryForm({ patient, open, onOpenChange }: Pro
   const hasRiskConditions = CONDITIONS.some(c => form.conditionsMatrix[c.key]);
   const hasAllergies = form.medicalTriage["allergies"];
 
-  const inputCls = `w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-accent focus:outline-none ${isLocked ? "opacity-60 pointer-events-none" : ""}`;
+  const inputCls = `w-full bg-muted rounded-lg px-4 py-3 text-base border border-border focus:border-clinic-green focus:ring-1 focus:ring-clinic-green focus:outline-none transition-colors ${isLocked ? "opacity-60 pointer-events-none" : ""}`;
   const sectionCls = "space-y-3 p-4 bg-card rounded-xl border border-border";
 
   return (

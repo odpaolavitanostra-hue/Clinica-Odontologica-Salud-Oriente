@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,51 +6,52 @@
 
 @layer base {
   :root {
-    --background: 150 5% 95%;
-    --foreground: 150 10% 12%;
+    /* ─── Diamond Noir V74.0 — Dark-First Palette ─── */
+    --background: 150 5% 14%;
+    --foreground: 40 30% 96%;
 
-    --card: 40 20% 98%;
-    --card-foreground: 150 10% 12%;
+    --card: 150 5% 18%;
+    --card-foreground: 40 30% 96%;
 
-    --popover: 40 20% 98%;
-    --popover-foreground: 150 10% 12%;
+    --popover: 150 5% 16%;
+    --popover-foreground: 40 30% 96%;
 
     --primary: 43 78% 62%;
-    --primary-foreground: 155 5% 12%;
+    --primary-foreground: 150 5% 12%;
 
-    --secondary: 160 8% 92%;
-    --secondary-foreground: 150 10% 12%;
+    --secondary: 150 5% 22%;
+    --secondary-foreground: 40 30% 96%;
 
-    --muted: 150 6% 91%;
-    --muted-foreground: 150 5% 40%;
+    --muted: 150 5% 20%;
+    --muted-foreground: 40 10% 60%;
 
     --accent: 43 78% 62%;
-    --accent-foreground: 0 0% 7%;
+    --accent-foreground: 150 5% 12%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 150 8% 85%;
-    --input: 150 8% 85%;
+    --border: 150 5% 24%;
+    --input: 150 5% 24%;
     --ring: 43 78% 62%;
 
     --radius: 0.75rem;
 
-    /* ORIGINAL GOLD (#E8C056) — Accent for premium borders, alerts, money highlights */
+    /* GOLD (#E8C056) */
     --gold: 43 78% 62%;
-    --gold-foreground: 0 0% 7%;
+    --gold-foreground: 150 5% 12%;
     --gold-muted: 43 60% 72%;
 
-    /* AMBER ALERT (Original Gold #E8C056 — alerts & warnings ONLY) */
+    /* AMBER (alerts ONLY) */
     --amber: 43 72% 55%;
-    --amber-foreground: 0 0% 7%;
+    --amber-foreground: 150 5% 12%;
 
-    --noir: 155 5% 12%;
-    --noir-light: 155 5% 18%;
+    --noir: 150 5% 12%;
+    --noir-light: 150 5% 18%;
     --noir-foreground: 40 30% 96%;
 
-    --pearl: 40 30% 97%;
-    --pearl-foreground: 150 10% 15%;
+    --pearl: 40 30% 96%;
+    --pearl-foreground: 150 5% 12%;
 
     --clinic-green: 160 28% 50%;
     --clinic-green-foreground: 0 0% 100%;
@@ -59,21 +60,21 @@
     --warning: 43 72% 55%;
     --info: 210 60% 50%;
 
-    --sidebar-background: 155 5% 12%;
+    --sidebar-background: 150 5% 10%;
     --sidebar-foreground: 40 30% 96%;
     --sidebar-primary: 43 78% 62%;
-    --sidebar-primary-foreground: 155 5% 12%;
-    --sidebar-accent: 155 5% 18%;
+    --sidebar-primary-foreground: 150 5% 12%;
+    --sidebar-accent: 150 5% 16%;
     --sidebar-accent-foreground: 40 30% 96%;
-    --sidebar-border: 155 5% 24%;
+    --sidebar-border: 150 5% 20%;
     --sidebar-ring: 43 78% 62%;
 
-    --font-display: 'Playfair Display', serif;
-    --font-body: 'Montserrat', sans-serif;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Poppins', sans-serif;
 
-    --glass-bg: 0 0% 100% / 0.12;
-    --glass-border: 0 0% 100% / 0.2;
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --glass-bg: 0 0% 100% / 0.06;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -85,10 +86,32 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    font-size: 20px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Scrollbar styling for Diamond Noir */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--noir));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
   }
 }
 
@@ -102,11 +125,11 @@
   }
 
   .glass-card-pearl {
-    background: hsla(40, 30%, 97%, 0.85);
+    background: hsla(150, 5%, 18%, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsla(40, 30%, 97%, 0.6);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+    border: 1px solid hsla(150, 5%, 24%, 0.6);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
   }
 
   .gold-border {
@@ -118,11 +141,11 @@
   }
 
   .noir-gradient {
-    background: linear-gradient(135deg, hsl(0, 0%, 7%) 0%, hsl(0, 0%, 14%) 100%);
+    background: linear-gradient(135deg, hsl(150, 5%, 10%) 0%, hsl(150, 5%, 16%) 100%);
   }
 
   .hero-overlay {
-    background: linear-gradient(180deg, hsla(0, 0%, 7%, 0.75) 0%, hsla(0, 0%, 7%, 0.9) 100%);
+    background: linear-gradient(180deg, hsla(150, 5%, 10%, 0.8) 0%, hsla(150, 5%, 10%, 0.95) 100%);
   }
 
   .text-gold {
@@ -136,9 +159,10 @@
   /* ─── Gold CTA Button ─── */
   .btn-gold {
     background-color: hsl(var(--gold));
-    color: hsl(155, 5%, 12%);
+    color: hsl(150, 5%, 12%);
     border-radius: 4px;
     font-weight: 600;
+    min-height: 48px;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -167,13 +191,14 @@
     to { left: 200%; }
   }
 
-  /* ─── Luxury Backdrop Blur for modals ─── */
+  /* ─── Glassmorphism Modal Backdrop ─── */
   .backdrop-luxury {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    background: hsla(150, 5%, 10%, 0.8);
   }
 
-  /* ─── Module transition ─── */
+  /* ─── Module transition (Fade & Slide 0.4s) ─── */
   .module-enter {
     animation: fade-slide 0.4s ease-out forwards;
   }
@@ -214,5 +239,12 @@
   .animate-fade-up-delay-3 {
     animation: fade-up 0.8s ease-out 0.6s forwards;
     opacity: 0;
+  }
+}
+
+/* ─── Responsive: mobile minimum 18px ─── */
+@media (max-width: 768px) {
+  body {
+    font-size: 18px;
   }
 }
