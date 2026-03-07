@@ -225,14 +225,14 @@ export const AdminLeads = () => {
         {STATUSES.map(status => {
           const columnLeads = filtered.filter(l => l.status === status.id);
           return (
-            <div key={status.id} className="bg-card/50 rounded-xl p-3 gold-border min-h-[300px] space-y-3">
+            <div key={status.id} className="bg-card/50 rounded-xl p-4 gold-border min-h-[300px] space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                <h4 className="font-display text-base font-semibold flex items-center gap-1.5">
                   <span>{status.emoji}</span> {status.label}
                 </h4>
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{columnLeads.length}</span>
+                <span className="text-sm bg-muted px-2 py-0.5 rounded-full">{columnLeads.length}</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">{status.desc}</p>
+              <p className="text-xs text-muted-foreground">{status.desc}</p>
 
               {/* Campaign button for cold leads */}
               {status.id === "cold" && columnLeads.length > 0 && (
