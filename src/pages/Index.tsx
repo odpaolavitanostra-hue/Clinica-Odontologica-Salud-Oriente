@@ -1,23 +1,31 @@
 import { useState } from "react";
 import {
-  MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays,
-  Sparkles, Stethoscope, Scissors, Droplets, Eye, Shield, SmilePlus, Wrench, MessageCircle
+  MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays, MessageCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
+import serviceBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
+import serviceEndodoncia from "@/assets/service-endodoncia.jpg";
+import serviceExtraccion from "@/assets/service-extraccion.jpg";
+import serviceLimpieza from "@/assets/service-limpieza.jpg";
+import serviceRevision from "@/assets/service-revision.jpg";
+import serviceProtesis from "@/assets/service-protesis.jpg";
+import serviceResina from "@/assets/service-resina.jpg";
+import serviceImplantes from "@/assets/service-implantes.jpg";
+import serviceOtros from "@/assets/service-otros.jpg";
 
 const SERVICES = [
-  { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
-  { name: "Endodoncia", treatment: "Endodoncia", icon: Stethoscope, desc: "Tratamiento de conductos para salvar y preservar tu pieza dental." },
-  { name: "Extracción", treatment: "Extracción", icon: Scissors, desc: "Procedimientos seguros y modernos con mínima molestia." },
-  { name: "Limpieza Dental", treatment: "Limpieza Dental", icon: Droplets, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
-  { name: "Revisión", treatment: "Revisión", icon: Eye, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
-  { name: "Prótesis", treatment: "Prótesis", icon: Shield, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
-  { name: "Resina Compuesta", treatment: "Resina Compuesta", icon: SmilePlus, desc: "Restauraciones estéticas con materiales de última generación." },
-  { name: "Implantes", treatment: "Implantes", icon: Wrench, desc: "Implantes dentales de alta calidad para resultados permanentes." },
-  { name: "Otros", treatment: "Otros", icon: CalendarDays, desc: "Consulta personalizada según tus necesidades específicas." },
+  { name: "Blanqueamiento", treatment: "Blanqueamiento", img: serviceBlanqueamiento, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
+  { name: "Endodoncia", treatment: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar y preservar tu pieza dental." },
+  { name: "Extracción", treatment: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros y modernos con mínima molestia." },
+  { name: "Limpieza Dental", treatment: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
+  { name: "Revisión", treatment: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
+  { name: "Prótesis", treatment: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
+  { name: "Resina Compuesta", treatment: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
+  { name: "Implantes", treatment: "Implantes", img: serviceImplantes, desc: "Implantes dentales de alta calidad para resultados permanentes." },
+  { name: "Otros", treatment: "Otros", img: serviceOtros, desc: "Consulta personalizada según tus necesidades específicas." },
 ];
 
 const WA_LINK = "https://wa.me/584227180013?text=Hola,%20deseo%20agendar%20una%20evaluación%20en%20Salud%20Oriente.";
@@ -66,7 +74,6 @@ const Index = () => {
             loading="eager"
           />
           <div className="absolute inset-0 hero-overlay" />
-          {/* Radial glow for text pop */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsla(43,78%,62%,0.06)_0%,_transparent_70%)]" />
 
           <div className="relative z-10 container mx-auto px-4 pt-24 lg:pt-32 pb-16 lg:pb-24">
@@ -97,7 +104,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Info cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14 lg:mt-20 max-w-4xl mx-auto animate-fade-up-delay-3">
               <InfoCard icon={<MapPin className="w-5 h-5 text-gold" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz" href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" />
               <InfoCard icon={<Phone className="w-5 h-5 text-gold" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
@@ -116,29 +122,32 @@ const Index = () => {
               Tratamientos odontológicos de alta calidad con tecnología moderna y atención personalizada.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {SERVICES.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <button
-                    key={s.name}
-                    onClick={() => openBooking(s.treatment)}
-                    className="bg-card rounded-xl p-6 text-left border border-border hover:border-clinic-green hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-                  >
-                    <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
-                      <Icon className="w-6 h-6 text-gold" />
-                    </div>
+              {SERVICES.map((s) => (
+                <button
+                  key={s.name}
+                  onClick={() => openBooking(s.treatment)}
+                  className="bg-card rounded-xl overflow-hidden text-left border border-border hover:border-clinic-green hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="h-44 overflow-hidden">
+                    <img
+                      src={s.img}
+                      alt={s.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-5">
                     <h3 className="font-display text-xl font-semibold mb-2">{s.name}</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
-                  </button>
-                );
-              })}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ── CONTACTO & MAPA ── */}
         <section id="contacto" className="relative py-20 noir-gradient">
-          {/* Floating contact card */}
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-border p-8 md:p-12 mb-12">
               <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center">
@@ -163,7 +172,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Map */}
             <div className="max-w-4xl mx-auto">
               <h3 className="font-display text-2xl text-noir-foreground font-bold mb-6 text-center">Encuéntranos</h3>
               <div className="rounded-xl overflow-hidden gold-border">
