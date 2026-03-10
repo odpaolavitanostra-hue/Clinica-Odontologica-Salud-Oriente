@@ -1,130 +1,215 @@
 import { useState } from "react";
-import { MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays } from "lucide-react";
+import {
+  MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays,
+  Sparkles, Stethoscope, Scissors, Droplets, Eye, Shield, SmilePlus, Wrench, MessageCircle
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
-import serviceLimpieza from "@/assets/service-limpieza.jpg";
-import serviceResina from "@/assets/service-resina.jpg";
-import serviceExtraccion from "@/assets/service-extraccion.jpg";
-import serviceEndodoncia from "@/assets/service-endodoncia.jpg";
-import serviceRevision from "@/assets/service-revision.jpg";
-import serviceBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
-import serviceProtesis from "@/assets/service-protesis.jpg";
+
+const SERVICES = [
+  { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
+  { name: "Endodoncia", treatment: "Endodoncia", icon: Stethoscope, desc: "Tratamiento de conductos para salvar y preservar tu pieza dental." },
+  { name: "Extracción", treatment: "Extracción", icon: Scissors, desc: "Procedimientos seguros y modernos con mínima molestia." },
+  { name: "Limpieza Dental", treatment: "Limpieza Dental", icon: Droplets, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
+  { name: "Revisión", treatment: "Revisión", icon: Eye, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
+  { name: "Prótesis", treatment: "Prótesis", icon: Shield, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
+  { name: "Resina Compuesta", treatment: "Resina Compuesta", icon: SmilePlus, desc: "Restauraciones estéticas con materiales de última generación." },
+  { name: "Implantes", treatment: "Implantes", icon: Wrench, desc: "Implantes dentales de alta calidad para resultados permanentes." },
+  { name: "Otros", treatment: "Otros", icon: CalendarDays, desc: "Consulta personalizada según tus necesidades específicas." },
+];
+
+const WA_LINK = "https://wa.me/584227180013?text=Hola,%20deseo%20agendar%20una%20evaluación%20en%20Salud%20Oriente.";
 
 const Index = () => {
   const [rentalOpen, setRentalOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingTreatment, setBookingTreatment] = useState("");
+
+  const openBooking = (treatment = "") => {
+    setBookingTreatment(treatment);
+    setBookingOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background font-body">
-      <nav className="fixed top-0 left-0 right-0 z-50 noir-gradient">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="font-display text-lg md:text-xl text-gold font-semibold tracking-wide">
+      {/* ── STICKY NAVBAR ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[10px] bg-noir/80 border-b border-noir-light/30">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <Link to="/" className="font-display text-lg md:text-xl text-gold font-bold tracking-wide">
             COSO
-          </h1>
-          <div className="flex items-center gap-4">
-          </div>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Servicios</a>
+            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Contacto</a>
+            <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">
+              Alquiler
+            </button>
+          </nav>
+          <button
+            onClick={() => openBooking()}
+            className="btn-gold px-5 py-2 text-sm flex items-center gap-2"
+          >
+            <CalendarDays className="w-4 h-4" /> Cita Rápida
+          </button>
         </div>
-      </nav>
+      </header>
 
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <img src={heroImage} alt="Consultorio dental moderno" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 hero-overlay" />
-        
-        <div className="relative z-10 container mx-auto px-4 pt-20 lg:pt-32 pb-16 lg:pb-24">
-          <div className="max-w-3xl mx-auto text-center">
-            <p className="text-gold text-sm md:text-base font-semibold tracking-[0.3em] uppercase mb-6 animate-fade-up">
-              Odontología de Excelencia
-            </p>
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl text-noir-foreground font-bold leading-tight mb-6 animate-fade-up-delay-1">
-              Clínica Odontológica{" "}
-              <span className="text-gold">Salud Oriente</span>
-            </h1>
-            <p className="text-noir-foreground/70 text-lg md:text-xl mb-10 max-w-xl mx-auto animate-fade-up-delay-2">
-              Tu sonrisa merece lo mejor. Atención profesional y personalizada en Puerto La Cruz.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
-              <button
-                onClick={() => { setBookingTreatment(""); setBookingOpen(true); }}
-                className="btn-gold inline-flex items-center gap-2 px-8 py-4 text-lg"
-              >
-                Agendar Cita <ArrowRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setRentalOpen(true)}
-                className="btn-gold inline-flex items-center gap-2 px-8 py-4 text-lg"
-              >
-                Alquiler para Profesionales <Building2 className="w-5 h-5" />
-              </button>
+      <main>
+        {/* ── HERO SECTION ── */}
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+          <img
+            src={heroImage}
+            alt="Interior moderno de la Clínica Odontológica Salud Oriente en Puerto La Cruz"
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 hero-overlay" />
+          {/* Radial glow for text pop */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsla(43,78%,62%,0.06)_0%,_transparent_70%)]" />
+
+          <div className="relative z-10 container mx-auto px-4 pt-24 lg:pt-32 pb-16 lg:pb-24">
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="text-gold text-sm md:text-base font-semibold tracking-[0.3em] uppercase mb-6 animate-fade-up">
+                Odontología de Excelencia
+              </p>
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-noir-foreground font-bold leading-tight mb-6 animate-fade-up-delay-1">
+                Odontología Estética e Implantes en{" "}
+                <span className="text-gold">Puerto La Cruz</span>
+              </h1>
+              <p className="text-noir-foreground/80 text-lg md:text-xl mb-10 max-w-xl mx-auto animate-fade-up-delay-2 leading-relaxed">
+                Recupera tu sonrisa con tratamientos modernos, seguros y personalizados.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
+                <button
+                  onClick={() => openBooking()}
+                  className="btn-gold inline-flex items-center gap-2 px-8 py-4 text-lg"
+                >
+                  Agendar Cita <ArrowRight className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setRentalOpen(true)}
+                  className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold rounded border-2 border-gold text-gold hover:bg-gold/10 transition-colors"
+                >
+                  Alquiler para Profesionales <Building2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Info cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14 lg:mt-20 max-w-4xl mx-auto animate-fade-up-delay-3">
+              <InfoCard icon={<MapPin className="w-5 h-5 text-gold" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz" href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" />
+              <InfoCard icon={<Phone className="w-5 h-5 text-gold" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
+              <InfoCard icon={<Clock className="w-5 h-5 text-gold" />} title="Horario" text="Lun-Vie 8:00–17:00 · Sáb 8:00–14:00" />
             </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 lg:mt-20 max-w-4xl mx-auto animate-fade-up-delay-3">
-            <InfoCard icon={<MapPin className="w-5 h-5 text-gold" />} title="Ubicación" text="C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui" />
-            <InfoCard icon={<Phone className="w-5 h-5 text-gold" />} title="Teléfono" text="0422-7180013" href="https://wa.me/584227180013" />
-            <InfoCard icon={<Clock className="w-5 h-5 text-gold" />} title="Horario" text="Lun-Vie 8:00-17:00 • Sáb 8:00-14:00" />
+        {/* ── SERVICIOS GRID ── */}
+        <section id="servicios" className="py-20 bg-background">
+          <div className="container mx-auto px-4">
+            <h2 className="font-display text-3xl md:text-4xl text-center font-bold mb-4">
+              Nuestros <span className="text-gold">Servicios</span>
+            </h2>
+            <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
+              Tratamientos odontológicos de alta calidad con tecnología moderna y atención personalizada.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {SERVICES.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <button
+                    key={s.name}
+                    onClick={() => openBooking(s.treatment)}
+                    className="bg-card rounded-xl p-6 text-left border border-border hover:border-clinic-green hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
+                      <Icon className="w-6 h-6 text-gold" />
+                    </div>
+                    <h3 className="font-display text-xl font-semibold mb-2">{s.name}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <h2 className="font-display text-3xl md:text-4xl text-center font-bold mb-4">
-            Nuestros <span className="text-gold">Servicios</span>
-          </h2>
-          <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
-            Ofrecemos tratamientos odontológicos de alta calidad con tecnología moderna.
+        {/* ── CONTACTO & MAPA ── */}
+        <section id="contacto" className="relative py-20 noir-gradient">
+          {/* Floating contact card */}
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-border p-8 md:p-12 mb-12">
+              <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center">
+                ¿Listo para tu nueva <span className="text-gold">sonrisa</span>?
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 hover:text-gold transition-colors">
+                  <MapPin className="w-6 h-6 text-gold" />
+                  <span className="font-display font-semibold">Ubicación</span>
+                  <span className="text-muted-foreground text-sm">C.C Novocentro piso 1, local 1-02, Puerto La Cruz, Anzoátegui</span>
+                </a>
+                <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 hover:text-gold transition-colors">
+                  <Phone className="w-6 h-6 text-gold" />
+                  <span className="font-display font-semibold">WhatsApp</span>
+                  <span className="text-muted-foreground text-sm">0422-7180013</span>
+                </a>
+                <div className="flex flex-col items-center gap-2">
+                  <Clock className="w-6 h-6 text-gold" />
+                  <span className="font-display font-semibold">Horario</span>
+                  <span className="text-muted-foreground text-sm">Lun-Vie 8:00–17:00<br />Sáb 8:00–14:00</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Map */}
+            <div className="max-w-4xl mx-auto">
+              <h3 className="font-display text-2xl text-noir-foreground font-bold mb-6 text-center">Encuéntranos</h3>
+              <div className="rounded-xl overflow-hidden gold-border">
+                <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="block w-full">
+                  <iframe
+                    src="https://maps.google.com/maps?q=Cl%C3%ADnica+Odontol%C3%B3gica+Salud+Oriente+Novocentro+Puerto+La+Cruz+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
+                    width="100%"
+                    height="350"
+                    style={{ border: 0, pointerEvents: "none" }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Ubicación de la Clínica Odontológica Salud Oriente"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ── FOOTER ── */}
+      <footer className="noir-gradient py-10 border-t border-noir-light/20">
+        <div className="container mx-auto px-4 text-center space-y-3">
+          <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
+            "Tu sonrisa merece lo mejor..."
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[
-              { name: "Blanqueamiento", treatment: "Blanqueamiento", img: serviceBlanqueamiento, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros." },
-              { name: "Endodoncia", treatment: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar tu pieza dental." },
-              { name: "Extracción", treatment: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros con mínima molestia." },
-              { name: "Limpieza Dental", treatment: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
-              { name: "Otros", treatment: "Otros", img: serviceRevision, desc: "Consulta personalizada según tus necesidades." },
-              { name: "Prótesis", treatment: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
-              { name: "Resina Compuesta", treatment: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
-              { name: "Revisión", treatment: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
-            ].map((s) => (
-              <button
-                key={s.name}
-                onClick={() => { setBookingTreatment(s.treatment); setBookingOpen(true); }}
-                className="bg-card rounded-xl overflow-hidden gold-border hover:gold-glow transition-shadow duration-300 group block text-left"
-              >
-                <div className="h-40 overflow-hidden">
-                  <img src={s.img} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
-                <div className="p-5">
-                  <h3 className="font-display text-lg font-semibold mb-2">{s.name}</h3>
-                  <p className="text-muted-foreground text-sm">{s.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 noir-gradient">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl text-noir-foreground font-bold mb-8">Encuéntranos</h2>
-          <div className="max-w-4xl mx-auto rounded-xl overflow-hidden gold-border">
-            <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="block w-full">
-            <iframe
-              src="https://maps.google.com/maps?q=Cl%C3%ADnica+Odontol%C3%B3gica+Salud+Oriente+Novocentro+Puerto+La+Cruz+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
-              width="100%" height="350" style={{ border: 0, pointerEvents: "none" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Ubicación de la clínica"
-            />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="noir-gradient py-8">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-          <p className="text-noir-foreground/60 text-sm text-center">© 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.</p>
-          <Link to="/login" className="text-noir-foreground/30 text-xs hover:text-noir-foreground/50 transition-colors">Acceso</Link>
+          <p className="text-noir-foreground/50 text-sm">
+            RIF: J-50800151-6 · © 2026 Clínica Odontológica Salud Oriente. Todos los derechos reservados.
+          </p>
+          <Link to="/login" className="text-noir-foreground/25 text-xs hover:text-noir-foreground/50 transition-colors inline-block">
+            Acceso
+          </Link>
         </div>
       </footer>
+
+      {/* ── WHATSAPP FAB ── */}
+      <a
+        href={WA_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+        aria-label="Contactar por WhatsApp"
+      >
+        <MessageCircle className="w-7 h-7" />
+      </a>
 
       <RentalRequestForm open={rentalOpen} onOpenChange={setRentalOpen} />
       <BookingDialog open={bookingOpen} onOpenChange={setBookingOpen} initialTreatment={bookingTreatment} />
@@ -132,15 +217,17 @@ const Index = () => {
   );
 };
 
-const InfoCard = ({ icon, title, text, href }: { icon: React.ReactNode; title: string; text: string; href?: string }) => {
-  const link = href || (title === "Ubicación" ? "https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" : undefined);
-  return (
-  <a href={link} target={link ? "_blank" : undefined} rel={link ? "noopener noreferrer" : undefined} className="glass-card-pearl rounded-xl p-5 text-center block hover:opacity-90 transition-opacity">
+const InfoCard = ({ icon, title, text, href }: { icon: React.ReactNode; title: string; text: string; href?: string }) => (
+  <a
+    href={href}
+    target={href ? "_blank" : undefined}
+    rel={href ? "noopener noreferrer" : undefined}
+    className="glass-card-pearl rounded-xl p-5 text-center block hover:opacity-90 transition-opacity"
+  >
     <div className="flex items-center justify-center mb-3">{icon}</div>
     <h3 className="font-display font-semibold text-pearl-foreground mb-1">{title}</h3>
     <p className="text-pearl-foreground/70 text-sm">{text}</p>
   </a>
-  );
-};
+);
 
 export default Index;
