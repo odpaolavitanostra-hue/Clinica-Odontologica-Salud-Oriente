@@ -43,6 +43,15 @@ const Index = () => {
       {/* ── STICKY NAVBAR ── */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[10px] bg-noir/80 border-b border-noir-light/30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          {/* Mobile: Hamburger */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-noir-foreground/70 hover:text-gold transition-colors p-1"
+            aria-label="Menú"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
           {/* Left: Nav links (desktop) */}
           <nav className="hidden md:flex items-center gap-6 flex-1">
             <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Tratamientos</a>
@@ -53,11 +62,11 @@ const Index = () => {
           </nav>
 
           {/* Center: Logo */}
-          <Link to="/" className="flex items-center justify-center mx-4 md:mx-0">
+          <Link to="/" className="flex items-center justify-center">
             <img
               src={logoWhite}
               alt="Clínica Odontológica Salud Oriente"
-              className="h-[70px] w-auto md:h-[80px] max-w-[250px] md:max-w-[300px]"
+              className="h-[50px] w-auto md:h-[80px] max-w-[150px] md:max-w-[300px]"
             />
           </Link>
 
@@ -77,14 +86,34 @@ const Index = () => {
             </button>
           </div>
 
-          {/* Mobile: CTA only */}
+          {/* Mobile: CTA */}
           <button
             onClick={() => openBooking()}
-            className="md:hidden btn-gold px-4 py-2 text-sm flex items-center gap-2"
+            className="md:hidden btn-gold px-3 py-2 text-xs flex items-center gap-1.5"
           >
-            <CalendarDays className="w-4 h-4" /> Cita
+            <CalendarDays className="w-3.5 h-3.5" /> Cita
           </button>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-noir/95 backdrop-blur-md border-t border-noir-light/20 animate-fade-up">
+            <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
+              <a href="#servicios" onClick={() => setMobileMenuOpen(false)} className="text-noir-foreground/80 hover:text-gold transition-colors text-base font-medium py-2 border-b border-noir-light/10">
+                Tratamientos
+              </a>
+              <a href="#contacto" onClick={() => setMobileMenuOpen(false)} className="text-noir-foreground/80 hover:text-gold transition-colors text-base font-medium py-2 border-b border-noir-light/10">
+                Nosotros
+              </a>
+              <button onClick={() => { setRentalOpen(true); setMobileMenuOpen(false); }} className="text-left text-noir-foreground/80 hover:text-gold transition-colors text-base font-medium py-2 border-b border-noir-light/10">
+                Alquiler para Profesionales
+              </button>
+              <a href="#contacto" onClick={() => setMobileMenuOpen(false)} className="text-center mt-2 px-5 py-2.5 text-sm font-semibold rounded border border-clinic-green text-noir-foreground hover:bg-clinic-green/10 transition-colors">
+                Contactar
+              </a>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main>
