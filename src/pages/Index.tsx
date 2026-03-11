@@ -8,8 +8,8 @@ import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
-import logoWhite from "@/assets/logo-white.png";
-import logoGreen from "@/assets/logo-green.png";
+import logoWhite from "@/assets/logo-white.svg";
+import logoGreen from "@/assets/logo-green.svg";
 
 const SERVICES: { name: string; treatment: string; icon: LucideIcon; img?: string; desc: string }[] = [
   { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
@@ -40,21 +40,46 @@ const Index = () => {
       {/* ── STICKY NAVBAR ── */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[10px] bg-noir/80 border-b border-noir-light/30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center">
-            <img src={logoWhite} alt="Clínica Odontológica Salud Oriente" className="h-[60px] w-auto" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Servicios</a>
-            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Contacto</a>
+          {/* Left: Nav links (desktop) */}
+          <nav className="hidden md:flex items-center gap-6 flex-1">
+            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Tratamientos</a>
+            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Nosotros</a>
             <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">
               Alquiler
             </button>
           </nav>
+
+          {/* Center: Logo */}
+          <Link to="/" className="flex items-center justify-center mx-4 md:mx-0">
+            <img
+              src={logoWhite}
+              alt="Clínica Odontológica Salud Oriente"
+              className="h-[70px] w-auto md:h-[80px] max-w-[250px] md:max-w-[300px]"
+            />
+          </Link>
+
+          {/* Right: Action buttons (desktop) */}
+          <div className="hidden md:flex items-center gap-3 flex-1 justify-end">
+            <a
+              href="#contacto"
+              className="px-5 py-2 text-sm font-semibold rounded border border-clinic-green text-noir-foreground hover:bg-clinic-green/10 transition-colors"
+            >
+              Contactar
+            </a>
+            <button
+              onClick={() => openBooking()}
+              className="btn-gold px-5 py-2 text-sm flex items-center gap-2"
+            >
+              <CalendarDays className="w-4 h-4" /> Agendar Cita
+            </button>
+          </div>
+
+          {/* Mobile: CTA only */}
           <button
             onClick={() => openBooking()}
-            className="btn-gold px-5 py-2 text-sm flex items-center gap-2"
+            className="md:hidden btn-gold px-4 py-2 text-sm flex items-center gap-2"
           >
-            <CalendarDays className="w-4 h-4" /> Cita Rápida
+            <CalendarDays className="w-4 h-4" /> Cita
           </button>
         </div>
       </header>
@@ -71,14 +96,14 @@ const Index = () => {
           <div className="absolute inset-0 hero-overlay" />
           {/* Watermark isotipo */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img src={logoWhite} alt="" className="w-[600px] h-auto opacity-[0.03]" aria-hidden="true" />
+            <img src={logoWhite} alt="" className="w-[500px] md:w-[700px] h-auto opacity-[0.03]" aria-hidden="true" />
           </div>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsla(43,78%,62%,0.06)_0%,_transparent_70%)]" />
 
           <div className="relative z-10 container mx-auto px-4 pt-24 lg:pt-32 pb-16 lg:pb-24">
             <div className="max-w-3xl mx-auto text-center">
               <p className="text-gold text-sm md:text-base font-semibold tracking-[0.3em] uppercase mb-6 animate-fade-up">
-                Odontología de Excelencia
+                Clínica Odontológica Salud Oriente
               </p>
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-noir-foreground font-bold leading-tight mb-6 animate-fade-up-delay-1">
                 Odontología Estética e Implantes en{" "}
@@ -159,7 +184,7 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-clinic-green/10 p-8 md:p-12 mb-12">
               <div className="flex justify-center mb-6">
-                <img src={logoGreen} alt="Clínica Odontológica Salud Oriente" className="h-20 w-auto" />
+                <img src={logoGreen} alt="Clínica Odontológica Salud Oriente" className="h-[80px] md:h-[100px] w-auto max-w-[300px]" />
               </div>
               <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center text-pearl-foreground">
                 ¿Listo para tu nueva <span className="text-clinic-green">sonrisa</span>?
@@ -207,7 +232,7 @@ const Index = () => {
       {/* ── FOOTER ── */}
       <footer className="noir-gradient py-10 border-t border-noir-light/20">
         <div className="container mx-auto px-4 text-center space-y-4">
-          <img src={logoWhite} alt="Salud Oriente" className="h-12 w-auto mx-auto mb-2" />
+          <img src={logoWhite} alt="Salud Oriente" className="h-[80px] md:h-[100px] w-auto max-w-[350px] mx-auto mb-2" />
           <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
             "Tu sonrisa merece lo mejor..."
           </p>
