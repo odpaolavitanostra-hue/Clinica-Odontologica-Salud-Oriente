@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
-import logoWhite from "@/assets/logo-white.svg";
+import logoWhite from "@/assets/logo-white.png";
 import logoGreen from "@/assets/logo-green.svg";
 
 const SERVICES: { name: string; treatment: string; icon: LucideIcon; img?: string; desc: string }[] = [
