@@ -48,7 +48,7 @@ const Index = () => {
             <img
               src={logoWhite}
               alt="Clínica Odontológica Salud Oriente"
-              className="w-[180px] md:w-[280px] h-[60px] md:h-[80px] object-contain"
+              className="w-[230px] md:w-[280px] h-[70px] md:h-[80px] object-contain"
             />
           </Link>
 
