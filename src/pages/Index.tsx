@@ -119,26 +119,35 @@ const Index = () => {
               Tratamientos odontológicos de alta calidad con tecnología moderna y atención personalizada.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {SERVICES.map((s) => (
-                <button
-                  key={s.name}
-                  onClick={() => openBooking(s.treatment)}
-                  className="bg-card rounded-xl overflow-hidden text-left border border-border hover:border-clinic-green hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  <div className="h-44 overflow-hidden">
-                    <img
-                      src={s.img}
-                      alt={s.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-display text-xl font-semibold mb-2">{s.name}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
-                  </div>
-                </button>
-              ))}
+              {SERVICES.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <button
+                    key={s.name}
+                    onClick={() => openBooking(s.treatment)}
+                    className="bg-card rounded-xl overflow-hidden text-left border border-border hover:border-clinic-green hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                  >
+                    {s.img ? (
+                      <div className="h-44 overflow-hidden">
+                        <img
+                          src={s.img}
+                          alt={s.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-44 flex items-center justify-center bg-secondary/40 group-hover:bg-secondary/60 transition-colors duration-300">
+                        <Icon className="w-14 h-14 text-gold group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <h3 className="font-display text-xl font-semibold mb-2">{s.name}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
