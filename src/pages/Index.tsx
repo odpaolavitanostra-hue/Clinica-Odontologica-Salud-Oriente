@@ -54,30 +54,14 @@ const Index = () => {
             />
           </Link>
 
-          {/* Center: Logo text + Nav links (desktop) */}
-          <div className="hidden md:flex flex-col items-center flex-1 mx-4">
-            <img
-              src={logoHeaderWhite}
-              alt="Clínica Odontológica Salud Oriente"
-              className="h-[28px] lg:h-[34px] w-auto object-contain mb-1 opacity-90"
-            />
-            <nav className="flex items-center gap-6">
-              <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-xs font-medium tracking-wide uppercase">Tratamientos</a>
-              <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-xs font-medium tracking-wide uppercase">Nosotros</a>
-              <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-xs font-medium tracking-wide uppercase">
-                Alquiler
-              </button>
-            </nav>
-          </div>
-
-          {/* Mobile center: Logo text */}
-          <div className="md:hidden flex-1 flex justify-center mx-2">
-            <img
-              src={logoHeaderWhite}
-              alt="Clínica Odontológica Salud Oriente"
-              className="h-[20px] w-auto object-contain opacity-90"
-            />
-          </div>
+          {/* Center: Nav links (desktop) */}
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium tracking-wide">Tratamientos</a>
+            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium tracking-wide">Nosotros</a>
+            <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium tracking-wide">
+              Alquiler
+            </button>
+          </nav>
 
           {/* Right: Action buttons (desktop) + Mobile hamburger & CTA */}
           <div className="flex items-center gap-3 shrink-0">
