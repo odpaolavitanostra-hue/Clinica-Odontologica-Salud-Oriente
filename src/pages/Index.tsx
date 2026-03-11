@@ -47,9 +47,9 @@ const Index = () => {
           {/* Left: Logo (principal) */}
           <Link to="/" className="flex items-center shrink-0 ml-0 md:ml-8">
             <img
-              src={logoWhite}
+              src={logoIcon}
               alt="Clínica Odontológica Salud Oriente"
-              className="w-[230px] md:w-[280px] h-[70px] md:h-[80px] object-contain"
+              className="w-[60px] md:w-[80px] h-[60px] md:h-[80px] object-contain"
             />
           </Link>
 
