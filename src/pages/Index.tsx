@@ -12,6 +12,7 @@ import heroImage from "@/assets/hero-clinic.jpg";
 import logoIcon from "@/assets/logo-icon-white.png";
 import logoWhite from "@/assets/logo-white.png";
 import logoGreen from "@/assets/logo-green.svg";
+import logoHeaderWhite from "@/assets/logo-header-white.png";
 
 const SERVICES: { name: string; treatment: string; icon: LucideIcon; img?: string; desc: string }[] = [
   { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
