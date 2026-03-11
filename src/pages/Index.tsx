@@ -96,7 +96,7 @@ const Index = () => {
           <div className="absolute inset-0 hero-overlay" />
           {/* Watermark isotipo */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img src={logoWhite} alt="" className="w-[600px] h-auto opacity-[0.03]" aria-hidden="true" />
+            <img src={logoWhite} alt="" className="w-[500px] md:w-[700px] h-auto opacity-[0.03]" aria-hidden="true" />
           </div>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsla(43,78%,62%,0.06)_0%,_transparent_70%)]" />
 
