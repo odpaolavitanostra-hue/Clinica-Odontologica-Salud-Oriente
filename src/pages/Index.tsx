@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays, MessageCircle,
   Sparkles, HeartPulse, Scissors, SprayCan, Search, Cog, Layers, CircleDot, HelpCircle,
+  Menu, X,
   type LucideIcon
 } from "lucide-react";
 import { Link } from "react-router-dom";
