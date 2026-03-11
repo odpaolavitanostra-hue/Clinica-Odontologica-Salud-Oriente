@@ -263,9 +263,9 @@ const Index = () => {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer className="noir-gradient py-10 border-t border-noir-light/20">
-        <div className="container mx-auto px-4 text-center space-y-4">
-          <img src={logoIcon} alt="Salud Oriente" className="h-[120px] md:h-[150px] w-auto mx-auto mb-2" />
+      <footer className="noir-gradient py-14 border-t border-noir-light/20">
+        <div className="container mx-auto px-4 text-center space-y-5">
+          <img src={logoWhite} alt="Salud Oriente" className="h-[100px] md:h-[140px] w-auto max-w-[400px] mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(232,192,86,0.15)]" />
           <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
             "Tu sonrisa merece lo mejor..."
           </p>
