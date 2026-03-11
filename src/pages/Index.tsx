@@ -265,7 +265,7 @@ const Index = () => {
       {/* ── FOOTER ── */}
       <footer className="noir-gradient py-14 border-t border-noir-light/20">
         <div className="container mx-auto px-4 text-center space-y-5">
-          <img src={logoWhite} alt="Salud Oriente" className="h-[100px] md:h-[140px] w-auto max-w-[400px] mx-auto mb-3 drop-shadow-[0_2px_8px_rgba(232,192,86,0.15)]" />
+          <img src={logoWhite} alt="Salud Oriente" className="h-[200px] md:h-[250px] lg:h-[280px] w-auto max-w-[90%] mx-auto mb-4 drop-shadow-[0_4px_16px_rgba(232,192,86,0.2)]" />
           <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
             "Tu sonrisa merece lo mejor..."
           </p>
