@@ -136,9 +136,11 @@ const Index = () => {
 
           <div className="relative z-10 container mx-auto px-4 pt-24 lg:pt-32 pb-16 lg:pb-24">
             <div className="max-w-3xl mx-auto text-center">
-              <p className="text-gold text-sm md:text-base font-semibold tracking-[0.3em] uppercase mb-6 animate-fade-up">
-                Clínica Odontológica Salud Oriente
-              </p>
+              <img
+                src={logoHeaderWhite}
+                alt="Clínica Odontológica Salud Oriente"
+                className="h-[40px] md:h-[55px] lg:h-[65px] w-auto object-contain mx-auto mb-2 drop-shadow-[0_2px_10px_rgba(232,192,86,0.2)]"
+              />
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-noir-foreground font-bold leading-tight mb-6 animate-fade-up-delay-1">
                 Odontología Estética e Implantes en{" "}
                 <span className="text-gold">Puerto La Cruz</span>
