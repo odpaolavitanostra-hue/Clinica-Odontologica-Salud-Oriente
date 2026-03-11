@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
+import logoIcon from "@/assets/logo-icon-white.png";
 import logoWhite from "@/assets/logo-white.png";
 import logoGreen from "@/assets/logo-green.svg";
 
