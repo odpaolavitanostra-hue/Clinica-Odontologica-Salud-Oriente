@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
+import logoIcon from "@/assets/logo-icon-white.png";
 import logoWhite from "@/assets/logo-white.png";
 import logoGreen from "@/assets/logo-green.svg";
 
@@ -46,9 +47,9 @@ const Index = () => {
           {/* Left: Logo (principal) */}
           <Link to="/" className="flex items-center shrink-0 ml-0 md:ml-8">
             <img
-              src={logoWhite}
+              src={logoIcon}
               alt="Clínica Odontológica Salud Oriente"
-              className="w-[230px] md:w-[280px] h-[70px] md:h-[80px] object-contain"
+              className="w-[60px] md:w-[80px] h-[60px] md:h-[80px] object-contain"
             />
           </Link>
 
@@ -264,7 +265,7 @@ const Index = () => {
       {/* ── FOOTER ── */}
       <footer className="noir-gradient py-10 border-t border-noir-light/20">
         <div className="container mx-auto px-4 text-center space-y-4">
-          <img src={logoWhite} alt="Salud Oriente" className="h-[80px] md:h-[100px] w-auto max-w-[350px] mx-auto mb-2" />
+          <img src={logoIcon} alt="Salud Oriente" className="h-[120px] md:h-[150px] w-auto mx-auto mb-2" />
           <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
             "Tu sonrisa merece lo mejor..."
           </p>
