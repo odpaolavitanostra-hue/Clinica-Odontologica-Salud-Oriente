@@ -15,7 +15,7 @@ import { AdminTenants } from "@/components/admin/AdminTenants";
 import { AdminLeads } from "@/components/admin/AdminLeads";
 import { useAuth } from "@/hooks/useAuth";
 import { useClinicData } from "@/hooks/useClinicData";
-import logoGreen from "@/assets/logo-green.png";
+import logoWhite from "@/assets/logo-icon-white.png";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -129,7 +129,7 @@ const Admin = () => {
             <button className="md:hidden text-noir-foreground" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <img src={logoGreen} alt="Salud Oriente" className="h-8 object-contain" />
+            <img src={logoWhite} alt="Salud Oriente" className="h-8 object-contain" />
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
