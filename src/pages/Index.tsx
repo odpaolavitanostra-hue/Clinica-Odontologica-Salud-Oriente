@@ -218,31 +218,6 @@ const Index = () => {
         {/* ── CONTACTO & MAPA ── */}
         <section id="contacto" className="relative py-20 bg-pearl">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-clinic-green/10 p-8 md:p-12 mb-12">
-              <div className="flex justify-center mb-6">
-                <img src={logoGreen} alt="Clínica Odontológica Salud Oriente" className="h-[80px] md:h-[100px] w-auto max-w-[300px]" />
-              </div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center text-pearl-foreground">
-                ¿Listo para tu nueva <span className="text-clinic-green">sonrisa</span>?
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-pearl-foreground hover:text-clinic-green transition-colors">
-                  <MapPin className="w-6 h-6 text-clinic-green" />
-                  <span className="font-display font-semibold">Ubicación</span>
-                  <span className="text-muted-foreground text-sm">C.C Novocentro piso 1, local 1-02, Puerto La Cruz, Anzoátegui</span>
-                </a>
-                <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-pearl-foreground hover:text-clinic-green transition-colors">
-                  <Phone className="w-6 h-6 text-clinic-green" />
-                  <span className="font-display font-semibold">WhatsApp</span>
-                  <span className="text-muted-foreground text-sm">0422-7180013</span>
-                </a>
-                <div className="flex flex-col items-center gap-2 text-pearl-foreground">
-                  <Clock className="w-6 h-6 text-clinic-green" />
-                  <span className="font-display font-semibold">Horario</span>
-                  <span className="text-muted-foreground text-sm">Lun-Vie 8:00–17:00<br />Sáb 8:00–14:00</span>
-                </div>
-              </div>
-            </div>
 
             <div className="max-w-4xl mx-auto">
               <h3 className="font-display text-2xl text-pearl-foreground font-bold mb-6 text-center">Encuéntranos</h3>
