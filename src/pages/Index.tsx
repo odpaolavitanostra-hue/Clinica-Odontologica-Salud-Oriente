@@ -176,7 +176,7 @@ const Index = () => {
         <section id="servicios" className="py-20 bg-background">
           <div className="container mx-auto px-4">
             <h2 className="font-display text-3xl md:text-4xl text-center font-bold mb-4">
-              Nuestros <span className="text-gold">Servicios</span>
+              Nuestros <span className="text-gold">Tratamientos</span>
             </h2>
             <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
               Tratamientos odontológicos de alta calidad con tecnología moderna y atención personalizada.
