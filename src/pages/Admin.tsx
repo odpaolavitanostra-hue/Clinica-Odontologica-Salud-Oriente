@@ -15,6 +15,7 @@ import { AdminTenants } from "@/components/admin/AdminTenants";
 import { AdminLeads } from "@/components/admin/AdminLeads";
 import { useAuth } from "@/hooks/useAuth";
 import { useClinicData } from "@/hooks/useClinicData";
+import logoGreen from "@/assets/logo-green.png";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
