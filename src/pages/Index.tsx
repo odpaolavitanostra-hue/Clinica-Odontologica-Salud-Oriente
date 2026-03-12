@@ -245,7 +245,7 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center space-y-4">
           <img src={logoWhite} alt="Salud Oriente" className="h-[140px] md:h-[180px] lg:h-[200px] w-auto max-w-[90%] mx-auto drop-shadow-[0_2px_10px_rgba(232,192,86,0.15)]" />
           <p className="text-noir-foreground/90 text-lg md:text-xl font-display font-semibold italic">
-            "Tu sonrisa merece lo mejor..."
+            "¿Listo para tu nueva sonrisa?"
           </p>
 
           {/* Instagram CTA */}
