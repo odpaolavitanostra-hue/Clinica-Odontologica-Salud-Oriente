@@ -36,7 +36,8 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
     } catch { return appointment.date; }
   })();
 
-  const amountVES = finance.treatmentPriceUSD * tasaBCV;
+  const historicalRate = finance.tasaBCV;
+  const amountVES = finance.treatmentPriceUSD * historicalRate;
 
   const handlePrint = () => {
     localStorage.setItem("coso-invoice-counter", invoiceNumber.toString());
@@ -121,8 +122,12 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
         </div>
 
         <div class="totals">
-          <div class="total-row"><span>Tasa BCV:</span><span>${tasaBCV.toFixed(2)} Bs/$</span></div>
+          <div class="total-row"><span>Tasa BCV (${formattedDate}):</span><span>${historicalRate.toFixed(2)} Bs/$</span></div>
           <div class="total-row grand"><span>TOTAL:</span><span>Bs. ${fmtVES(amountVES)}</span></div>
+        </div>
+
+        <div style="margin-top:16px;font-size:11px;color:#666;font-style:italic;text-align:right;">
+          * Los montos en bolívares (Bs.) están calculados según la tasa BCV vigente para la fecha del tratamiento.
         </div>
 
         <div class="footer">
@@ -165,7 +170,8 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
               <span>Total VES</span>
               <span className="font-bold text-primary">Bs. {formatVES(amountVES)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Tasa BCV: {tasaBCV.toFixed(2)} Bs/$</p>
+            <p className="text-xs text-muted-foreground mt-1">Tasa BCV ({formattedDate}): {historicalRate.toFixed(2)} Bs/$</p>
+            <p className="text-[10px] text-muted-foreground italic mt-1">* Tasa BCV vigente para la fecha del tratamiento</p>
           </div>
 
           <div className="flex items-center gap-2">
