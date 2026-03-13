@@ -122,8 +122,12 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
         </div>
 
         <div class="totals">
-          <div class="total-row"><span>Tasa BCV:</span><span>${tasaBCV.toFixed(2)} Bs/$</span></div>
+          <div class="total-row"><span>Tasa BCV (${formattedDate}):</span><span>${historicalRate.toFixed(2)} Bs/$</span></div>
           <div class="total-row grand"><span>TOTAL:</span><span>Bs. ${fmtVES(amountVES)}</span></div>
+        </div>
+
+        <div style="margin-top:16px;font-size:11px;color:#666;font-style:italic;text-align:right;">
+          * Los montos en bolívares (Bs.) están calculados según la tasa BCV vigente para la fecha del tratamiento.
         </div>
 
         <div class="footer">
