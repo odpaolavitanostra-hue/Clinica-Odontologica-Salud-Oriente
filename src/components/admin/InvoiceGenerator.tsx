@@ -36,7 +36,8 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
     } catch { return appointment.date; }
   })();
 
-  const amountVES = finance.treatmentPriceUSD * tasaBCV;
+  const historicalRate = finance.tasaBCV;
+  const amountVES = finance.treatmentPriceUSD * historicalRate;
 
   const handlePrint = () => {
     localStorage.setItem("coso-invoice-counter", invoiceNumber.toString());
