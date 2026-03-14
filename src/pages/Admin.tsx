@@ -45,6 +45,7 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   const prevCounts = useRef<{ appointments: number; patients: number; pendingRentals: number }>({
     appointments: 0, patients: 0, pendingRentals: 0,
