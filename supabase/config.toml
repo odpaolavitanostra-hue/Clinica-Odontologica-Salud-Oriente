@@ -2,3 +2,6 @@ project_id = "qwyzsyeuovlzecqhmvpz"
 
 [functions.manage-doctor-auth]
 verify_jwt = false
+
+[functions.process-notifications]
+verify_jwt = false
