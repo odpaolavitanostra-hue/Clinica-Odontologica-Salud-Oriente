@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* ─── Diamond Noir V74.1 — Refined Dark with Warm Contrast ─── */
+    /* ─── Diamond Noir V74.1 — Light Mode ─── */
     --background: 180 3% 93%;
     --foreground: 150 8% 15%;
 
@@ -75,6 +75,71 @@
     --glass-bg: 0 0% 100% / 0.7;
     --glass-border: 0 0% 100% / 0.5;
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .dark {
+    /* ─── Diamond Noir V74.1 — Dark Mode ─── */
+    --background: 150 5% 10%;
+    --foreground: 40 30% 92%;
+
+    --card: 150 5% 14%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 150 5% 14%;
+    --popover-foreground: 40 30% 92%;
+
+    --primary: 43 78% 62%;
+    --primary-foreground: 150 5% 10%;
+
+    --secondary: 150 5% 18%;
+    --secondary-foreground: 40 30% 88%;
+
+    --muted: 150 5% 18%;
+    --muted-foreground: 40 10% 55%;
+
+    --accent: 43 78% 62%;
+    --accent-foreground: 150 5% 10%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 150 5% 22%;
+    --input: 150 5% 22%;
+    --ring: 43 78% 62%;
+
+    --gold: 43 78% 62%;
+    --gold-foreground: 150 5% 10%;
+    --gold-muted: 43 60% 50%;
+
+    --amber: 43 72% 55%;
+    --amber-foreground: 150 5% 10%;
+
+    --noir: 150 5% 8%;
+    --noir-light: 150 5% 14%;
+    --noir-foreground: 40 30% 96%;
+
+    --pearl: 150 5% 16%;
+    --pearl-foreground: 40 30% 92%;
+
+    --clinic-green: 160 28% 45%;
+    --clinic-green-foreground: 0 0% 100%;
+
+    --success: 160 40% 42%;
+    --warning: 43 72% 55%;
+    --info: 210 60% 55%;
+
+    --sidebar-background: 150 5% 8%;
+    --sidebar-foreground: 40 30% 96%;
+    --sidebar-primary: 43 78% 62%;
+    --sidebar-primary-foreground: 150 5% 10%;
+    --sidebar-accent: 150 5% 14%;
+    --sidebar-accent-foreground: 40 30% 96%;
+    --sidebar-border: 150 5% 18%;
+    --sidebar-ring: 43 78% 62%;
+
+    --glass-bg: 150 5% 12% / 0.8;
+    --glass-border: 150 5% 20% / 0.5;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   }
 }
 
