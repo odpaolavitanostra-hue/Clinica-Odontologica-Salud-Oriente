@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   CalendarDays, Users, Package, DollarSign, Settings, LogOut, 
-  Stethoscope, Menu, X, LayoutDashboard, Building2, Bell, UserCheck 
+  Stethoscope, Menu, X, LayoutDashboard, Building2, Bell, UserCheck, Moon, Sun 
 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminCalendar } from "@/components/admin/AdminCalendar";
 import { AdminDoctors } from "@/components/admin/AdminDoctors";
