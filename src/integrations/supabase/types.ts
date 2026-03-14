@@ -410,6 +410,63 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          message: string
+          patient_name: string
+          phone: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          message?: string
+          patient_name?: string
+          phone?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          type?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          message?: string
+          patient_name?: string
+          phone?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notifications_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_notifications_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           created_at: string
