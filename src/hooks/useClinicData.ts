@@ -370,8 +370,10 @@ export function useClinicData() {
   };
 
   // ─── Appointment CRUD ───
+  const INVASIVE_TREATMENTS = ["cirugía", "endodoncia", "extracción", "implante", "implantes"];
+
   const addAppointment = async (app: Omit<Appointment, 'id'>) => {
-    await supabase.from("appointments").insert({
+    const { data: inserted } = await supabase.from("appointments").insert({
       patient_name: app.patientName, patient_phone: app.patientPhone,
       patient_cedula: app.patientCedula, patient_email: app.patientEmail,
       doctor_id: app.doctorId, date: app.date, time: app.time,
@@ -379,7 +381,47 @@ export function useClinicData() {
       status: app.status, notes: app.notes,
       payment_method: app.paymentMethod || null,
       payment_reference: app.paymentReference || null,
-    });
+    }).select("id").single();
+
+    const appointmentId = inserted?.id;
+
+    // Auto-schedule notifications
+    if (appointmentId && app.patientPhone) {
+      const notifications: any[] = [];
+
+      // 1. Reminder: 24h before appointment
+      const appointmentDateTime = new Date(`${app.date}T${app.time}:00-04:00`);
+      const reminderTime = new Date(appointmentDateTime.getTime() - 24 * 60 * 60 * 1000);
+      if (reminderTime > new Date()) {
+        notifications.push({
+          type: "reminder",
+          appointment_id: appointmentId,
+          patient_name: app.patientName,
+          phone: app.patientPhone,
+          message: `Hola ${app.patientName}, le recordamos su cita mañana ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos!`,
+          scheduled_for: reminderTime.toISOString(),
+        });
+      }
+
+      // 2. Post-op follow-up: 24h after appointment (only for invasive treatments)
+      const isInvasive = INVASIVE_TREATMENTS.some(t => app.treatment.toLowerCase().includes(t));
+      if (isInvasive) {
+        const followupTime = new Date(appointmentDateTime.getTime() + 24 * 60 * 60 * 1000);
+        notifications.push({
+          type: "postop",
+          appointment_id: appointmentId,
+          patient_name: app.patientName,
+          phone: app.patientPhone,
+          message: `Hola ${app.patientName}, ayer se realizó su ${app.treatment} en Clínica Salud Oriente. ¿Cómo se siente? Si tiene alguna molestia, no dude en contactarnos.`,
+          scheduled_for: followupTime.toISOString(),
+        });
+      }
+
+      if (notifications.length > 0) {
+        await supabase.from("scheduled_notifications").insert(notifications);
+      }
+    }
+
     inv("appointments");
   };
   const updateAppointment = async (id: string, app: Partial<Appointment>) => {
