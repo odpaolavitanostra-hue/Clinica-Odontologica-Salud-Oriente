@@ -119,7 +119,7 @@ export const AdminCalendar = () => {
       return;
     }
 
-    const newApp = await addAppointment({
+    await addAppointment({
       patientName: f.patientName, patientPhone: f.patientPhone,
       patientCedula: f.patientCedula, patientEmail: f.patientEmail,
       doctorId: effectiveDoctorId, date: f.date, time: f.time,
@@ -129,10 +129,10 @@ export const AdminCalendar = () => {
       paymentReference: hasPay ? f.paymentReference : undefined,
     });
 
-    if (hasPay && newApp) {
+    if (hasPay) {
       await addTransaction({
         date: f.date,
-        type: "ingreso",
+        type: "patient",
         description: `Pago cita: ${effectiveTreatment}`,
         entityName: f.patientName,
         amountUSD: finalPrice,
@@ -140,7 +140,6 @@ export const AdminCalendar = () => {
         tasaBCV,
         paymentMethod: f.paymentMethod,
         paymentReference: f.paymentReference,
-        appointmentId: typeof newApp === 'object' && newApp !== null && 'id' in newApp ? (newApp as any).id : undefined,
       });
     }
 
