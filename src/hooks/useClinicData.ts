@@ -377,6 +377,8 @@ export function useClinicData() {
       doctor_id: app.doctorId, date: app.date, time: app.time,
       treatment: app.treatment, price_usd: app.priceUSD,
       status: app.status, notes: app.notes,
+      payment_method: app.paymentMethod || null,
+      payment_reference: app.paymentReference || null,
     });
     inv("appointments");
   };
