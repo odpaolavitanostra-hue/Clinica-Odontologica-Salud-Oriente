@@ -170,9 +170,9 @@ export const AdminTenants = () => {
         }
         prevHour = currentH;
       }
-      const autoPercent = getAutoPercentage(blockForm.clinicProvidesMaterials);
+      const customPercent = blockForm.clinicPercentage;
       for (const range of ranges) {
-        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: autoPercent });
+        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: customPercent });
       }
       toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
