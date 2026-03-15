@@ -289,7 +289,7 @@ export function useClinicData() {
       email: tenant?.email ?? "",
       phone: tenant?.phone ?? "",
       cedula: tenant?.cedula ?? "",
-      rentalMode: (tenant?.rental_mode as 'turno' | 'procedimiento' | 'percent') ?? "turno",
+      rentalMode: (tenant?.rental_mode === 'procedimiento' ? 'percent' : tenant?.rental_mode as 'turno' | 'percent') ?? "turno",
       rentalPrice: tenant?.rental_price ?? 0,
       blockedSlots: blockedSlotsByTenantId[tenantId] || [],
     };
