@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon, Stethoscope, Package } from "lucide-react";
+import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Sun, Moon, Stethoscope, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useClinicData } from "@/hooks/useClinicData";
 import { getAllAvailableSlots, getCaracasNow, getCaracasToday, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 import { Switch } from "@/components/ui/switch";
-import { formatVES } from "@/lib/formatVES";
 import BookingConfirmationModal from "./BookingConfirmationModal";
 
 interface RentalRequestFormProps {
@@ -15,17 +14,16 @@ interface RentalRequestFormProps {
 }
 
 const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
-  const { appointments, tenants, treatments, tasaBCV } = useClinicData();
+  const { appointments, tenants, treatments } = useClinicData();
   const [submitting, setSubmitting] = useState(false);
   const [confirmationData, setConfirmationData] = useState<{ name: string; date: string; time: string } | null>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     cedula: "",
-    cov: "",
     email: "",
     phone: "",
-    rentalMode: "" as "" | "turno" | "procedimiento" | "percent",
+    rentalMode: "" as "" | "turno" | "percent",
     date: "",
     turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
@@ -44,7 +42,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           ...prev,
           firstName: prev.firstName || existingTenant.firstName,
           lastName: prev.lastName || existingTenant.lastName,
-          cov: prev.cov || existingTenant.cov,
           email: prev.email || existingTenant.email,
           phone: prev.phone || existingTenant.phone.replace(/^\+58/, ""),
         }));
@@ -79,7 +76,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     return true;
   };
 
-  const percentSlots = form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento")
+  const percentSlots = form.date && form.rentalMode === "percent"
     ? getAllAvailableSlots(form.date, appointments, tenants, isToday ? currentHour : undefined, isToday)
     : [];
 
@@ -108,7 +105,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!form.firstName || !form.lastName || !form.cedula || !form.cov || !form.email || !form.phone) {
+    if (!form.firstName || !form.lastName || !form.cedula || !form.email || !form.phone) {
       toast.error("Completa todos los campos obligatorios");
       return;
     }
@@ -120,7 +117,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
       toast.error("Selecciona el turno (AM o PM)");
       return;
     }
-    if ((form.rentalMode === "percent" || form.rentalMode === "procedimiento") && form.selectedHours.length === 0) {
+    if (form.rentalMode === "percent" && form.selectedHours.length === 0) {
       toast.error("Selecciona al menos una hora");
       return;
     }
@@ -128,7 +125,8 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     setSubmitting(true);
     try {
       const formattedPhone = `+58${form.phone.replace(/^0/, "")}`;
-      const treatmentValue = (form.rentalMode === "percent" || form.rentalMode === "procedimiento") ? (form.treatment || "Revisión") : "Revisión";
+      const treatmentValue = form.rentalMode === "percent" ? (form.treatment || "Revisión") : "Revisión";
+      const autoPercentage = form.clinicProvidesMaterials ? 60 : 40;
 
       // Auto-save tenant data
       const existingTenant = tenants.find(t => t.cedula === form.cedula.trim());
@@ -137,7 +135,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           first_name: form.firstName.trim(),
           last_name: form.lastName.trim(),
           cedula: form.cedula.trim(),
-          cov: form.cov.trim(),
           email: form.email.trim(),
           phone: formattedPhone,
           rental_mode: form.rentalMode,
@@ -160,12 +157,12 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           requester_first_name: form.firstName.trim(),
           requester_last_name: form.lastName.trim(),
           requester_cedula: form.cedula.trim(),
-          requester_cov: form.cov.trim(),
           requester_email: form.email.trim(),
           requester_phone: formattedPhone,
           rental_mode: form.rentalMode,
           treatment: treatmentValue,
           clinic_provides_materials: form.clinicProvidesMaterials,
+          clinic_percentage: 0,
         } as any);
         if (error) throw error;
 
@@ -203,12 +200,12 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             requester_first_name: form.firstName.trim(),
             requester_last_name: form.lastName.trim(),
             requester_cedula: form.cedula.trim(),
-            requester_cov: form.cov.trim(),
             requester_email: form.email.trim(),
             requester_phone: formattedPhone,
             rental_mode: form.rentalMode,
             treatment: treatmentValue,
             clinic_provides_materials: form.clinicProvidesMaterials,
+            clinic_percentage: autoPercentage,
           } as any);
           if (error) throw error;
         }
@@ -222,7 +219,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
       }
 
       setForm({
-        firstName: "", lastName: "", cedula: "", cov: "", email: "", phone: "",
+        firstName: "", lastName: "", cedula: "", email: "", phone: "",
         rentalMode: "", date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false,
       });
     } catch (err) {
@@ -268,21 +265,15 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
                   <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => update("cedula", e.target.value.replace(/[^0-9]/g, ""))} maxLength={20} placeholder="12345678 (auto-completa)" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV *</label>
-                  <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => update("cov", e.target.value)} maxLength={20} placeholder="COV-12345" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Mail className="w-3 h-3" /> Email *</label>
                   <input type="email" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.email} onChange={(e) => update("email", e.target.value)} maxLength={100} placeholder="doctor@correo.com" />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Teléfono *</label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-2 bg-muted border border-r-0 border-border rounded-l-lg text-xs text-muted-foreground font-medium">+58</span>
-                    <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-r-lg rounded-l-none px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.phone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); update("phone", val); }} maxLength={10} placeholder="4121234567" />
-                  </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Teléfono *</label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-2 bg-muted border border-r-0 border-border rounded-l-lg text-xs text-muted-foreground font-medium">+58</span>
+                  <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-r-lg rounded-l-none px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.phone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); update("phone", val); }} maxLength={10} placeholder="4121234567" />
                 </div>
               </div>
             </div>
@@ -296,36 +287,31 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               </div>
             </div>
 
-            {/* Rental mode */}
+            {/* Rental mode — only turno and percent */}
             {form.date && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modalidad de Alquiler</h3>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => { update("rentalMode", "turno"); update("turnoBlock", ""); update("selectedHours", []); }}
                     className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
                     <Clock className="w-4 h-4" /> Por Turno
-                  </button>
-                  <button type="button" onClick={() => { update("rentalMode", "procedimiento"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "procedimiento" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
-                    <Stethoscope className="w-4 h-4" /> Por Procedimiento
                   </button>
                   <button type="button" onClick={() => { update("rentalMode", "percent"); update("turnoBlock", ""); update("selectedHours", []); }}
                     className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
                     <Building2 className="w-4 h-4" /> Por Porcentaje (%)
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">El monto será acordado con la administración.</p>
               </div>
             )}
 
-            {/* Treatment selector for % mode */}
-            {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
+            {/* Treatment + Materials for percent mode */}
+            {form.date && form.rentalMode === "percent" && (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> {form.rentalMode === "procedimiento" ? "Procedimiento a realizar" : "Tratamiento a realizar"}</label>
+                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamiento a realizar</label>
                   <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.treatment} onChange={(e) => update("treatment", e.target.value)}>
                     {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                      <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+                      <option key={t.name} value={t.name}>{t.name}</option>
                     ))}
                   </select>
                 </div>
@@ -336,7 +322,6 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
                   </div>
                   <Switch checked={form.clinicProvidesMaterials} onCheckedChange={(v) => update("clinicProvidesMaterials", v)} className="data-[state=checked]:bg-gold" />
                 </div>
-                <p className="text-xs text-muted-foreground">El monto será acordado con la administración.</p>
               </div>
             )}
 
@@ -363,7 +348,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             )}
 
             {/* Percent hour selection */}
-            {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
+            {form.date && form.rentalMode === "percent" && (
               <div className="space-y-3">
                 {percentSlots.length > 0 ? (
                   <>
