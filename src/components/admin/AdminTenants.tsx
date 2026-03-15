@@ -740,7 +740,7 @@ export const AdminTenants = () => {
             open={!!payingRentalId}
             onOpenChange={(v) => !v && setPayingRentalId(null)}
             entityName={tenantName}
-            treatment={`Alquiler — ${req.rentalMode === 'turno' ? 'Por Turno' : 'Por %'}`}
+            treatment={`Alquiler — ${req.rentalMode === 'turno' ? 'Por Turno' : req.rentalMode === 'procedimiento' ? 'Por Procedimiento' : 'Por %'}`}
             defaultPrice={req.rentalPrice || 0}
             tasaBCV={tasaBCV}
             onConfirm={async (finalPrice, paymentMethod, paymentReference) => {
