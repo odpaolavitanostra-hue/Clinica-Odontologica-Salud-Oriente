@@ -628,13 +628,14 @@ export const AdminTenants = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1">Modo de Alquiler</label>
-                <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm({ ...form, rentalMode: e.target.value as "turno" | "percent" })}>
+                <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm({ ...form, rentalMode: e.target.value as "turno" | "procedimiento" | "percent" })}>
                   <option value="turno">Por Turno</option>
+                  <option value="procedimiento">Por Procedimiento</option>
                   <option value="percent">Por Porcentaje (%)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">{form.rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
+                <label className="block text-xs font-medium mb-1">{form.rentalMode === "percent" ? "Porcentaje (%)" : "Precio (USD)"}</label>
                 <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalPrice} onChange={(e) => setForm({ ...form, rentalPrice: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
