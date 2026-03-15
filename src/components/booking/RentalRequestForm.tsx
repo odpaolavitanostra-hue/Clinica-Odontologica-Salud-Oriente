@@ -125,7 +125,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     setSubmitting(true);
     try {
       const formattedPhone = `+58${form.phone.replace(/^0/, "")}`;
-      const treatmentValue = form.rentalMode === "percent" ? (form.treatment || "Revisión") : "Revisión";
+      const treatmentValue = (form.rentalMode === "percent" || form.rentalMode === "procedimiento") ? (form.treatment || "Revisión") : "Revisión";
 
       // Auto-save tenant data
       const existingTenant = tenants.find(t => t.cedula === form.cedula.trim());
