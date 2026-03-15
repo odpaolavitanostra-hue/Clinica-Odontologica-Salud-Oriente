@@ -116,7 +116,7 @@ export interface Tenant {
   email: string;
   phone: string;
   cedula: string;
-  rentalMode: 'turno' | 'procedimiento' | 'percent';
+  rentalMode: 'turno' | 'percent';
   rentalPrice: number;
   blockedSlots: TenantBlockedSlot[];
 }
