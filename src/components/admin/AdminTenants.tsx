@@ -292,13 +292,18 @@ export const AdminTenants = () => {
               </div>
               <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => {
                 onClinicMaterialsChange?.(v);
+                onClinicPercentageChange?.(v ? 60 : 40);
               }} className="data-[state=checked]:bg-gold" />
             </div>
-            <div className="bg-card rounded-lg px-3 py-2.5 border border-border">
-              <p className="text-xs font-medium">Comisión clínica: <span className="text-gold font-bold">{clinicProvidesMaterials ? "60%" : "40%"}</span></p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {clinicProvidesMaterials ? "Materiales incluidos por la clínica → 60%" : "Sin materiales → 40%"}
-              </p>
+            <div className="bg-card rounded-lg px-3 py-2.5 border border-border space-y-1">
+              <label className="text-xs font-medium flex items-center gap-1">Comisión clínica (%)</label>
+              <div className="flex items-center gap-2">
+                <input type="number" step="1" min="0" max="100" className="w-20 bg-muted rounded-lg px-3 py-1.5 text-sm border border-border focus:border-gold focus:outline-none text-center font-bold text-gold" value={clinicPercentage ?? getAutoPercentage(clinicProvidesMaterials || false)} onChange={(e) => onClinicPercentageChange?.(parseInt(e.target.value) || 0)} />
+                <span className="text-xs text-muted-foreground">%</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  Sugerido: {clinicProvidesMaterials ? "60%" : "40%"}
+                </span>
+              </div>
             </div>
           </div>
         )}
