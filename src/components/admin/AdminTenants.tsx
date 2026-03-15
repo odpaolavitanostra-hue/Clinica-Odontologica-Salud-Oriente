@@ -97,7 +97,7 @@ export const AdminTenants = () => {
       await updateTenant(editing, { firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode as "turno" | "percent", rentalPrice: form.rentalPrice });
       toast.success("Inquilino actualizado");
     } else {
-      const newTenant = await addTenant({ firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
+      const newTenant = await addTenant({ firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode as "turno" | "percent", rentalPrice: form.rentalPrice });
       if (form.date && form.rentalMode) {
         const tenantId = newTenant?.id;
         if (tenantId) {
