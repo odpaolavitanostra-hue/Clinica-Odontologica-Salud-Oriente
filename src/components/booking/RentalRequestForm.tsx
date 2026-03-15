@@ -23,7 +23,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     cov: "",
     email: "",
     phone: "",
-    rentalMode: "" as "" | "turno" | "percent",
+    rentalMode: "" as "" | "turno" | "procedimiento" | "percent",
     date: "",
     turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
