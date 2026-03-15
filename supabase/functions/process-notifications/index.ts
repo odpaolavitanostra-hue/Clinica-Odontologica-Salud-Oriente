@@ -11,11 +11,11 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const webhookUrl = Deno.env.get("WEBHOOK_URL_WHATSAPP");
+    const webhookWhatsApp = Deno.env.get("WEBHOOK_URL_WHATSAPP");
+    const webhookEmail = Deno.env.get("WEBHOOK_URL_EMAIL");
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get pending notifications that are due
     const now = new Date().toISOString();
     const { data: pending, error: fetchErr } = await supabase
       .from("scheduled_notifications")
@@ -36,17 +36,15 @@ Deno.serve(async (req) => {
     let skipped = 0;
 
     for (const notif of pending) {
-      if (!webhookUrl) {
-        // No webhook configured yet — mark as "no_webhook" so it can be retried later
-        await supabase.from("scheduled_notifications").update({
-          status: "no_webhook",
-        }).eq("id", notif.id);
+      const hasAnyWebhook = webhookWhatsApp || webhookEmail;
+
+      if (!hasAnyWebhook) {
+        await supabase.from("scheduled_notifications").update({ status: "no_webhook" }).eq("id", notif.id);
         skipped++;
         continue;
       }
 
       try {
-        // Send to external webhook (n8n/Make)
         const payload = {
           id: notif.id,
           type: notif.type,
@@ -56,31 +54,64 @@ Deno.serve(async (req) => {
           appointment_id: notif.appointment_id,
           lead_id: notif.lead_id,
           scheduled_for: notif.scheduled_for,
+          channel: "all",
         };
 
-        const res = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const promises: Promise<Response>[] = [];
 
-        if (res.ok) {
+        // Send to WhatsApp webhook
+        if (webhookWhatsApp) {
+          promises.push(
+            fetch(webhookWhatsApp, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload, channel: "whatsapp" }),
+            })
+          );
+        }
+
+        // Send to Email webhook
+        if (webhookEmail) {
+          // Look up patient email from appointments table
+          let patientEmail = "";
+          if (notif.appointment_id) {
+            const { data: appt } = await supabase
+              .from("appointments")
+              .select("patient_email")
+              .eq("id", notif.appointment_id)
+              .single();
+            patientEmail = appt?.patient_email || "";
+          }
+
+          promises.push(
+            fetch(webhookEmail, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload, channel: "email", email: patientEmail }),
+            })
+          );
+        }
+
+        const results = await Promise.allSettled(promises);
+        const allOk = results.every(
+          (r) => r.status === "fulfilled" && r.value.ok
+        );
+
+        if (allOk) {
           await supabase.from("scheduled_notifications").update({
             status: "sent",
             sent_at: new Date().toISOString(),
           }).eq("id", notif.id);
           sent++;
         } else {
-          const errText = await res.text();
-          await supabase.from("scheduled_notifications").update({
-            status: "failed",
-          }).eq("id", notif.id);
-          console.error(`Webhook failed for ${notif.id}: ${errText}`);
+          const errors = results
+            .filter((r) => r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok))
+            .map((r) => r.status === "rejected" ? r.reason : "HTTP error");
+          console.error(`Webhook errors for ${notif.id}:`, errors);
+          await supabase.from("scheduled_notifications").update({ status: "failed" }).eq("id", notif.id);
         }
       } catch (err) {
-        await supabase.from("scheduled_notifications").update({
-          status: "failed",
-        }).eq("id", notif.id);
+        await supabase.from("scheduled_notifications").update({ status: "failed" }).eq("id", notif.id);
         console.error(`Error sending ${notif.id}:`, err);
       }
     }
