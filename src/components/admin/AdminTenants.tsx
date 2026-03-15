@@ -46,7 +46,7 @@ export const AdminTenants = () => {
   };
 
   const resetBlockForm = () => {
-    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [] });
+    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
   };
 
   const isBlockAvailableFor = (date: string, block: "am" | "pm"): boolean => {
