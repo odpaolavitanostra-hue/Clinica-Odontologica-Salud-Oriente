@@ -470,14 +470,6 @@ export const AdminTenants = () => {
           )}
           <span className="text-xs text-muted-foreground font-normal ml-1">({rentalRequests.length} total)</span>
         </h3>
-      <div className="space-y-3">
-        <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-          <Clock className="w-5 h-5 text-orange-400" /> Gestión de Alquileres
-          {pendingCount > 0 && (
-            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingCount} pendiente(s)</span>
-          )}
-          <span className="text-xs text-muted-foreground font-normal ml-1">({rentalRequests.length} total)</span>
-        </h3>
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
