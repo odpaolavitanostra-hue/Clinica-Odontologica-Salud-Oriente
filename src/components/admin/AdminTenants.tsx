@@ -507,14 +507,23 @@ export const AdminTenants = () => {
                         <input type="time" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.endTime} onChange={(e) => setRequestEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
                       </div>
                     </div>
-                    {requestEditForm.rentalMode === "percent" && (
+                    {(requestEditForm.rentalMode === "percent" || requestEditForm.rentalMode === "procedimiento") && (
                       <div>
-                        <label className="block text-xs font-medium mb-1">Tratamiento</label>
+                        <label className="block text-xs font-medium mb-1">Tratamiento / Procedimiento</label>
                         <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.treatment} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatment: e.target.value }))}>
                           {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
                             <option key={t.name} value={t.name}>{t.name}</option>
                           ))}
                         </select>
+                      </div>
+                    )}
+                    {requestEditForm.rentalMode === "percent" && (
+                      <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2 border border-border">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-3.5 h-3.5 text-gold" />
+                          <p className="text-xs font-medium">¿Clínica provee materiales?</p>
+                        </div>
+                        <Switch checked={requestEditForm.clinicProvidesMaterials} onCheckedChange={(v) => setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v }))} />
                       </div>
                     )}
                     <div className="flex gap-2">
