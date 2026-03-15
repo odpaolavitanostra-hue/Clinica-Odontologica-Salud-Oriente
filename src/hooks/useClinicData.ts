@@ -265,6 +265,8 @@ export function useClinicData() {
       requesterPhone: slot.requester_phone || undefined,
       rentalPrice: slot.rental_price || undefined,
       treatment: (slot as any).treatment || undefined,
+      clinicProvidesMaterials: (slot as any).clinic_provides_materials || false,
+      clinicPercentage: (slot as any).clinic_percentage || 0,
     });
 
     return acc;
