@@ -672,22 +672,43 @@ export const AdminTenants = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-3 text-sm">
-                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "turno" ? "Por Turno" : "Por Porcentaje (%)"}
-                    </span>
-                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "percent" ? `${req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false)}% clínica` : `$${(req.rentalPrice || 0).toFixed(2)} | Bs. ${formatVES((req.rentalPrice || 0) * tasaBCV)}`}
-                    </span>
-                    {req.rentalMode === "percent" && req.treatment && (
-                      <span className="flex items-center gap-1"><Stethoscope className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
-                    )}
-                    {req.clinicProvidesMaterials && (
-                      <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-gold" /> Materiales incluidos</span>
-                    )}
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
-                      {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-gold" />
+                        {req.rentalMode === "turno" ? "Por Turno" : "Por Porcentaje (%)"}
+                      </span>
+                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
+                        {req.rentalMode === "percent" ? `${req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false)}% clínica` : `$${(req.rentalPrice || 0).toFixed(2)} | Bs. ${formatVES((req.rentalPrice || 0) * tasaBCV)}`}
+                      </span>
+                      {req.rentalMode === "percent" && req.treatment && (
+                        <span className="flex items-center gap-1"><Stethoscope className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
+                      )}
+                      {req.clinicProvidesMaterials && (
+                        <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-gold" /> Materiales incluidos</span>
+                      )}
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
+                        {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
+                      </span>
+                    </div>
+                    {req.rentalMode === "percent" && (() => {
+                      const selectedTreatment = treatments.find(t => t.name === req.treatment);
+                      const treatmentPrice = selectedTreatment?.priceUSD || 0;
+                      const pct = req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false);
+                      const clinicAmount = treatmentPrice * (pct / 100);
+                      const doctorAmount = treatmentPrice - clinicAmount;
+                      return treatmentPrice > 0 ? (
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <div className="bg-muted rounded-lg px-3 py-1.5">
+                            <p className="text-[10px] text-muted-foreground">Clínica ({pct}%)</p>
+                            <p className="text-xs font-bold text-gold">${clinicAmount.toFixed(2)} <span className="font-normal text-muted-foreground">| Bs. {formatVES(clinicAmount * tasaBCV)}</span></p>
+                          </div>
+                          <div className="bg-muted rounded-lg px-3 py-1.5">
+                            <p className="text-[10px] text-muted-foreground">Doctor ({100 - pct}%)</p>
+                            <p className="text-xs font-bold">${doctorAmount.toFixed(2)} <span className="font-normal text-muted-foreground">| Bs. {formatVES(doctorAmount * tasaBCV)}</span></p>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
                 )}
               </div>
