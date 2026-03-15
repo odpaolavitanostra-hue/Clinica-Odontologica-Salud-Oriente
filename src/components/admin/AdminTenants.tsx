@@ -6,6 +6,10 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import PaymentModal from "./PaymentModal";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
+import { formatVES } from "@/lib/formatVES";
+import { toast } from "sonner";
+import PaymentModal from "./PaymentModal";
+import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
   const { tenants, treatments, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot, tasaBCV, addTransaction } = useClinicData();
