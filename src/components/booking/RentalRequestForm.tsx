@@ -76,7 +76,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     return true;
   };
 
-  const percentSlots = form.date && form.rentalMode === "percent"
+  const percentSlots = form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento")
     ? getAllAvailableSlots(form.date, appointments, tenants, isToday ? currentHour : undefined, isToday)
     : [];
 
