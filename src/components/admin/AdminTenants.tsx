@@ -31,8 +31,9 @@ export const AdminTenants = () => {
     treatment: "Revisión", clinicProvidesMaterials: false,
   });
   const [blockForm, setBlockForm] = useState({
-    date: "", rentalMode: "" as "" | "turno" | "percent",
+    date: "", rentalMode: "" as "" | "turno" | "procedimiento" | "percent",
     turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
+    treatment: "Revisión", clinicProvidesMaterials: false,
   });
 
   const caracasToday = getCaracasToday();
