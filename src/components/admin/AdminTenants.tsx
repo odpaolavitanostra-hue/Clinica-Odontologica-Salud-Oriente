@@ -26,8 +26,9 @@ export const AdminTenants = () => {
   }>({ date: "", startTime: "", endTime: "", rentalPrice: 0, rentalMode: "turno" });
   const [form, setForm] = useState({
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
-    rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
+    rentalMode: "turno" as "turno" | "procedimiento" | "percent", rentalPrice: 0,
     date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
+    treatment: "Revisión", clinicProvidesMaterials: false,
   });
   const [blockForm, setBlockForm] = useState({
     date: "", rentalMode: "" as "" | "turno" | "percent",
