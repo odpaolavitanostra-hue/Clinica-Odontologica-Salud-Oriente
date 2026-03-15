@@ -192,7 +192,6 @@ export const AdminTenants = () => {
 
   const handleApproveRequest = async (reqId: string) => {
     if (editingRequest === reqId) {
-      const autoPercent = requestEditForm.rentalMode === 'percent' ? getAutoPercentage(requestEditForm.clinicProvidesMaterials) : 0;
       await updateBlockedSlot(reqId, {
         rentalMode: requestEditForm.rentalMode,
         rentalPrice: requestEditForm.rentalPrice,
@@ -201,7 +200,7 @@ export const AdminTenants = () => {
         endTime: requestEditForm.endTime,
         treatment: requestEditForm.treatment,
         clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials,
-        clinicPercentage: autoPercent,
+        clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0,
       });
     }
     await approveRentalRequest(reqId);
