@@ -52,6 +52,7 @@ export const AdminFinances = () => {
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion" | "cierre">("resumen");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("mes");
   const [customDate, setCustomDate] = useState(new Date().toISOString().split("T")[0]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [purchases, setPurchases] = useState<AccountingEntry[]>(() => {
     const saved = localStorage.getItem("coso-purchases");
