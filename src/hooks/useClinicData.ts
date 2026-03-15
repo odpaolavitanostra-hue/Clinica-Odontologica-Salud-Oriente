@@ -633,6 +633,8 @@ export function useClinicData() {
         rentalMode: slot.rental_mode || tenant?.rental_mode || 'turno',
         rentalPrice: slot.rental_price || tenant?.rental_price || 0,
         treatment: (slot as any).treatment || 'Revisión',
+        clinicProvidesMaterials: (slot as any).clinic_provides_materials || false,
+        clinicPercentage: (slot as any).clinic_percentage || 0,
       };
     });
 
