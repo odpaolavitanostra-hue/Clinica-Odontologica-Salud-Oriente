@@ -221,7 +221,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
 
       setForm({
         firstName: "", lastName: "", cedula: "", cov: "", email: "", phone: "",
-        rentalMode: "", date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión",
+        rentalMode: "", date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false,
       });
     } catch (err) {
       toast.error("Error al enviar la solicitud. Intenta nuevamente.");
