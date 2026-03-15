@@ -541,13 +541,13 @@ export const AdminTenants = () => {
                 ) : (
                   <div className="flex flex-wrap gap-3 text-sm">
                     <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "turno" ? "Por Turno" : "Por Porcentaje (%)"}
+                      {req.rentalMode === "turno" ? "Por Turno" : req.rentalMode === "procedimiento" ? "Por Procedimiento" : "Por Porcentaje (%)"}
                     </span>
                     <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "turno" ? `$${(req.rentalPrice || 0).toFixed(2)} USD` : `${req.rentalPrice}%`}
+                      {req.rentalMode === "percent" ? `${req.rentalPrice}%` : `$${(req.rentalPrice || 0).toFixed(2)} USD`}
                     </span>
-                    {req.rentalMode === "percent" && req.treatment && (
-                      <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
+                    {(req.rentalMode === "percent" || req.rentalMode === "procedimiento") && req.treatment && (
+                      <span className="flex items-center gap-1"><Stethoscope className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
                     )}
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
                       {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
