@@ -186,6 +186,7 @@ export const AdminTenants = () => {
       rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
       treatment: req.treatment || "Revisión", clinicProvidesMaterials: req.clinicProvidesMaterials || false,
+      clinicPercentage: req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false),
     });
   };
 
