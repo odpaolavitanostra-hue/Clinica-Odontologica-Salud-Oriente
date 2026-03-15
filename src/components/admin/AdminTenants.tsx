@@ -485,9 +485,10 @@ export const AdminTenants = () => {
                     onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
                     onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                     onToggleHour={(h) => toggleHour("block", h)}
-                    treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
-                    clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
-                  />
+                     treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
+                     clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
+                     clinicPercentage={blockForm.clinicPercentage} onClinicPercentageChange={(v) => setBlockForm(prev => ({ ...prev, clinicPercentage: v }))}
+                   />
                   {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
                     <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
                   )}
