@@ -41,6 +41,12 @@ export const AdminInventory = () => {
         </button>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <input type="text" placeholder="Buscar por nombre..." className="w-full bg-card rounded-lg pl-10 pr-4 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      </div>
+
       {(adding || editing) && (
         <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
           <h3 className="font-semibold">{adding ? "Nuevo Item" : "Editar Item"}</h3>
