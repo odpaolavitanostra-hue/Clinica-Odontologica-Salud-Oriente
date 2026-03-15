@@ -94,7 +94,7 @@ export const AdminTenants = () => {
   const handleSave = async () => {
     if (!form.firstName || !form.lastName) { toast.error("Nombre y apellido son obligatorios"); return; }
     if (editing) {
-      await updateTenant(editing, { firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
+      await updateTenant(editing, { firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode as "turno" | "percent", rentalPrice: form.rentalPrice });
       toast.success("Inquilino actualizado");
     } else {
       const newTenant = await addTenant({ firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
