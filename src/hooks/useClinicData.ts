@@ -373,15 +373,22 @@ export function useClinicData() {
   const INVASIVE_TREATMENTS = ["cirugía", "endodoncia", "extracción", "implante", "implantes"];
 
   const addAppointment = async (app: Omit<Appointment, 'id'>) => {
-    const { data: inserted } = await supabase.from("appointments").insert({
-      patient_name: app.patientName, patient_phone: app.patientPhone,
-      patient_cedula: app.patientCedula, patient_email: app.patientEmail,
-      doctor_id: app.doctorId, date: app.date, time: app.time,
+    const { data: inserted, error } = await supabase.from("appointments").insert({
+      patient_name: app.patientName, patient_phone: app.patientPhone || '',
+      patient_cedula: app.patientCedula || '',
+      patient_email: app.patientEmail || '',
+      doctor_id: app.doctorId && app.doctorId.length > 0 ? app.doctorId : null,
+      date: app.date, time: app.time,
       treatment: app.treatment, price_usd: app.priceUSD,
       status: app.status, notes: app.notes,
       payment_method: app.paymentMethod || null,
       payment_reference: app.paymentReference || null,
     }).select("id").single();
+
+    if (error) {
+      console.error("Error creating appointment:", error);
+      throw error;
+    }
 
     const appointmentId = inserted?.id;
 
