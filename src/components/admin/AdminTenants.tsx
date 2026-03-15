@@ -16,8 +16,8 @@ export const AdminTenants = () => {
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
   const [requestEditForm, setRequestEditForm] = useState<{
-    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean;
-  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false });
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean; clinicPercentage: number;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
