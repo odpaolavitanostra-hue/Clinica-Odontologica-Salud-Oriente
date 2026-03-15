@@ -575,22 +575,23 @@ export const AdminTenants = () => {
 
                 {/* Editable details */}
                 {isEditing ? (
-                  <div className="bg-muted rounded-lg p-4 space-y-3">
+                  <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3">
                     <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar detalles del alquiler</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Modalidad</label>
-                        <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
-                          <option value="turno">Por Turno</option>
-                          <option value="percent">Por Porcentaje (%)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
-                        <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Modalidad</label>
+                      <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
+                        <option value="turno">Por Turno</option>
+                        <option value="percent">Por Porcentaje (%)</option>
+                      </select>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    {requestEditForm.rentalMode === "turno" && (
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Precio USD</label>
+                        <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
+                        {requestEditForm.rentalPrice > 0 && <p className="text-[10px] text-muted-foreground mt-1">Bs. {formatVES(requestEditForm.rentalPrice * tasaBCV)}</p>}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <label className="block text-xs font-medium mb-1">Fecha</label>
                         <input type="date" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.date} onChange={(e) => setRequestEditForm(prev => ({ ...prev, date: e.target.value }))} />
