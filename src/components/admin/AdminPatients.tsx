@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check, UserCog, ClipboardList } from "lucide-react";
+import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText, Upload, Clock, Mail, MessageCircle, Check, UserCog, ClipboardList, Search } from "lucide-react";
 import { toast } from "sonner";
 import ClinicalHistoryForm from "@/components/clinical/ClinicalHistoryForm";
 import OdontogramChart from "@/components/odontogram/OdontogramChart";
 import { useOdontogram, createEmptyOdontogram, type OdontogramData } from "@/hooks/useOdontogram";
 import { useClinicalHistory } from "@/hooks/useClinicalHistory";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const AdminPatients = () => {
   const { patients, appointments, addPatient, updatePatient, deletePatient, updateAppointment, doctors } = useClinicData();
@@ -22,6 +23,7 @@ export const AdminPatients = () => {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [clinicalHistoryPatient, setClinicalHistoryPatient] = useState<Patient | null>(null);
   const [odontogramPatientId, setOdontogramPatientId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
@@ -63,15 +65,37 @@ export const AdminPatients = () => {
     if (patient) { const updated = [...(patient.photos || [])]; updated.splice(index, 1); await updatePatient(patientId, { photos: updated }); toast.info("Foto eliminada"); }
   };
 
+  const filteredPatients = searchQuery.length >= 2
+    ? patients.filter((p) =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.cedula.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.phone.includes(searchQuery) ||
+        p.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.notes.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : patients;
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
           <Users className="w-6 h-6 text-accent" /> Pacientes
         </h2>
         <button onClick={() => setAdding(true)} className="btn-gold px-4 py-2 text-sm flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agregar
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Buscar paciente por nombre, cédula, teléfono..."
+          className="w-full bg-card rounded-lg pl-10 pr-4 py-2.5 text-sm border border-border focus:border-primary focus:outline-none"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {(adding || editing) && (
@@ -112,7 +136,7 @@ export const AdminPatients = () => {
                       {doctor && <p className="text-xs text-muted-foreground">Dr. {doctor.name}</p>}
                       {app.notes && <p className="text-xs text-orange-500 mt-1">📝 {app.notes}</p>}
                     </div>
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex gap-1 items-center flex-wrap">
                       {app.patientPhone && (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>)}
                       {app.patientEmail && (<a href={`mailto:${app.patientEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
                       <button onClick={() => { setEditingDoctorId(editingDoctorId === app.id ? null : app.id); setSelectedDoctorId(app.doctorId || doctors[0]?.id || ""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Asignar doctor"><UserCog className="w-4 h-4" /></button>
@@ -140,10 +164,10 @@ export const AdminPatients = () => {
       )}
 
       <div className="space-y-3">
-        {patients.length === 0 ? (
-          <p className="text-muted-foreground text-center py-12">No hay pacientes registrados</p>
+        {filteredPatients.length === 0 ? (
+          <p className="text-muted-foreground text-center py-12">{searchQuery ? "No se encontraron pacientes" : "No hay pacientes registrados"}</p>
         ) : (
-          patients.map((p) => (
+          filteredPatients.map((p) => (
             <PatientCard
               key={p.id}
               patient={p}
@@ -179,7 +203,6 @@ export const AdminPatients = () => {
 const PatientCard = ({ patient: p, appointments, doctors, onEdit, onDelete, onPhotoUpload, onPdfUpload, onRemovePhoto, onClinicalHistory, onViewOdontogram, showOdontogram, viewingPhotos, onTogglePhotos, viewingPdf, onTogglePdf, uploadingPhoto, uploadingPdf, updatePatient }: any) => {
   const { history } = useClinicalHistory(p.id);
   
-  // Get odontogram snapshots from appointments
   const patientApps = appointments.filter((a: any) => a.patientName === p.name && a.odontogramData);
   const sortedSnapshots = patientApps.sort((a: any, b: any) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
   const [selectedSnapshot, setSelectedSnapshot] = useState(0);
@@ -200,18 +223,57 @@ const PatientCard = ({ patient: p, appointments, doctors, onEdit, onDelete, onPh
           <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
           {p.notes && <p className="text-xs text-muted-foreground">📝 {p.notes}</p>}
         </div>
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex gap-1.5 items-center flex-wrap justify-center">
           {p.phone && (() => {
             const phoneClean = p.phone.replace(/[^0-9]/g, "");
             const waPhone = phoneClean.startsWith("58") ? phoneClean : `58${phoneClean}`;
-            return (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>);
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20"><MessageCircle className="w-4 h-4" /></a>
+                </TooltipTrigger>
+                <TooltipContent>WhatsApp</TooltipContent>
+              </Tooltip>
+            );
           })()}
-          {p.email && (<a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
-          <button onClick={() => onClinicalHistory(p)} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica"><ClipboardList className="w-4 h-4" /></button>
-          <button onClick={() => onViewOdontogram(p.id)} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Odontograma">🦷</button>
-          <button onClick={() => onTogglePhotos()} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Fotos"><Camera className="w-4 h-4" /></button>
-          <button onClick={() => onEdit(p)} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Editar"><Edit className="w-4 h-4" /></button>
-          <button onClick={() => onDelete(p.id)} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
+          {p.email && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"><Mail className="w-4 h-4" /></a>
+              </TooltipTrigger>
+              <TooltipContent>Enviar correo</TooltipContent>
+            </Tooltip>
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => onClinicalHistory(p)} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20"><ClipboardList className="w-4 h-4" /></button>
+            </TooltipTrigger>
+            <TooltipContent>Historia clínica</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => onViewOdontogram(p.id)} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20">🦷</button>
+            </TooltipTrigger>
+            <TooltipContent>Odontograma</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => onTogglePhotos()} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20"><Camera className="w-4 h-4" /></button>
+            </TooltipTrigger>
+            <TooltipContent>Fotos del proceso</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => onEdit(p)} className="p-2 rounded-lg bg-accent/10 text-accent hover:bg-accent/20"><Edit className="w-4 h-4" /></button>
+            </TooltipTrigger>
+            <TooltipContent>Editar paciente</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => onDelete(p.id)} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
+            </TooltipTrigger>
+            <TooltipContent>Eliminar paciente</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
@@ -245,7 +307,6 @@ const PatientCard = ({ patient: p, appointments, doctors, onEdit, onDelete, onPh
           )}
         </div>
       )}
-
 
       {viewingPhotos && (
         <div className="bg-muted rounded-lg p-3 space-y-3">

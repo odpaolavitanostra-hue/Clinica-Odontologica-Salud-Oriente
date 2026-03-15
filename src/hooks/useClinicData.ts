@@ -261,7 +261,6 @@ export function useClinicData() {
       requesterCov: slot.requester_cov || undefined,
       requesterEmail: slot.requester_email || undefined,
       requesterPhone: slot.requester_phone || undefined,
-      rentalMode: slot.rental_mode || undefined,
       rentalPrice: slot.rental_price || undefined,
       treatment: (slot as any).treatment || undefined,
     });
