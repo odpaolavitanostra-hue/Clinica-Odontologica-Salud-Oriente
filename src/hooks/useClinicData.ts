@@ -581,6 +581,8 @@ export function useClinicData() {
       tenant_id: tenantId, date: slot.date, all_day: slot.allDay,
       start_time: slot.startTime, end_time: slot.endTime,
       treatment: slot.treatment || 'Revisión',
+      rental_mode: slot.rentalMode || 'turno',
+      status: slot.status || 'approved',
     });
     inv("tenant_blocked_slots");
   };
