@@ -395,22 +395,32 @@ export function useClinicData() {
     // Auto-schedule notifications
     if (appointmentId && app.patientPhone) {
       const notifications: any[] = [];
-
-      // 1. Reminder: 24h before appointment
       const appointmentDateTime = new Date(`${app.date}T${app.time}:00-04:00`);
-      const reminderTime = new Date(appointmentDateTime.getTime() - 24 * 60 * 60 * 1000);
+
+      // 1. Instant confirmation (scheduled_for = now)
+      notifications.push({
+        type: "confirmation",
+        appointment_id: appointmentId,
+        patient_name: app.patientName,
+        phone: app.patientPhone,
+        message: `✅ ¡Cita confirmada! Hola ${app.patientName}, su cita para ${app.treatment} ha sido agendada para el ${app.date} a las ${app.time} en Clínica Salud Oriente (C.C Novocentro piso 1, local 1-02, Puerto La Cruz). ¡Le esperamos!`,
+        scheduled_for: new Date().toISOString(),
+      });
+
+      // 2. Reminder: 2 hours before appointment
+      const reminderTime = new Date(appointmentDateTime.getTime() - 2 * 60 * 60 * 1000);
       if (reminderTime > new Date()) {
         notifications.push({
           type: "reminder",
           appointment_id: appointmentId,
           patient_name: app.patientName,
           phone: app.patientPhone,
-          message: `Hola ${app.patientName}, le recordamos su cita mañana ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos!`,
+          message: `⏰ Recordatorio: Hola ${app.patientName}, su cita es hoy ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos en 2 horas!`,
           scheduled_for: reminderTime.toISOString(),
         });
       }
 
-      // 2. Post-op follow-up: 24h after appointment (only for invasive treatments)
+      // 3. Post-op follow-up: 24h after (only for invasive treatments)
       const isInvasive = INVASIVE_TREATMENTS.some(t => app.treatment.toLowerCase().includes(t));
       if (isInvasive) {
         const followupTime = new Date(appointmentDateTime.getTime() + 24 * 60 * 60 * 1000);
