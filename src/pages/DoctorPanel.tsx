@@ -43,7 +43,7 @@ const DoctorPanel = () => {
   const [odontogramAppId, setOdontogramAppId] = useState<string | null>(null);
   const [odontogramNotes, setOdontogramNotes] = useState("");
   const odontogram = useOdontogram();
-  const { isDark, toggle: toggleTheme } = useTheme();
+  
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
