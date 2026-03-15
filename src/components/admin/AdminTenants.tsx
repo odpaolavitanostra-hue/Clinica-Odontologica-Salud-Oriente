@@ -459,93 +459,17 @@ export const AdminTenants = () => {
             </div>
           </div>
         )}
-
-        {tenants.length === 0 && !showForm ? (
-          <p className="text-muted-foreground text-center py-8">No hay inquilinos registrados</p>
-        ) : (
-          tenants.map((t) => (
-            <div key={t.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="font-semibold">{t.firstName} {t.lastName}</p>
-                  <p className="text-sm text-muted-foreground">COV: {t.cov || "—"} • Cédula: {t.cedula || "—"}</p>
-                  <p className="text-sm text-muted-foreground">{t.email || "—"} • {t.phone || "—"}</p>
-                  <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-                  <button onClick={() => { setBlockingTenant(blockingTenant === t.id ? null : t.id); resetBlockForm(); }} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Agendar horario"><Lock className="w-4 h-4" /></button>
-                  <button onClick={async () => { await deleteTenant(t.id); toast.success("Inquilino eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              </div>
-
-              {blockingTenant === t.id && (
-                <div className="bg-muted rounded-lg p-4 space-y-4">
-                  <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
-                  <ScheduleSelector date={blockForm.date} rentalMode={blockForm.rentalMode} turnoBlock={blockForm.turnoBlock} selectedHours={blockForm.selectedHours}
-                    onDateChange={(d) => setBlockForm(prev => ({ ...prev, date: d, rentalMode: "", turnoBlock: "", selectedHours: [] }))}
-                    onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
-                    onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
-                    onToggleHour={(h) => toggleHour("block", h)}
-                     treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
-                     clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
-                     clinicPercentage={blockForm.clinicPercentage} onClinicPercentageChange={(v) => setBlockForm(prev => ({ ...prev, clinicPercentage: v }))}
-                   />
-                  {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
-                    <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
-                  )}
-                </div>
-              )}
-
-              {t.blockedSlots.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground">Horarios bloqueados:</p>
-                  {t.blockedSlots.sort((a, b) => a.date.localeCompare(b.date)).map((sl) => (
-                    <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
-                      {editingSlot === sl.id ? (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
-                              <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
-                                <option value="turno">Por Turno</option>
-                                <option value="percent">Por Porcentaje (%)</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "percent" ? "Porcentaje %" : "Precio USD"}</label>
-                              <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
-                            <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
-                            <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
-                          </div>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleSaveSlotEdit(sl.id)} className="bg-gold text-gold-foreground px-2 py-1 rounded text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
-                            <button onClick={() => setEditingSlot(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}{sl.treatment && sl.rentalMode === "percent" ? ` • ${sl.treatment}` : ""}</span>
-                          <div className="flex gap-1">
-                            <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
-                            <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
-        )}
       </div>
 
-      {/* Rental Requests Section */}
+      {/* Gestión de Alquileres — RIGHT AFTER form, before tenant cards */}
+      <div className="space-y-3">
+        <h3 className="font-display font-semibold text-lg flex items-center gap-2">
+          <Clock className="w-5 h-5 text-gold" /> Gestión de Alquileres
+          {pendingCount > 0 && (
+            <span className="bg-destructive text-destructive-foreground text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingCount} pendiente(s)</span>
+          )}
+          <span className="text-xs text-muted-foreground font-normal ml-1">({rentalRequests.length} total)</span>
+        </h3>
       <div className="space-y-3">
         <h3 className="font-display font-semibold text-lg flex items-center gap-2">
           <Clock className="w-5 h-5 text-orange-400" /> Gestión de Alquileres
