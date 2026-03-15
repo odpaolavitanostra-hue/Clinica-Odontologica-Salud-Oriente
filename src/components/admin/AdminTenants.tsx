@@ -615,10 +615,12 @@ export const AdminTenants = () => {
               <h3 className="text-xs font-semibold flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-gold" /> Fecha y Horario</h3>
               <ScheduleSelector date={form.date} rentalMode={form.rentalMode} turnoBlock={form.turnoBlock} selectedHours={form.selectedHours}
                 onDateChange={(d) => setForm(prev => ({ ...prev, date: d, turnoBlock: "", selectedHours: [] }))}
-                onModeChange={(m) => setForm(prev => ({ ...prev, rentalMode: m as "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
+                onModeChange={(m) => setForm(prev => ({ ...prev, rentalMode: m as "turno" | "procedimiento" | "percent", turnoBlock: "", selectedHours: [] }))}
                 onTurnoChange={(t) => setForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                 onToggleHour={(h) => toggleHour("form", h)}
                 rentalPrice={form.rentalPrice} onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
+                treatment={form.treatment} onTreatmentChange={(t) => setForm(prev => ({ ...prev, treatment: t }))}
+                clinicProvidesMaterials={form.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
               />
             </div>
           )}
