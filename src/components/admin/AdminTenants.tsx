@@ -484,6 +484,7 @@ export const AdminTenants = () => {
                         <label className="block text-xs font-medium mb-1">Modalidad</label>
                         <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
                           <option value="turno">Por Turno</option>
+                          <option value="procedimiento">Por Procedimiento</option>
                           <option value="percent">Por Porcentaje (%)</option>
                         </select>
                       </div>
