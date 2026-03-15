@@ -64,7 +64,7 @@ export const AdminInventory = () => {
       )}
 
       <div className="space-y-3">
-        {inventory.map((item) => (
+        {inventory.filter(item => !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
           <div key={item.id} className={`bg-card rounded-xl p-4 flex items-center justify-between flex-wrap gap-3 ${item.stock <= item.minStock ? "border-2 border-amber" : "gold-border"}`}>
             <div className="flex-1">
               <div className="flex items-center gap-2">
