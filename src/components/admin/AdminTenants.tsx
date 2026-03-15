@@ -371,16 +371,18 @@ export const AdminTenants = () => {
 
   return (
     <div className="space-y-6">
-      {/* New Tenant + Rental — ANCHORED AT TOP */}
+      {/* HEADER: Alquiler de Consultorio — anchored at top */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl font-bold flex items-center gap-2">
+          <Building2 className="w-6 h-6 text-gold" /> Alquiler de Consultorio
+        </h2>
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+          <Plus className="w-4 h-4" /> Nuevo Inquilino
+        </button>
+      </div>
+
+      {/* New Tenant Form */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-gold" /> Alquiler de Consultorio
-          </h3>
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
-            <Plus className="w-4 h-4" /> Nuevo Inquilino
-          </button>
-        </div>
 
         {showForm && (
           <div className="bg-muted rounded-xl p-5 space-y-5">
