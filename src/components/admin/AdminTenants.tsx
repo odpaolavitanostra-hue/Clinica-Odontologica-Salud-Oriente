@@ -489,7 +489,7 @@ export const AdminTenants = () => {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
+                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : requestEditForm.rentalMode === "procedimiento" ? "Precio USD" : "Porcentaje %"}</label>
                         <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                       </div>
                     </div>
