@@ -295,13 +295,17 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             {form.date && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modalidad de Alquiler</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <button type="button" onClick={() => { update("rentalMode", "turno"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
                     <Clock className="w-4 h-4" /> Por Turno
                   </button>
+                  <button type="button" onClick={() => { update("rentalMode", "procedimiento"); update("turnoBlock", ""); update("selectedHours", []); }}
+                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "procedimiento" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    <Stethoscope className="w-4 h-4" /> Por Procedimiento
+                  </button>
                   <button type="button" onClick={() => { update("rentalMode", "percent"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
                     <Building2 className="w-4 h-4" /> Por Porcentaje (%)
                   </button>
                 </div>
