@@ -254,6 +254,7 @@ export function useClinicData() {
       startTime: slot.start_time || undefined,
       endTime: slot.end_time || undefined,
       status: slot.status || 'approved',
+      rentalMode: slot.rental_mode || undefined,
       requesterFirstName: slot.requester_first_name || undefined,
       requesterLastName: slot.requester_last_name || undefined,
       requesterCedula: slot.requester_cedula || undefined,
