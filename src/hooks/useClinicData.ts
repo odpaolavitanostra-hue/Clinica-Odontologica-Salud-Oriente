@@ -114,7 +114,7 @@ export interface Tenant {
   email: string;
   phone: string;
   cedula: string;
-  rentalMode: 'turno' | 'percent';
+  rentalMode: 'turno' | 'procedimiento' | 'percent';
   rentalPrice: number;
   blockedSlots: TenantBlockedSlot[];
 }
