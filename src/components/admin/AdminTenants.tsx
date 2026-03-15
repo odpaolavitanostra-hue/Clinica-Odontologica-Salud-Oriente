@@ -225,14 +225,17 @@ export const AdminTenants = () => {
   };
 
   // Schedule selection UI
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange }: {
+  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
     rentalPrice?: number; onPriceChange?: (p: number) => void;
+    treatment?: string; onTreatmentChange?: (t: string) => void;
+    clinicProvidesMaterials?: boolean; onClinicMaterialsChange?: (v: boolean) => void;
   }) => {
     const amAvail = date ? isBlockAvailableFor(date, "am") : false;
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
-    const pSlots = date && rentalMode === "percent" ? getAvailableSlots(date) : [];
+    const needsHours = rentalMode === "percent" || rentalMode === "procedimiento";
+    const pSlots = date && needsHours ? getAvailableSlots(date) : [];
     return (
       <div className="space-y-4">
         <div>
@@ -242,22 +245,82 @@ export const AdminTenants = () => {
         {date && (
           <div className="space-y-3">
             <p className="text-xs font-semibold flex items-center gap-1"><Building2 className="w-3 h-3 text-gold" /> Modalidad de Alquiler</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+            <div className="grid grid-cols-3 gap-2">
+              <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
                 <Clock className="w-4 h-4" /> Por Turno
               </button>
-              <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Building2 className="w-4 h-4" /> Por Porcentaje (%)
+              <button type="button" onClick={() => onModeChange("procedimiento")} className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "procedimiento" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                <Stethoscope className="w-4 h-4" /> Por Procedimiento
+              </button>
+              <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                <DollarSign className="w-4 h-4" /> Por Porcentaje (%)
               </button>
             </div>
           </div>
         )}
-        {date && rentalMode && onPriceChange && (
+
+        {/* Turno: flat USD price */}
+        {date && rentalMode === "turno" && onPriceChange && (
           <div>
-            <label className="block text-xs font-medium mb-1">{rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
+            <label className="block text-xs font-medium mb-1">Precio por Turno (USD)</label>
             <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
           </div>
         )}
+
+        {/* Procedimiento: treatment dropdown + flat USD price */}
+        {date && rentalMode === "procedimiento" && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Procedimiento a realizar</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
+                {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUsd.toFixed(2)}</option>
+                ))}
+              </select>
+            </div>
+            {onPriceChange && (
+              <div>
+                <label className="block text-xs font-medium mb-1">Precio por Procedimiento (USD)</label>
+                <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Porcentaje: % input + materials toggle */}
+        {date && rentalMode === "percent" && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Procedimiento a realizar</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
+                {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                  <option key={t.name} value={t.name}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center justify-between bg-card rounded-lg px-3 py-3 border border-border">
+              <div className="flex items-center gap-2">
+                <Package className="w-4 h-4 text-gold" />
+                <div>
+                  <p className="text-xs font-medium">¿La clínica provee los materiales?</p>
+                  <p className="text-[10px] text-muted-foreground">{clinicProvidesMaterials ? "Sí → Mayor porcentaje de cobro" : "No → Menor porcentaje de cobro"}</p>
+                </div>
+              </div>
+              <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => onClinicMaterialsChange?.(v)} />
+            </div>
+            {onPriceChange && (
+              <div>
+                <label className="block text-xs font-medium mb-1">Porcentaje a cobrar (%)</label>
+                <input type="number" step="1" min="0" max="100" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {clinicProvidesMaterials ? "💡 Sugerido: 40-50% (materiales incluidos)" : "💡 Sugerido: 20-30% (sin materiales)"}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Turno selection */}
         {date && rentalMode === "turno" && (
           <div className="space-y-3">
             <p className="text-xs font-medium">Seleccione el turno:</p>
@@ -274,7 +337,9 @@ export const AdminTenants = () => {
             {!amAvail && !pmAvail && <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha.</p>}
           </div>
         )}
-        {date && rentalMode === "percent" && (
+
+        {/* Hour selection for procedimiento and percent */}
+        {date && needsHours && (
           <div className="space-y-3">
             {pSlots.length > 0 ? (
               <>
