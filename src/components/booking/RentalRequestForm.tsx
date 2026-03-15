@@ -117,7 +117,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
       toast.error("Selecciona el turno (AM o PM)");
       return;
     }
-    if (form.rentalMode === "percent" && form.selectedHours.length === 0) {
+    if ((form.rentalMode === "percent" || form.rentalMode === "procedimiento") && form.selectedHours.length === 0) {
       toast.error("Selecciona al menos una hora");
       return;
     }
