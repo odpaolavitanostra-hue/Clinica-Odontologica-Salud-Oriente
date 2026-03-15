@@ -592,12 +592,12 @@ export const AdminTenants = () => {
               <div className="bg-muted rounded-lg p-4 space-y-4">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
                 <ScheduleSelector date={blockForm.date} rentalMode={blockForm.rentalMode} turnoBlock={blockForm.turnoBlock} selectedHours={blockForm.selectedHours}
-                  onDateChange={(d) => setBlockForm({ date: d, rentalMode: "", turnoBlock: "", selectedHours: [] })}
-                  onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
+                  onDateChange={(d) => setBlockForm(prev => ({ ...prev, date: d, rentalMode: "", turnoBlock: "", selectedHours: [] }))}
+                  onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "procedimiento" | "percent", turnoBlock: "", selectedHours: [] }))}
                   onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                   onToggleHour={(h) => toggleHour("block", h)}
                 />
-                {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
+                {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || ((blockForm.rentalMode === "percent" || blockForm.rentalMode === "procedimiento") && blockForm.selectedHours.length > 0)) && (
                   <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
                 )}
               </div>
