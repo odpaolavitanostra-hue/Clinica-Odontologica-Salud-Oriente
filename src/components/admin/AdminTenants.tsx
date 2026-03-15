@@ -107,7 +107,7 @@ export const AdminTenants = () => {
             const startTime = hours[0];
             const lastH = parseInt(hours[hours.length - 1]);
             const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment });
+            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: form.rentalMode === 'percent' ? form.rentalPrice : 0 });
           } else if ((form.rentalMode === "percent" || form.rentalMode === "procedimiento") && form.selectedHours.length > 0) {
             const sorted = [...form.selectedHours].sort();
             const ranges: { start: string; end: string }[] = [];
