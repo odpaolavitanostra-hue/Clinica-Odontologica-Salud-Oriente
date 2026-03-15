@@ -233,12 +233,13 @@ export const AdminTenants = () => {
   };
 
   // Schedule selection UI — only turno and percent
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange }: {
+  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange, clinicPercentage, onClinicPercentageChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
     rentalPrice?: number; onPriceChange?: (p: number) => void;
     treatment?: string; onTreatmentChange?: (t: string) => void;
     clinicProvidesMaterials?: boolean; onClinicMaterialsChange?: (v: boolean) => void;
+    clinicPercentage?: number; onClinicPercentageChange?: (v: number) => void;
   }) => {
     const amAvail = date ? isBlockAvailableFor(date, "am") : false;
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
