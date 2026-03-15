@@ -180,7 +180,7 @@ export const AdminTenants = () => {
     setRequestEditForm({
       rentalMode: req.rentalMode, rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
-      treatment: req.treatment || "Revisión",
+      treatment: req.treatment || "Revisión", clinicProvidesMaterials: false,
     });
   };
 
