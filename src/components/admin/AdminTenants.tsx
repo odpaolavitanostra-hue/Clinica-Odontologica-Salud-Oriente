@@ -537,7 +537,7 @@ export const AdminTenants = () => {
               : isCompleted ? { cls: "bg-clinic-green/20 text-clinic-green", label: "✔️ Completado" }
               : { cls: "bg-destructive/20 text-destructive", label: "❌ Cancelado" };
             return (
-              <div key={req.id} className={`bg-card rounded-xl p-5 space-y-3 ${isPending ? "border border-orange-500/30" : isCompleted ? "border border-clinic-green/30" : isCancelled ? "border border-destructive/30 opacity-60" : "gold-border"}`}>
+              <div key={req.id} className={`bg-card rounded-xl p-3 sm:p-5 space-y-3 ${isPending ? "border border-orange-500/30" : isCompleted ? "border border-clinic-green/30" : isCancelled ? "border border-destructive/30 opacity-60" : "gold-border"}`}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
