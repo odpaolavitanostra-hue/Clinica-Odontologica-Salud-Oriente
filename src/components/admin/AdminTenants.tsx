@@ -768,7 +768,7 @@ export const AdminTenants = () => {
                     <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
                       {editingSlot === sl.id ? (
                         <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
                               <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
                               <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
