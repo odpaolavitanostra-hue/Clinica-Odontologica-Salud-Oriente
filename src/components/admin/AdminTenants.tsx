@@ -16,8 +16,8 @@ export const AdminTenants = () => {
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
   const [requestEditForm, setRequestEditForm] = useState<{
-    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean;
-  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false });
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean; clinicPercentage: number;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -28,25 +28,25 @@ export const AdminTenants = () => {
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
     date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false,
+    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
   });
   const [blockForm, setBlockForm] = useState({
     date: "", rentalMode: "" as "" | "turno" | "percent",
     turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false,
+    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
   });
 
   const caracasToday = getCaracasToday();
   const caracasNow = getCaracasNow();
 
   const resetForm = () => {
-    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
+    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
     setShowForm(false);
     setEditing(null);
   };
 
   const resetBlockForm = () => {
-    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
+    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
   };
 
   const isBlockAvailableFor = (date: string, block: "am" | "pm"): boolean => {
@@ -122,9 +122,8 @@ export const AdminTenants = () => {
               }
               prevHour = currentH;
             }
-            const autoPercent = getAutoPercentage(form.clinicProvidesMaterials);
             for (const range of ranges) {
-              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: autoPercent });
+              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: form.clinicPercentage });
             }
           }
         }
@@ -135,7 +134,7 @@ export const AdminTenants = () => {
   };
 
   const handleEdit = (t: Tenant) => {
-    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: (t.rentalMode === "turno" ? "turno" : "percent") as "turno" | "percent", rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
+    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: (t.rentalMode === "turno" ? "turno" : "percent") as "turno" | "percent", rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
     setEditing(t.id);
     setShowForm(true);
   };
@@ -171,9 +170,9 @@ export const AdminTenants = () => {
         }
         prevHour = currentH;
       }
-      const autoPercent = getAutoPercentage(blockForm.clinicProvidesMaterials);
+      const customPercent = blockForm.clinicPercentage;
       for (const range of ranges) {
-        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: autoPercent });
+        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: customPercent });
       }
       toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
@@ -187,12 +186,12 @@ export const AdminTenants = () => {
       rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
       treatment: req.treatment || "Revisión", clinicProvidesMaterials: req.clinicProvidesMaterials || false,
+      clinicPercentage: req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false),
     });
   };
 
   const handleApproveRequest = async (reqId: string) => {
     if (editingRequest === reqId) {
-      const autoPercent = requestEditForm.rentalMode === 'percent' ? getAutoPercentage(requestEditForm.clinicProvidesMaterials) : 0;
       await updateBlockedSlot(reqId, {
         rentalMode: requestEditForm.rentalMode,
         rentalPrice: requestEditForm.rentalPrice,
@@ -201,7 +200,7 @@ export const AdminTenants = () => {
         endTime: requestEditForm.endTime,
         treatment: requestEditForm.treatment,
         clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials,
-        clinicPercentage: autoPercent,
+        clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0,
       });
     }
     await approveRentalRequest(reqId);
@@ -233,12 +232,13 @@ export const AdminTenants = () => {
   };
 
   // Schedule selection UI — only turno and percent
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange }: {
+  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange, clinicPercentage, onClinicPercentageChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
     rentalPrice?: number; onPriceChange?: (p: number) => void;
     treatment?: string; onTreatmentChange?: (t: string) => void;
     clinicProvidesMaterials?: boolean; onClinicMaterialsChange?: (v: boolean) => void;
+    clinicPercentage?: number; onClinicPercentageChange?: (v: number) => void;
   }) => {
     const amAvail = date ? isBlockAvailableFor(date, "am") : false;
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
@@ -291,13 +291,18 @@ export const AdminTenants = () => {
               </div>
               <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => {
                 onClinicMaterialsChange?.(v);
+                onClinicPercentageChange?.(v ? 60 : 40);
               }} className="data-[state=checked]:bg-gold" />
             </div>
-            <div className="bg-card rounded-lg px-3 py-2.5 border border-border">
-              <p className="text-xs font-medium">Comisión clínica: <span className="text-gold font-bold">{clinicProvidesMaterials ? "60%" : "40%"}</span></p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {clinicProvidesMaterials ? "Materiales incluidos por la clínica → 60%" : "Sin materiales → 40%"}
-              </p>
+            <div className="bg-card rounded-lg px-3 py-2.5 border border-border space-y-1">
+              <label className="text-xs font-medium flex items-center gap-1">Comisión clínica (%)</label>
+              <div className="flex items-center gap-2">
+                <input type="number" step="1" min="0" max="100" className="w-20 bg-muted rounded-lg px-3 py-1.5 text-sm border border-border focus:border-gold focus:outline-none text-center font-bold text-gold" value={clinicPercentage ?? getAutoPercentage(clinicProvidesMaterials || false)} onChange={(e) => onClinicPercentageChange?.(parseInt(e.target.value) || 0)} />
+                <span className="text-xs text-muted-foreground">%</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  Sugerido: {clinicProvidesMaterials ? "60%" : "40%"}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -366,16 +371,18 @@ export const AdminTenants = () => {
 
   return (
     <div className="space-y-6">
-      {/* New Tenant + Rental — ANCHORED AT TOP */}
+      {/* HEADER: Alquiler de Consultorio — anchored at top */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl font-bold flex items-center gap-2">
+          <Building2 className="w-6 h-6 text-gold" /> Alquiler de Consultorio
+        </h2>
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+          <Plus className="w-4 h-4" /> Nuevo Inquilino
+        </button>
+      </div>
+
+      {/* New Tenant Form */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-gold" /> Alquiler de Consultorio
-          </h3>
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
-            <Plus className="w-4 h-4" /> Nuevo Inquilino
-          </button>
-        </div>
 
         {showForm && (
           <div className="bg-muted rounded-xl p-5 space-y-5">
@@ -425,9 +432,10 @@ export const AdminTenants = () => {
                   onTurnoChange={(t) => setForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                   onToggleHour={(h) => toggleHour("form", h)}
                   rentalPrice={form.rentalPrice} onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
-                  treatment={form.treatment} onTreatmentChange={(t) => setForm(prev => ({ ...prev, treatment: t }))}
-                  clinicProvidesMaterials={form.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
-                />
+                   treatment={form.treatment} onTreatmentChange={(t) => setForm(prev => ({ ...prev, treatment: t }))}
+                   clinicProvidesMaterials={form.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
+                   clinicPercentage={form.clinicPercentage} onClinicPercentageChange={(v) => setForm(prev => ({ ...prev, clinicPercentage: v }))}
+                 />
               </div>
             )}
             {editing && (
@@ -451,97 +459,14 @@ export const AdminTenants = () => {
             </div>
           </div>
         )}
-
-        {tenants.length === 0 && !showForm ? (
-          <p className="text-muted-foreground text-center py-8">No hay inquilinos registrados</p>
-        ) : (
-          tenants.map((t) => (
-            <div key={t.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="font-semibold">{t.firstName} {t.lastName}</p>
-                  <p className="text-sm text-muted-foreground">COV: {t.cov || "—"} • Cédula: {t.cedula || "—"}</p>
-                  <p className="text-sm text-muted-foreground">{t.email || "—"} • {t.phone || "—"}</p>
-                  <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-                  <button onClick={() => { setBlockingTenant(blockingTenant === t.id ? null : t.id); resetBlockForm(); }} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Agendar horario"><Lock className="w-4 h-4" /></button>
-                  <button onClick={async () => { await deleteTenant(t.id); toast.success("Inquilino eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              </div>
-
-              {blockingTenant === t.id && (
-                <div className="bg-muted rounded-lg p-4 space-y-4">
-                  <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
-                  <ScheduleSelector date={blockForm.date} rentalMode={blockForm.rentalMode} turnoBlock={blockForm.turnoBlock} selectedHours={blockForm.selectedHours}
-                    onDateChange={(d) => setBlockForm(prev => ({ ...prev, date: d, rentalMode: "", turnoBlock: "", selectedHours: [] }))}
-                    onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
-                    onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
-                    onToggleHour={(h) => toggleHour("block", h)}
-                    treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
-                    clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
-                  />
-                  {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
-                    <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
-                  )}
-                </div>
-              )}
-
-              {t.blockedSlots.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground">Horarios bloqueados:</p>
-                  {t.blockedSlots.sort((a, b) => a.date.localeCompare(b.date)).map((sl) => (
-                    <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
-                      {editingSlot === sl.id ? (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
-                              <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
-                                <option value="turno">Por Turno</option>
-                                <option value="percent">Por Porcentaje (%)</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "percent" ? "Porcentaje %" : "Precio USD"}</label>
-                              <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
-                            <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
-                            <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
-                          </div>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleSaveSlotEdit(sl.id)} className="bg-gold text-gold-foreground px-2 py-1 rounded text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
-                            <button onClick={() => setEditingSlot(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}{sl.treatment && sl.rentalMode === "percent" ? ` • ${sl.treatment}` : ""}</span>
-                          <div className="flex gap-1">
-                            <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
-                            <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
-        )}
       </div>
 
-      {/* Rental Requests Section */}
+      {/* Gestión de Alquileres — RIGHT AFTER form, before tenant cards */}
       <div className="space-y-3">
         <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-          <Clock className="w-5 h-5 text-orange-400" /> Gestión de Alquileres
+          <Clock className="w-5 h-5 text-gold" /> Gestión de Alquileres
           {pendingCount > 0 && (
-            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingCount} pendiente(s)</span>
+            <span className="bg-destructive text-destructive-foreground text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingCount} pendiente(s)</span>
           )}
           <span className="text-xs text-muted-foreground font-normal ml-1">({rentalRequests.length} total)</span>
         </h3>
@@ -670,14 +595,22 @@ export const AdminTenants = () => {
                           <p className="text-xs font-medium">¿Clínica provee materiales?</p>
                         </div>
                         <Switch checked={requestEditForm.clinicProvidesMaterials} onCheckedChange={(v) => {
-                          setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v, rentalPrice: v ? 60 : 40 }));
+                          setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v, clinicPercentage: v ? 60 : 40 }));
                         }} className="data-[state=checked]:bg-gold" />
+                      </div>
+                    )}
+                    {requestEditForm.rentalMode === "percent" && (
+                      <div className="bg-card rounded-lg px-3 py-2 border border-border space-y-1">
+                        <label className="text-xs font-medium">Comisión clínica (%)</label>
+                        <div className="flex items-center gap-2">
+                          <input type="number" step="1" min="0" max="100" className="w-20 bg-muted rounded-lg px-3 py-1.5 text-sm border border-border focus:border-gold focus:outline-none text-center font-bold text-gold" value={requestEditForm.clinicPercentage} onChange={(e) => setRequestEditForm(prev => ({ ...prev, clinicPercentage: parseInt(e.target.value) || 0 }))} />
+                          <span className="text-xs text-muted-foreground">% — Sugerido: {requestEditForm.clinicProvidesMaterials ? "60%" : "40%"}</span>
+                        </div>
                       </div>
                     )}
                     <div className="flex gap-2">
                       <button onClick={async () => {
-                        const autoPercent = requestEditForm.rentalMode === 'percent' ? getAutoPercentage(requestEditForm.clinicProvidesMaterials) : 0;
-                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatment, clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials, clinicPercentage: autoPercent });
+                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatment, clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials, clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0 });
                         toast.success("Datos actualizados");
                         setEditingRequest(null);
                       }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar cambios</button>
@@ -712,7 +645,97 @@ export const AdminTenants = () => {
         )}
       </div>
 
-      {/* Payment Modal for Rentals */}
+      {/* Inquilinos Registrados */}
+      <div className="space-y-4">
+        <h3 className="font-display font-semibold text-lg flex items-center gap-2">
+          <User className="w-5 h-5 text-gold" /> Inquilinos Registrados
+          <span className="text-xs text-muted-foreground font-normal">({tenants.length})</span>
+        </h3>
+        {tenants.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No hay inquilinos registrados</p>
+        ) : (
+          tenants.map((t) => (
+            <div key={t.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="font-semibold">{t.firstName} {t.lastName}</p>
+                  <p className="text-sm text-muted-foreground">COV: {t.cov || "—"} • Cédula: {t.cedula || "—"}</p>
+                  <p className="text-sm text-muted-foreground">{t.email || "—"} • {t.phone || "—"}</p>
+                  <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
+                  <button onClick={() => { setBlockingTenant(blockingTenant === t.id ? null : t.id); resetBlockForm(); }} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Agendar horario"><Lock className="w-4 h-4" /></button>
+                  <button onClick={async () => { await deleteTenant(t.id); toast.success("Inquilino eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+
+              {blockingTenant === t.id && (
+                <div className="bg-muted rounded-lg p-4 space-y-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
+                  <ScheduleSelector date={blockForm.date} rentalMode={blockForm.rentalMode} turnoBlock={blockForm.turnoBlock} selectedHours={blockForm.selectedHours}
+                    onDateChange={(d) => setBlockForm(prev => ({ ...prev, date: d, rentalMode: "", turnoBlock: "", selectedHours: [] }))}
+                    onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
+                    onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
+                    onToggleHour={(h) => toggleHour("block", h)}
+                    treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
+                    clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
+                    clinicPercentage={blockForm.clinicPercentage} onClinicPercentageChange={(v) => setBlockForm(prev => ({ ...prev, clinicPercentage: v }))}
+                  />
+                  {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
+                    <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
+                  )}
+                </div>
+              )}
+
+              {t.blockedSlots.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground">Horarios bloqueados:</p>
+                  {t.blockedSlots.sort((a, b) => a.date.localeCompare(b.date)).map((sl) => (
+                    <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
+                      {editingSlot === sl.id ? (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
+                              <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
+                                <option value="turno">Por Turno</option>
+                                <option value="percent">Por Porcentaje (%)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "percent" ? "Porcentaje %" : "Precio USD"}</label>
+                              <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
+                            <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
+                            <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
+                          </div>
+                          <div className="flex gap-1">
+                            <button onClick={() => handleSaveSlotEdit(sl.id)} className="bg-gold text-gold-foreground px-2 py-1 rounded text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                            <button onClick={() => setEditingSlot(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.clinicPercentage || sl.rentalPrice || 0}% clínica` : `$${(sl.rentalPrice || 0).toFixed(2)}`}{sl.treatment && sl.rentalMode === "percent" ? ` • ${sl.treatment}` : ""}</span>
+                          <div className="flex gap-1">
+                            <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
+                            <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
       {payingRentalId && (() => {
         const req = rentalRequests.find(r => r.id === payingRentalId);
         if (!req) return null;
