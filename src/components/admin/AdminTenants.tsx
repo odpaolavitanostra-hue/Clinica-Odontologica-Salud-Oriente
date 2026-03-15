@@ -693,11 +693,12 @@ export const AdminTenants = () => {
                             <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
                             <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
                               <option value="turno">Por Turno</option>
+                              <option value="procedimiento">Por Procedimiento</option>
                               <option value="percent">Por Porcentaje (%)</option>
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
+                            <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "percent" ? "Porcentaje %" : "Precio USD"}</label>
                             <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                           </div>
                         </div>
