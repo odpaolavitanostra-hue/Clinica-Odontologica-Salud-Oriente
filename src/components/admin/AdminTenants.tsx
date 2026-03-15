@@ -728,7 +728,7 @@ export const AdminTenants = () => {
           <p className="text-muted-foreground text-center py-8">No hay inquilinos registrados</p>
         ) : (
           tenants.map((t) => (
-            <div key={t.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
+            <div key={t.id} className="bg-card rounded-xl p-3 sm:p-5 gold-border space-y-3">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <p className="font-semibold">{t.firstName} {t.lastName}</p>
