@@ -714,7 +714,7 @@ export const AdminTenants = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
-                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}</span>
+                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}{sl.rentalMode === "procedimiento" && sl.treatment ? ` • ${sl.treatment}` : ""}</span>
                         <div className="flex gap-1">
                           <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
                           <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
