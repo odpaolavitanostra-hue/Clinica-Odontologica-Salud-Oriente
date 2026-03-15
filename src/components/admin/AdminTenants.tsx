@@ -398,11 +398,11 @@ export const AdminTenants = () => {
   return (
     <div className="space-y-6">
       {/* HEADER: Alquiler de Consultorio — anchored at top */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Building2 className="w-6 h-6 text-gold" /> Alquiler de Consultorio
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h2 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-gold" /> Alquiler de Consultorio
         </h2>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="bg-gold text-gold-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-1">
           <Plus className="w-4 h-4" /> Nuevo Inquilino
         </button>
       </div>
@@ -411,40 +411,40 @@ export const AdminTenants = () => {
       <div className="space-y-4">
 
         {showForm && (
-          <div className="bg-muted rounded-xl p-5 space-y-5">
+          <div className="bg-muted rounded-xl p-3 sm:p-5 space-y-4">
             <h4 className="font-semibold text-sm flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> {editing ? "Editar Inquilino" : "Nuevo Inquilino"}</h4>
             <div className="space-y-3">
               <h3 className="text-xs font-semibold flex items-center gap-2"><User className="w-3.5 h-3.5 text-gold" /> Datos Personales</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium mb-1">Nombre *</label>
-                  <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") })} maxLength={50} />
+                  <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") })} maxLength={50} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1">Apellido *</label>
-                  <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") })} maxLength={50} />
+                  <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") })} maxLength={50} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cédula *</label>
-                  <input type="text" inputMode="numeric" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => setForm({ ...form, cedula: e.target.value.replace(/[^0-9]/g, "") })} maxLength={20} placeholder="12345678" />
+                  <input type="text" inputMode="numeric" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => setForm({ ...form, cedula: e.target.value.replace(/[^0-9]/g, "") })} maxLength={20} placeholder="12345678" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV</label>
-                  <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => setForm({ ...form, cov: e.target.value })} maxLength={20} placeholder="COV-12345" />
+                  <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => setForm({ ...form, cov: e.target.value })} maxLength={20} placeholder="COV-12345" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Mail className="w-3 h-3" /> Email *</label>
-                  <input type="email" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={100} placeholder="doctor@correo.com" />
+                  <input type="email" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={100} placeholder="doctor@correo.com" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Teléfono *</label>
                   <div className="flex">
                     <span className="inline-flex items-center px-2 bg-card border border-r-0 border-border rounded-l-lg text-xs text-muted-foreground font-medium">+58</span>
-                    <input type="tel" inputMode="numeric" className="w-full bg-card rounded-r-lg rounded-l-none px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.phone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); setForm({ ...form, phone: val }); }} maxLength={10} placeholder="4121234567" />
+                    <input type="tel" inputMode="numeric" className="w-full bg-card rounded-r-lg rounded-l-none px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={form.phone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); setForm({ ...form, phone: val }); }} maxLength={10} placeholder="4121234567" />
                   </div>
                 </div>
               </div>
@@ -465,7 +465,7 @@ export const AdminTenants = () => {
               </div>
             )}
             {editing && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium mb-1">Modo de Alquiler</label>
                   <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm({ ...form, rentalMode: e.target.value as "turno" | "percent" })}>
@@ -537,10 +537,10 @@ export const AdminTenants = () => {
               : isCompleted ? { cls: "bg-clinic-green/20 text-clinic-green", label: "✔️ Completado" }
               : { cls: "bg-destructive/20 text-destructive", label: "❌ Cancelado" };
             return (
-              <div key={req.id} className={`bg-card rounded-xl p-5 space-y-3 ${isPending ? "border border-orange-500/30" : isCompleted ? "border border-clinic-green/30" : isCancelled ? "border border-destructive/30 opacity-60" : "gold-border"}`}>
+              <div key={req.id} className={`bg-card rounded-xl p-3 sm:p-5 space-y-3 ${isPending ? "border border-orange-500/30" : isCompleted ? "border border-clinic-green/30" : isCancelled ? "border border-destructive/30 opacity-60" : "gold-border"}`}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusBadge.cls}`}>{statusBadge.label}</span>
                       {req.tenantId && <span className="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold">Inquilino asignado</span>}
@@ -575,22 +575,23 @@ export const AdminTenants = () => {
 
                 {/* Editable details */}
                 {isEditing ? (
-                  <div className="bg-muted rounded-lg p-4 space-y-3">
+                  <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3">
                     <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar detalles del alquiler</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Modalidad</label>
-                        <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
-                          <option value="turno">Por Turno</option>
-                          <option value="percent">Por Porcentaje (%)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
-                        <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Modalidad</label>
+                      <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
+                        <option value="turno">Por Turno</option>
+                        <option value="percent">Por Porcentaje (%)</option>
+                      </select>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    {requestEditForm.rentalMode === "turno" && (
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Precio USD</label>
+                        <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
+                        {requestEditForm.rentalPrice > 0 && <p className="text-[10px] text-muted-foreground mt-1">Bs. {formatVES(requestEditForm.rentalPrice * tasaBCV)}</p>}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <label className="block text-xs font-medium mb-1">Fecha</label>
                         <input type="date" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.date} onChange={(e) => setRequestEditForm(prev => ({ ...prev, date: e.target.value }))} />
@@ -727,7 +728,7 @@ export const AdminTenants = () => {
           <p className="text-muted-foreground text-center py-8">No hay inquilinos registrados</p>
         ) : (
           tenants.map((t) => (
-            <div key={t.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
+            <div key={t.id} className="bg-card rounded-xl p-3 sm:p-5 gold-border space-y-3">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <p className="font-semibold">{t.firstName} {t.lastName}</p>
@@ -767,7 +768,7 @@ export const AdminTenants = () => {
                     <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
                       {editingSlot === sl.id ? (
                         <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
                               <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
                               <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
@@ -780,7 +781,7 @@ export const AdminTenants = () => {
                               <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                             </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
                             <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
                             <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
