@@ -40,7 +40,7 @@ export const AdminTenants = () => {
   const caracasNow = getCaracasNow();
 
   const resetForm = () => {
-    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [] });
+    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
     setShowForm(false);
     setEditing(null);
   };
