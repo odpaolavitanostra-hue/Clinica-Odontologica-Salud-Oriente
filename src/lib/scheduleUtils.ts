@@ -16,6 +16,7 @@ export interface BlockedSlotData {
   allDay: boolean;
   startTime?: string;
   endTime?: string;
+  status?: string;
 }
 
 export interface TenantWithSlots {
