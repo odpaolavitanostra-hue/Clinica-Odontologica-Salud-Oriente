@@ -304,6 +304,10 @@ export const AdminTenants = () => {
     if (filterStatus === "completed") return r.status === 'completed';
     if (filterStatus === "cancelled") return r.status === 'cancelled';
     return true;
+  }).filter(r => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (r.requesterFirstName?.toLowerCase().includes(q) || r.requesterLastName?.toLowerCase().includes(q) || r.requesterCedula?.includes(q) || r.date.includes(q) || r.treatment?.toLowerCase().includes(q));
   }).sort((a, b) => {
     const order: Record<string, number> = { pending_review: 0, approved: 1, completed: 2, cancelled: 3 };
     const diff = (order[a.status] || 0) - (order[b.status] || 0);
