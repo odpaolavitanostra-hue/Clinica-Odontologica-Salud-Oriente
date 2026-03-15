@@ -83,7 +83,12 @@ export const AdminFinances = () => {
   };
 
   const { start, end } = getDateRange(periodFilter, customDate);
-  const filteredFinances = finances.filter(f => inRange(f.date, start, end));
+  const filteredFinances = finances.filter(f => inRange(f.date, start, end)).filter(f => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const app = appointments.find(a => a.id === f.appointmentId);
+    return (app?.patientName?.toLowerCase().includes(q) || app?.treatment?.toLowerCase().includes(q) || f.date.includes(q));
+  });
   const filteredPurchases = purchases.filter(p => inRange(p.date, start, end));
   const filteredSales = sales.filter(s => inRange(s.date, start, end));
 
