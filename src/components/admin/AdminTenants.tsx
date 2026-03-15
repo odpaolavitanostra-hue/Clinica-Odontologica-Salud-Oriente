@@ -540,7 +540,7 @@ export const AdminTenants = () => {
               <div key={req.id} className={`bg-card rounded-xl p-3 sm:p-5 space-y-3 ${isPending ? "border border-orange-500/30" : isCompleted ? "border border-clinic-green/30" : isCancelled ? "border border-destructive/30 opacity-60" : "gold-border"}`}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusBadge.cls}`}>{statusBadge.label}</span>
                       {req.tenantId && <span className="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold">Inquilino asignado</span>}
