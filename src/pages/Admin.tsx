@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   CalendarDays, Users, Package, DollarSign, Settings, LogOut, 
-  Stethoscope, Menu, X, LayoutDashboard, Building2, Bell, UserCheck, Moon, Sun 
+  Stethoscope, Menu, X, LayoutDashboard, Building2, Bell, UserCheck 
 } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminCalendar } from "@/components/admin/AdminCalendar";
 import { AdminDoctors } from "@/components/admin/AdminDoctors";
@@ -45,7 +44,7 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { isDark, toggle: toggleTheme } = useTheme();
+  
 
   const prevCounts = useRef<{ appointments: number; patients: number; pendingRentals: number }>({
     appointments: 0, patients: 0, pendingRentals: 0,
@@ -163,9 +162,6 @@ const Admin = () => {
                 </div>
               )}
             </div>
-            <button onClick={toggleTheme} className="text-noir-foreground/60 hover:text-primary transition-colors" title={isDark ? "Modo claro" : "Modo oscuro"}>
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
             <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-primary transition-colors flex items-center gap-1 text-sm">
               <LogOut className="w-4 h-4" /> Salir
             </button>

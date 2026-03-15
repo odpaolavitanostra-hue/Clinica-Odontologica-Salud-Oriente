@@ -254,13 +254,13 @@ export function useClinicData() {
       startTime: slot.start_time || undefined,
       endTime: slot.end_time || undefined,
       status: slot.status || 'approved',
+      rentalMode: slot.rental_mode || undefined,
       requesterFirstName: slot.requester_first_name || undefined,
       requesterLastName: slot.requester_last_name || undefined,
       requesterCedula: slot.requester_cedula || undefined,
       requesterCov: slot.requester_cov || undefined,
       requesterEmail: slot.requester_email || undefined,
       requesterPhone: slot.requester_phone || undefined,
-      rentalMode: slot.rental_mode || undefined,
       rentalPrice: slot.rental_price || undefined,
       treatment: (slot as any).treatment || undefined,
     });
@@ -373,15 +373,22 @@ export function useClinicData() {
   const INVASIVE_TREATMENTS = ["cirugía", "endodoncia", "extracción", "implante", "implantes"];
 
   const addAppointment = async (app: Omit<Appointment, 'id'>) => {
-    const { data: inserted } = await supabase.from("appointments").insert({
-      patient_name: app.patientName, patient_phone: app.patientPhone,
-      patient_cedula: app.patientCedula, patient_email: app.patientEmail,
-      doctor_id: app.doctorId, date: app.date, time: app.time,
+    const { data: inserted, error } = await supabase.from("appointments").insert({
+      patient_name: app.patientName, patient_phone: app.patientPhone || '',
+      patient_cedula: app.patientCedula || '',
+      patient_email: app.patientEmail || '',
+      doctor_id: app.doctorId && app.doctorId.length > 0 ? app.doctorId : null,
+      date: app.date, time: app.time,
       treatment: app.treatment, price_usd: app.priceUSD,
       status: app.status, notes: app.notes,
       payment_method: app.paymentMethod || null,
       payment_reference: app.paymentReference || null,
     }).select("id").single();
+
+    if (error) {
+      console.error("Error creating appointment:", error);
+      throw error;
+    }
 
     const appointmentId = inserted?.id;
 

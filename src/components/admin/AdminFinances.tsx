@@ -52,6 +52,7 @@ export const AdminFinances = () => {
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion" | "cierre">("resumen");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("mes");
   const [customDate, setCustomDate] = useState(new Date().toISOString().split("T")[0]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [purchases, setPurchases] = useState<AccountingEntry[]>(() => {
     const saved = localStorage.getItem("coso-purchases");
@@ -82,7 +83,12 @@ export const AdminFinances = () => {
   };
 
   const { start, end } = getDateRange(periodFilter, customDate);
-  const filteredFinances = finances.filter(f => inRange(f.date, start, end));
+  const filteredFinances = finances.filter(f => inRange(f.date, start, end)).filter(f => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const app = appointments.find(a => a.id === f.appointmentId);
+    return (app?.patientName?.toLowerCase().includes(q) || app?.treatment?.toLowerCase().includes(q) || f.date.includes(q));
+  });
   const filteredPurchases = purchases.filter(p => inRange(p.date, start, end));
   const filteredSales = sales.filter(s => inRange(s.date, start, end));
 
@@ -199,6 +205,12 @@ export const AdminFinances = () => {
           <input type="date" className="bg-card rounded-lg px-3 py-1.5 text-xs border border-border" value={customDate} onChange={(e) => setCustomDate(e.target.value)} />
         )}
         <span className="text-xs text-muted-foreground ml-1">{periodLabel}</span>
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <input type="text" placeholder="Buscar por paciente, tratamiento..." className="w-full bg-card rounded-lg pl-10 pr-4 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useClinicData, InventoryItem } from "@/hooks/useClinicData";
-import { Package, Plus, Trash2, Edit, Save, X, AlertTriangle } from "lucide-react";
+import { Package, Plus, Trash2, Edit, Save, X, AlertTriangle, Search } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminInventory = () => {
@@ -9,6 +9,7 @@ export const AdminInventory = () => {
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: "", stock: 0, priceUSD: 0, minStock: 10 });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
@@ -40,6 +41,12 @@ export const AdminInventory = () => {
         </button>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <input type="text" placeholder="Buscar por nombre..." className="w-full bg-card rounded-lg pl-10 pr-4 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      </div>
+
       {(adding || editing) && (
         <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
           <h3 className="font-semibold">{adding ? "Nuevo Item" : "Editar Item"}</h3>
@@ -57,7 +64,7 @@ export const AdminInventory = () => {
       )}
 
       <div className="space-y-3">
-        {inventory.map((item) => (
+        {inventory.filter(item => !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
           <div key={item.id} className={`bg-card rounded-xl p-4 flex items-center justify-between flex-wrap gap-3 ${item.stock <= item.minStock ? "border-2 border-amber" : "gold-border"}`}>
             <div className="flex-1">
               <div className="flex items-center gap-2">

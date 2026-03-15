@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
-import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign } from "lucide-react";
+import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign, Search } from "lucide-react";
 import { toast } from "sonner";
 import PaymentModal from "./PaymentModal";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
@@ -17,6 +17,7 @@ export const AdminTenants = () => {
     rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string;
   }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión" });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   // Editing existing blocked slots
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
   const [slotEditForm, setSlotEditForm] = useState<{
@@ -303,6 +304,10 @@ export const AdminTenants = () => {
     if (filterStatus === "completed") return r.status === 'completed';
     if (filterStatus === "cancelled") return r.status === 'cancelled';
     return true;
+  }).filter(r => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (r.requesterFirstName?.toLowerCase().includes(q) || r.requesterLastName?.toLowerCase().includes(q) || r.requesterCedula?.includes(q) || r.date.includes(q) || r.treatment?.toLowerCase().includes(q));
   }).sort((a, b) => {
     const order: Record<string, number> = { pending_review: 0, approved: 1, completed: 2, cancelled: 3 };
     const diff = (order[a.status] || 0) - (order[b.status] || 0);
@@ -320,6 +325,11 @@ export const AdminTenants = () => {
           )}
           <span className="text-xs text-muted-foreground font-normal ml-1">({rentalRequests.length} total)</span>
         </h3>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input type="text" placeholder="Buscar por nombre, cédula, fecha..." className="w-full bg-card rounded-lg pl-10 pr-4 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </div>
 
         {/* Filter tabs */}
         <div className="flex gap-2 flex-wrap">

@@ -16,6 +16,7 @@ export interface BlockedSlotData {
   allDay: boolean;
   startTime?: string;
   endTime?: string;
+  status?: string;
 }
 
 export interface TenantWithSlots {
@@ -33,6 +34,7 @@ export const isSlotBlockedByTenant = (
   for (const tenant of tenants) {
     for (const slot of tenant.blockedSlots) {
       if (slot.date !== date) continue;
+      if (slot.status === 'cancelled') continue;
       if (slot.allDay) return { blocked: true, tenantName: `${tenant.firstName} ${tenant.lastName}` };
       if (slot.startTime && slot.endTime) {
         const start = parseInt(slot.startTime.split(':')[0]);
