@@ -104,6 +104,8 @@ export interface TenantBlockedSlot {
   rentalMode?: string;
   rentalPrice?: number;
   treatment?: string;
+  clinicProvidesMaterials?: boolean;
+  clinicPercentage?: number;
 }
 
 export interface Tenant {
