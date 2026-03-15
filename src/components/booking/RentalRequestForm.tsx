@@ -13,7 +13,7 @@ interface RentalRequestFormProps {
 }
 
 const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
-  const { appointments, tenants, treatments } = useClinicData();
+  const { appointments, tenants, treatments, tasaBCV } = useClinicData();
   const [submitting, setSubmitting] = useState(false);
   const [confirmationData, setConfirmationData] = useState<{ name: string; date: string; time: string } | null>(null);
   const [form, setForm] = useState({
@@ -28,6 +28,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
     treatment: "Revisión",
+    clinicProvidesMaterials: false,
   });
 
   const update = (key: string, val: any) => setForm((p) => ({ ...p, [key]: val }));
