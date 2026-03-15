@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
-import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign } from "lucide-react";
+import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign, Search } from "lucide-react";
 import { toast } from "sonner";
 import PaymentModal from "./PaymentModal";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
