@@ -114,7 +114,7 @@ export interface Tenant {
   email: string;
   phone: string;
   cedula: string;
-  rentalMode: 'turno' | 'percent';
+  rentalMode: 'turno' | 'procedimiento' | 'percent';
   rentalPrice: number;
   blockedSlots: TenantBlockedSlot[];
 }
@@ -285,7 +285,7 @@ export function useClinicData() {
       email: tenant?.email ?? "",
       phone: tenant?.phone ?? "",
       cedula: tenant?.cedula ?? "",
-      rentalMode: (tenant?.rental_mode as 'turno' | 'percent') ?? "turno",
+      rentalMode: (tenant?.rental_mode as 'turno' | 'procedimiento' | 'percent') ?? "turno",
       rentalPrice: tenant?.rental_price ?? 0,
       blockedSlots: blockedSlotsByTenantId[tenantId] || [],
     };
@@ -581,6 +581,8 @@ export function useClinicData() {
       tenant_id: tenantId, date: slot.date, all_day: slot.allDay,
       start_time: slot.startTime, end_time: slot.endTime,
       treatment: slot.treatment || 'Revisión',
+      rental_mode: slot.rentalMode || 'turno',
+      status: slot.status || 'approved',
     });
     inv("tenant_blocked_slots");
   };

@@ -23,7 +23,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     cov: "",
     email: "",
     phone: "",
-    rentalMode: "" as "" | "turno" | "percent",
+    rentalMode: "" as "" | "turno" | "procedimiento" | "percent",
     date: "",
     turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
@@ -76,7 +76,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     return true;
   };
 
-  const percentSlots = form.date && form.rentalMode === "percent"
+  const percentSlots = form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento")
     ? getAllAvailableSlots(form.date, appointments, tenants, isToday ? currentHour : undefined, isToday)
     : [];
 
@@ -117,7 +117,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
       toast.error("Selecciona el turno (AM o PM)");
       return;
     }
-    if (form.rentalMode === "percent" && form.selectedHours.length === 0) {
+    if ((form.rentalMode === "percent" || form.rentalMode === "procedimiento") && form.selectedHours.length === 0) {
       toast.error("Selecciona al menos una hora");
       return;
     }
@@ -125,7 +125,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     setSubmitting(true);
     try {
       const formattedPhone = `+58${form.phone.replace(/^0/, "")}`;
-      const treatmentValue = form.rentalMode === "percent" ? (form.treatment || "Revisión") : "Revisión";
+      const treatmentValue = (form.rentalMode === "percent" || form.rentalMode === "procedimiento") ? (form.treatment || "Revisión") : "Revisión";
 
       // Auto-save tenant data
       const existingTenant = tenants.find(t => t.cedula === form.cedula.trim());
@@ -295,13 +295,17 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             {form.date && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> Modalidad de Alquiler</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <button type="button" onClick={() => { update("rentalMode", "turno"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
                     <Clock className="w-4 h-4" /> Por Turno
                   </button>
+                  <button type="button" onClick={() => { update("rentalMode", "procedimiento"); update("turnoBlock", ""); update("selectedHours", []); }}
+                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "procedimiento" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    <Stethoscope className="w-4 h-4" /> Por Procedimiento
+                  </button>
                   <button type="button" onClick={() => { update("rentalMode", "percent"); update("turnoBlock", ""); update("selectedHours", []); }}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
+                    className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${form.rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-muted border-border hover:border-gold/50"}`}>
                     <Building2 className="w-4 h-4" /> Por Porcentaje (%)
                   </button>
                 </div>
@@ -310,9 +314,9 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             )}
 
             {/* Treatment selector for % mode */}
-            {form.date && form.rentalMode === "percent" && (
+            {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
               <div>
-                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamiento a realizar</label>
+                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> {form.rentalMode === "procedimiento" ? "Procedimiento a realizar" : "Tratamiento a realizar"}</label>
                 <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.treatment} onChange={(e) => update("treatment", e.target.value)}>
                   {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
                     <option key={t.name} value={t.name}>{t.name}</option>
@@ -345,7 +349,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             )}
 
             {/* Percent hour selection */}
-            {form.date && form.rentalMode === "percent" && (
+            {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
               <div className="space-y-3">
                 {percentSlots.length > 0 ? (
                   <>

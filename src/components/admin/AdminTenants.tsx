@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
-import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign, Search } from "lucide-react";
+import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign, Search, Stethoscope, Package } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import PaymentModal from "./PaymentModal";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
@@ -14,8 +15,8 @@ export const AdminTenants = () => {
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
   const [requestEditForm, setRequestEditForm] = useState<{
-    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string;
-  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión" });
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   const [searchQuery, setSearchQuery] = useState("");
   // Editing existing blocked slots
@@ -25,25 +26,27 @@ export const AdminTenants = () => {
   }>({ date: "", startTime: "", endTime: "", rentalPrice: 0, rentalMode: "turno" });
   const [form, setForm] = useState({
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
-    rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
+    rentalMode: "turno" as "turno" | "procedimiento" | "percent", rentalPrice: 0,
     date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
+    treatment: "Revisión", clinicProvidesMaterials: false,
   });
   const [blockForm, setBlockForm] = useState({
-    date: "", rentalMode: "" as "" | "turno" | "percent",
+    date: "", rentalMode: "" as "" | "turno" | "procedimiento" | "percent",
     turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
+    treatment: "Revisión", clinicProvidesMaterials: false,
   });
 
   const caracasToday = getCaracasToday();
   const caracasNow = getCaracasNow();
 
   const resetForm = () => {
-    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [] });
+    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
     setShowForm(false);
     setEditing(null);
   };
 
   const resetBlockForm = () => {
-    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [] });
+    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
   };
 
   const isBlockAvailableFor = (date: string, block: "am" | "pm"): boolean => {
@@ -91,10 +94,10 @@ export const AdminTenants = () => {
   const handleSave = async () => {
     if (!form.firstName || !form.lastName) { toast.error("Nombre y apellido son obligatorios"); return; }
     if (editing) {
-      await updateTenant(editing, { firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
+      await updateTenant(editing, { firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode as "turno" | "percent", rentalPrice: form.rentalPrice });
       toast.success("Inquilino actualizado");
     } else {
-      const newTenant = await addTenant({ firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
+      const newTenant = await addTenant({ firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode as "turno" | "percent", rentalPrice: form.rentalPrice });
       if (form.date && form.rentalMode) {
         const tenantId = newTenant?.id;
         if (tenantId) {
@@ -103,8 +106,8 @@ export const AdminTenants = () => {
             const startTime = hours[0];
             const lastH = parseInt(hours[hours.length - 1]);
             const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved' });
-          } else if (form.rentalMode === "percent" && form.selectedHours.length > 0) {
+            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment });
+          } else if ((form.rentalMode === "percent" || form.rentalMode === "procedimiento") && form.selectedHours.length > 0) {
             const sorted = [...form.selectedHours].sort();
             const ranges: { start: string; end: string }[] = [];
             let rangeStart = sorted[0]; let prevHour = parseInt(sorted[0]);
@@ -117,7 +120,7 @@ export const AdminTenants = () => {
               prevHour = currentH;
             }
             for (const range of ranges) {
-              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved' });
+              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment });
             }
           }
         }
@@ -128,7 +131,7 @@ export const AdminTenants = () => {
   };
 
   const handleEdit = (t: Tenant) => {
-    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: t.rentalMode, rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [] });
+    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: t.rentalMode as "turno" | "procedimiento" | "percent", rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
     setEditing(t.id);
     setShowForm(true);
   };
@@ -177,7 +180,7 @@ export const AdminTenants = () => {
     setRequestEditForm({
       rentalMode: req.rentalMode, rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
-      treatment: req.treatment || "Revisión",
+      treatment: req.treatment || "Revisión", clinicProvidesMaterials: false,
     });
   };
 
@@ -222,14 +225,17 @@ export const AdminTenants = () => {
   };
 
   // Schedule selection UI
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange }: {
+  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
     rentalPrice?: number; onPriceChange?: (p: number) => void;
+    treatment?: string; onTreatmentChange?: (t: string) => void;
+    clinicProvidesMaterials?: boolean; onClinicMaterialsChange?: (v: boolean) => void;
   }) => {
     const amAvail = date ? isBlockAvailableFor(date, "am") : false;
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
-    const pSlots = date && rentalMode === "percent" ? getAvailableSlots(date) : [];
+    const needsHours = rentalMode === "percent" || rentalMode === "procedimiento";
+    const pSlots = date && needsHours ? getAvailableSlots(date) : [];
     return (
       <div className="space-y-4">
         <div>
@@ -239,22 +245,82 @@ export const AdminTenants = () => {
         {date && (
           <div className="space-y-3">
             <p className="text-xs font-semibold flex items-center gap-1"><Building2 className="w-3 h-3 text-gold" /> Modalidad de Alquiler</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+            <div className="grid grid-cols-3 gap-2">
+              <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
                 <Clock className="w-4 h-4" /> Por Turno
               </button>
-              <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Building2 className="w-4 h-4" /> Por Porcentaje (%)
+              <button type="button" onClick={() => onModeChange("procedimiento")} className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "procedimiento" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                <Stethoscope className="w-4 h-4" /> Por Procedimiento
+              </button>
+              <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-xs font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                <DollarSign className="w-4 h-4" /> Por Porcentaje (%)
               </button>
             </div>
           </div>
         )}
-        {date && rentalMode && onPriceChange && (
+
+        {/* Turno: flat USD price */}
+        {date && rentalMode === "turno" && onPriceChange && (
           <div>
-            <label className="block text-xs font-medium mb-1">{rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
+            <label className="block text-xs font-medium mb-1">Precio por Turno (USD)</label>
             <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
           </div>
         )}
+
+        {/* Procedimiento: treatment dropdown + flat USD price */}
+        {date && rentalMode === "procedimiento" && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Procedimiento a realizar</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
+                {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)}</option>
+                ))}
+              </select>
+            </div>
+            {onPriceChange && (
+              <div>
+                <label className="block text-xs font-medium mb-1">Precio por Procedimiento (USD)</label>
+                <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Porcentaje: % input + materials toggle */}
+        {date && rentalMode === "percent" && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Procedimiento a realizar</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
+                {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                  <option key={t.name} value={t.name}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center justify-between bg-card rounded-lg px-3 py-3 border border-border">
+              <div className="flex items-center gap-2">
+                <Package className="w-4 h-4 text-gold" />
+                <div>
+                  <p className="text-xs font-medium">¿La clínica provee los materiales?</p>
+                  <p className="text-[10px] text-muted-foreground">{clinicProvidesMaterials ? "Sí → Mayor porcentaje de cobro" : "No → Menor porcentaje de cobro"}</p>
+                </div>
+              </div>
+              <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => onClinicMaterialsChange?.(v)} />
+            </div>
+            {onPriceChange && (
+              <div>
+                <label className="block text-xs font-medium mb-1">Porcentaje a cobrar (%)</label>
+                <input type="number" step="1" min="0" max="100" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {clinicProvidesMaterials ? "💡 Sugerido: 40-50% (materiales incluidos)" : "💡 Sugerido: 20-30% (sin materiales)"}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Turno selection */}
         {date && rentalMode === "turno" && (
           <div className="space-y-3">
             <p className="text-xs font-medium">Seleccione el turno:</p>
@@ -271,7 +337,9 @@ export const AdminTenants = () => {
             {!amAvail && !pmAvail && <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha.</p>}
           </div>
         )}
-        {date && rentalMode === "percent" && (
+
+        {/* Hour selection for procedimiento and percent */}
+        {date && needsHours && (
           <div className="space-y-3">
             {pSlots.length > 0 ? (
               <>
@@ -416,11 +484,12 @@ export const AdminTenants = () => {
                         <label className="block text-xs font-medium mb-1">Modalidad</label>
                         <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
                           <option value="turno">Por Turno</option>
+                          <option value="procedimiento">Por Procedimiento</option>
                           <option value="percent">Por Porcentaje (%)</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
+                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : requestEditForm.rentalMode === "procedimiento" ? "Precio USD" : "Porcentaje %"}</label>
                         <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                       </div>
                     </div>
@@ -438,14 +507,23 @@ export const AdminTenants = () => {
                         <input type="time" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.endTime} onChange={(e) => setRequestEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
                       </div>
                     </div>
-                    {requestEditForm.rentalMode === "percent" && (
+                    {(requestEditForm.rentalMode === "percent" || requestEditForm.rentalMode === "procedimiento") && (
                       <div>
-                        <label className="block text-xs font-medium mb-1">Tratamiento</label>
+                        <label className="block text-xs font-medium mb-1">Tratamiento / Procedimiento</label>
                         <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.treatment} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatment: e.target.value }))}>
                           {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
                             <option key={t.name} value={t.name}>{t.name}</option>
                           ))}
                         </select>
+                      </div>
+                    )}
+                    {requestEditForm.rentalMode === "percent" && (
+                      <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2 border border-border">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-3.5 h-3.5 text-gold" />
+                          <p className="text-xs font-medium">¿Clínica provee materiales?</p>
+                        </div>
+                        <Switch checked={requestEditForm.clinicProvidesMaterials} onCheckedChange={(v) => setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v }))} />
                       </div>
                     )}
                     <div className="flex gap-2">
@@ -463,13 +541,13 @@ export const AdminTenants = () => {
                 ) : (
                   <div className="flex flex-wrap gap-3 text-sm">
                     <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "turno" ? "Por Turno" : "Por Porcentaje (%)"}
+                      {req.rentalMode === "turno" ? "Por Turno" : req.rentalMode === "procedimiento" ? "Por Procedimiento" : "Por Porcentaje (%)"}
                     </span>
                     <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "turno" ? `$${(req.rentalPrice || 0).toFixed(2)} USD` : `${req.rentalPrice}%`}
+                      {req.rentalMode === "percent" ? `${req.rentalPrice}%` : `$${(req.rentalPrice || 0).toFixed(2)} USD`}
                     </span>
-                    {req.rentalMode === "percent" && req.treatment && (
-                      <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
+                    {(req.rentalMode === "percent" || req.rentalMode === "procedimiento") && req.treatment && (
+                      <span className="flex items-center gap-1"><Stethoscope className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
                     )}
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
                       {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
@@ -537,10 +615,12 @@ export const AdminTenants = () => {
               <h3 className="text-xs font-semibold flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-gold" /> Fecha y Horario</h3>
               <ScheduleSelector date={form.date} rentalMode={form.rentalMode} turnoBlock={form.turnoBlock} selectedHours={form.selectedHours}
                 onDateChange={(d) => setForm(prev => ({ ...prev, date: d, turnoBlock: "", selectedHours: [] }))}
-                onModeChange={(m) => setForm(prev => ({ ...prev, rentalMode: m as "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
+                onModeChange={(m) => setForm(prev => ({ ...prev, rentalMode: m as "turno" | "procedimiento" | "percent", turnoBlock: "", selectedHours: [] }))}
                 onTurnoChange={(t) => setForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                 onToggleHour={(h) => toggleHour("form", h)}
                 rentalPrice={form.rentalPrice} onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
+                treatment={form.treatment} onTreatmentChange={(t) => setForm(prev => ({ ...prev, treatment: t }))}
+                clinicProvidesMaterials={form.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
               />
             </div>
           )}
@@ -548,13 +628,14 @@ export const AdminTenants = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1">Modo de Alquiler</label>
-                <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm({ ...form, rentalMode: e.target.value as "turno" | "percent" })}>
+                <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm({ ...form, rentalMode: e.target.value as "turno" | "procedimiento" | "percent" })}>
                   <option value="turno">Por Turno</option>
+                  <option value="procedimiento">Por Procedimiento</option>
                   <option value="percent">Por Porcentaje (%)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">{form.rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
+                <label className="block text-xs font-medium mb-1">{form.rentalMode === "percent" ? "Porcentaje (%)" : "Precio (USD)"}</label>
                 <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalPrice} onChange={(e) => setForm({ ...form, rentalPrice: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
@@ -576,7 +657,7 @@ export const AdminTenants = () => {
                 <p className="font-semibold">{t.firstName} {t.lastName}</p>
                 <p className="text-sm text-muted-foreground">COV: {t.cov || "—"} • Cédula: {t.cedula || "—"}</p>
                 <p className="text-sm text-muted-foreground">{t.email || "—"} • {t.phone || "—"}</p>
-                <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
+                <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : t.rentalMode === "procedimiento" ? `Procedimiento: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
               </div>
               <div className="flex gap-1">
                 <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
@@ -589,12 +670,14 @@ export const AdminTenants = () => {
               <div className="bg-muted rounded-lg p-4 space-y-4">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
                 <ScheduleSelector date={blockForm.date} rentalMode={blockForm.rentalMode} turnoBlock={blockForm.turnoBlock} selectedHours={blockForm.selectedHours}
-                  onDateChange={(d) => setBlockForm({ date: d, rentalMode: "", turnoBlock: "", selectedHours: [] })}
-                  onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
+                  onDateChange={(d) => setBlockForm(prev => ({ ...prev, date: d, rentalMode: "", turnoBlock: "", selectedHours: [] }))}
+                  onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "procedimiento" | "percent", turnoBlock: "", selectedHours: [] }))}
                   onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                   onToggleHour={(h) => toggleHour("block", h)}
+                  treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
+                  clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
                 />
-                {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
+                {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || ((blockForm.rentalMode === "percent" || blockForm.rentalMode === "procedimiento") && blockForm.selectedHours.length > 0)) && (
                   <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
                 )}
               </div>
@@ -612,11 +695,12 @@ export const AdminTenants = () => {
                             <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
                             <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
                               <option value="turno">Por Turno</option>
+                              <option value="procedimiento">Por Procedimiento</option>
                               <option value="percent">Por Porcentaje (%)</option>
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
+                            <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "percent" ? "Porcentaje %" : "Precio USD"}</label>
                             <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                           </div>
                         </div>
@@ -632,7 +716,7 @@ export const AdminTenants = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
-                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}</span>
+                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}{sl.rentalMode === "procedimiento" && sl.treatment ? ` • ${sl.treatment}` : ""}</span>
                         <div className="flex gap-1">
                           <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
                           <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
@@ -658,7 +742,7 @@ export const AdminTenants = () => {
             open={!!payingRentalId}
             onOpenChange={(v) => !v && setPayingRentalId(null)}
             entityName={tenantName}
-            treatment={`Alquiler — ${req.rentalMode === 'turno' ? 'Por Turno' : 'Por %'}`}
+            treatment={`Alquiler — ${req.rentalMode === 'turno' ? 'Por Turno' : req.rentalMode === 'procedimiento' ? 'Por Procedimiento' : 'Por %'}`}
             defaultPrice={req.rentalPrice || 0}
             tasaBCV={tasaBCV}
             onConfirm={async (finalPrice, paymentMethod, paymentReference) => {
