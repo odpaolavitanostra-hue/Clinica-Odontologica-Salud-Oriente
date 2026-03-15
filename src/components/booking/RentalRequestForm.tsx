@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon, Stethoscope } from "lucide-react";
+import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon, Stethoscope, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useClinicData } from "@/hooks/useClinicData";
 import { getAllAvailableSlots, getCaracasNow, getCaracasToday, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
+import { Switch } from "@/components/ui/switch";
+import { formatVES } from "@/lib/formatVES";
 import BookingConfirmationModal from "./BookingConfirmationModal";
 
 interface RentalRequestFormProps {
