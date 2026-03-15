@@ -169,7 +169,7 @@ export const AdminTenants = () => {
         prevHour = currentH;
       }
       for (const range of ranges) {
-        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved' });
+        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials });
       }
       toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
