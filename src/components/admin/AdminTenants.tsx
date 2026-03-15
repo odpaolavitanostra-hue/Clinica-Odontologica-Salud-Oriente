@@ -122,9 +122,8 @@ export const AdminTenants = () => {
               }
               prevHour = currentH;
             }
-            const autoPercent = getAutoPercentage(form.clinicProvidesMaterials);
             for (const range of ranges) {
-              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: autoPercent });
+              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: form.clinicPercentage });
             }
           }
         }
