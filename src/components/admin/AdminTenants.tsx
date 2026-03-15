@@ -195,6 +195,8 @@ export const AdminTenants = () => {
         startTime: requestEditForm.startTime,
         endTime: requestEditForm.endTime,
         treatment: requestEditForm.treatment,
+        clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials,
+        clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.rentalPrice : 0,
       });
     }
     await approveRentalRequest(reqId);
