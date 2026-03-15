@@ -521,13 +521,18 @@ export const AdminTenants = () => {
                         </select>
                       </div>
                     )}
-                    {requestEditForm.rentalMode === "percent" && (
+                    {(requestEditForm.rentalMode === "percent" || requestEditForm.rentalMode === "procedimiento") && (
                       <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2 border border-border">
                         <div className="flex items-center gap-2">
                           <Package className="w-3.5 h-3.5 text-gold" />
                           <p className="text-xs font-medium">¿Clínica provee materiales?</p>
                         </div>
-                        <Switch checked={requestEditForm.clinicProvidesMaterials} onCheckedChange={(v) => setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v }))} />
+                        <Switch checked={requestEditForm.clinicProvidesMaterials} onCheckedChange={(v) => {
+                          setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v }));
+                          if (requestEditForm.rentalMode === 'percent') {
+                            setRequestEditForm(prev => ({ ...prev, clinicProvidesMaterials: v, rentalPrice: v ? 60 : 40 }));
+                          }
+                        }} className="data-[state=checked]:bg-gold" />
                       </div>
                     )}
                     <div className="flex gap-2">
