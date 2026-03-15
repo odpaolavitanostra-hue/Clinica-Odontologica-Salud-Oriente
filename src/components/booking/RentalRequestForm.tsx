@@ -349,7 +349,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             )}
 
             {/* Percent hour selection */}
-            {form.date && form.rentalMode === "percent" && (
+            {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
               <div className="space-y-3">
                 {percentSlots.length > 0 ? (
                   <>
