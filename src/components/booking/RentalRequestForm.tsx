@@ -208,7 +208,8 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             requester_phone: formattedPhone,
             rental_mode: form.rentalMode,
             treatment: treatmentValue,
-          });
+            clinic_provides_materials: form.clinicProvidesMaterials,
+          } as any);
           if (error) throw error;
         }
 
