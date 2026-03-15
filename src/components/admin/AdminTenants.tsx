@@ -295,26 +295,27 @@ export const AdminTenants = () => {
               <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Procedimiento a realizar</label>
               <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
                 {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                  <option key={t.name} value={t.name}>{t.name}</option>
+                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
                 ))}
               </select>
             </div>
             <div className="flex items-center justify-between bg-card rounded-lg px-3 py-3 border border-border">
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-gold" />
-                <div>
-                  <p className="text-xs font-medium">¿La clínica provee los materiales?</p>
-                  <p className="text-[10px] text-muted-foreground">{clinicProvidesMaterials ? "Sí → Mayor porcentaje de cobro" : "No → Menor porcentaje de cobro"}</p>
-                </div>
+                <p className="text-xs font-medium">¿La clínica provee los materiales?</p>
               </div>
-              <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => onClinicMaterialsChange?.(v)} />
+              <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => {
+                onClinicMaterialsChange?.(v);
+                // Auto-set percentage: 60% if materials provided, 40% if not
+                if (onPriceChange) onPriceChange(v ? 60 : 40);
+              }} className="data-[state=checked]:bg-gold" />
             </div>
             {onPriceChange && (
               <div>
-                <label className="block text-xs font-medium mb-1">Porcentaje a cobrar (%)</label>
+                <label className="block text-xs font-medium mb-1">Porcentaje a cobrar por la clínica (%)</label>
                 <input type="number" step="1" min="0" max="100" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {clinicProvidesMaterials ? "💡 Sugerido: 40-50% (materiales incluidos)" : "💡 Sugerido: 20-30% (sin materiales)"}
+                  {clinicProvidesMaterials ? "💡 Materiales incluidos → Sugerido: 50-60%" : "💡 Sin materiales → Sugerido: 30-40%"}
                 </p>
               </div>
             )}
