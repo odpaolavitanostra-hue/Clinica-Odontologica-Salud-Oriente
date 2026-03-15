@@ -587,7 +587,9 @@ export function useClinicData() {
       treatment: slot.treatment || 'Revisión',
       rental_mode: slot.rentalMode || 'turno',
       status: slot.status || 'approved',
-    });
+      clinic_provides_materials: slot.clinicProvidesMaterials || false,
+      clinic_percentage: slot.clinicPercentage || 0,
+    } as any);
     inv("tenant_blocked_slots");
   };
   const removeTenantBlockedSlot = async (_tenantId: string, slotId: string) => {
