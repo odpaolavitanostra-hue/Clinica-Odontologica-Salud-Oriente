@@ -491,6 +491,8 @@ export type Database = {
       tenant_blocked_slots: {
         Row: {
           all_day: boolean
+          clinic_percentage: number | null
+          clinic_provides_materials: boolean | null
           created_at: string
           date: string
           end_time: string | null
@@ -512,6 +514,8 @@ export type Database = {
         }
         Insert: {
           all_day?: boolean
+          clinic_percentage?: number | null
+          clinic_provides_materials?: boolean | null
           created_at?: string
           date: string
           end_time?: string | null
@@ -533,6 +537,8 @@ export type Database = {
         }
         Update: {
           all_day?: boolean
+          clinic_percentage?: number | null
+          clinic_provides_materials?: boolean | null
           created_at?: string
           date?: string
           end_time?: string | null
