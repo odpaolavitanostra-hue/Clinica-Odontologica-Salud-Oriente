@@ -657,7 +657,7 @@ export const AdminTenants = () => {
                 <p className="font-semibold">{t.firstName} {t.lastName}</p>
                 <p className="text-sm text-muted-foreground">COV: {t.cov || "—"} • Cédula: {t.cedula || "—"}</p>
                 <p className="text-sm text-muted-foreground">{t.email || "—"} • {t.phone || "—"}</p>
-                <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
+                <p className="text-sm font-medium mt-1">{t.rentalMode === "turno" ? `Turno: $${t.rentalPrice.toFixed(2)} USD` : t.rentalMode === "procedimiento" ? `Procedimiento: $${t.rentalPrice.toFixed(2)} USD` : `Porcentaje: ${t.rentalPrice}%`}</p>
               </div>
               <div className="flex gap-1">
                 <button onClick={() => handleEdit(t)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
