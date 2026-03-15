@@ -314,9 +314,9 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             )}
 
             {/* Treatment selector for % mode */}
-            {form.date && form.rentalMode === "percent" && (
+            {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
               <div>
-                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamiento a realizar</label>
+                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> {form.rentalMode === "procedimiento" ? "Procedimiento a realizar" : "Tratamiento a realizar"}</label>
                 <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.treatment} onChange={(e) => update("treatment", e.target.value)}>
                   {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
                     <option key={t.name} value={t.name}>{t.name}</option>
