@@ -9,6 +9,7 @@ export const AdminInventory = () => {
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: "", stock: 0, priceUSD: 0, minStock: 10 });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
