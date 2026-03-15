@@ -131,7 +131,7 @@ export const AdminTenants = () => {
   };
 
   const handleEdit = (t: Tenant) => {
-    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: t.rentalMode, rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [] });
+    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: t.rentalMode as "turno" | "procedimiento" | "percent", rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
     setEditing(t.id);
     setShowForm(true);
   };
