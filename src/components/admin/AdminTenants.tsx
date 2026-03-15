@@ -275,7 +275,7 @@ export const AdminTenants = () => {
               <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Procedimiento a realizar</label>
               <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
                 {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)}</option>
+                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
                 ))}
               </select>
             </div>
