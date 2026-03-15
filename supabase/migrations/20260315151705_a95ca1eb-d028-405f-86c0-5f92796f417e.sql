@@ -1,0 +1,2 @@
+ALTER TABLE public.tenant_blocked_slots ADD COLUMN IF NOT EXISTS clinic_provides_materials boolean DEFAULT false;
+ALTER TABLE public.tenant_blocked_slots ADD COLUMN IF NOT EXISTS clinic_percentage numeric DEFAULT 0;

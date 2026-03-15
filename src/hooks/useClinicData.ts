@@ -104,6 +104,8 @@ export interface TenantBlockedSlot {
   rentalMode?: string;
   rentalPrice?: number;
   treatment?: string;
+  clinicProvidesMaterials?: boolean;
+  clinicPercentage?: number;
 }
 
 export interface Tenant {
@@ -263,6 +265,8 @@ export function useClinicData() {
       requesterPhone: slot.requester_phone || undefined,
       rentalPrice: slot.rental_price || undefined,
       treatment: (slot as any).treatment || undefined,
+      clinicProvidesMaterials: (slot as any).clinic_provides_materials || false,
+      clinicPercentage: (slot as any).clinic_percentage || 0,
     });
 
     return acc;
@@ -583,7 +587,9 @@ export function useClinicData() {
       treatment: slot.treatment || 'Revisión',
       rental_mode: slot.rentalMode || 'turno',
       status: slot.status || 'approved',
-    });
+      clinic_provides_materials: slot.clinicProvidesMaterials || false,
+      clinic_percentage: slot.clinicPercentage || 0,
+    } as any);
     inv("tenant_blocked_slots");
   };
   const removeTenantBlockedSlot = async (_tenantId: string, slotId: string) => {
@@ -591,7 +597,7 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
-  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string; treatment?: string }) => {
+  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string; treatment?: string; clinicProvidesMaterials?: boolean; clinicPercentage?: number }) => {
     const mapped: any = {};
     if (updates.rentalMode !== undefined) mapped.rental_mode = updates.rentalMode;
     if (updates.rentalPrice !== undefined) mapped.rental_price = updates.rentalPrice;
@@ -599,6 +605,8 @@ export function useClinicData() {
     if (updates.startTime !== undefined) mapped.start_time = updates.startTime;
     if (updates.endTime !== undefined) mapped.end_time = updates.endTime;
     if (updates.treatment !== undefined) mapped.treatment = updates.treatment;
+    if (updates.clinicProvidesMaterials !== undefined) mapped.clinic_provides_materials = updates.clinicProvidesMaterials;
+    if (updates.clinicPercentage !== undefined) mapped.clinic_percentage = updates.clinicPercentage;
     await supabase.from("tenant_blocked_slots").update(mapped).eq("id", slotId);
     inv("tenant_blocked_slots");
   };
@@ -625,6 +633,8 @@ export function useClinicData() {
         rentalMode: slot.rental_mode || tenant?.rental_mode || 'turno',
         rentalPrice: slot.rental_price || tenant?.rental_price || 0,
         treatment: (slot as any).treatment || 'Revisión',
+        clinicProvidesMaterials: (slot as any).clinic_provides_materials || false,
+        clinicPercentage: (slot as any).clinic_percentage || 0,
       };
     });
 

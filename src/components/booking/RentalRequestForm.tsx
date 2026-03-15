@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon, Stethoscope } from "lucide-react";
+import { Building2, User, CreditCard, Phone, Mail, Clock, Send, Briefcase, Sun, Moon, Stethoscope, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useClinicData } from "@/hooks/useClinicData";
 import { getAllAvailableSlots, getCaracasNow, getCaracasToday, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
+import { Switch } from "@/components/ui/switch";
+import { formatVES } from "@/lib/formatVES";
 import BookingConfirmationModal from "./BookingConfirmationModal";
 
 interface RentalRequestFormProps {
@@ -13,7 +15,7 @@ interface RentalRequestFormProps {
 }
 
 const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
-  const { appointments, tenants, treatments } = useClinicData();
+  const { appointments, tenants, treatments, tasaBCV } = useClinicData();
   const [submitting, setSubmitting] = useState(false);
   const [confirmationData, setConfirmationData] = useState<{ name: string; date: string; time: string } | null>(null);
   const [form, setForm] = useState({
@@ -28,6 +30,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
     turnoBlock: "" as "" | "am" | "pm",
     selectedHours: [] as string[],
     treatment: "Revisión",
+    clinicProvidesMaterials: false,
   });
 
   const update = (key: string, val: any) => setForm((p) => ({ ...p, [key]: val }));
@@ -162,7 +165,8 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
           requester_phone: formattedPhone,
           rental_mode: form.rentalMode,
           treatment: treatmentValue,
-        });
+          clinic_provides_materials: form.clinicProvidesMaterials,
+        } as any);
         if (error) throw error;
 
         onOpenChange(false);
@@ -204,7 +208,8 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
             requester_phone: formattedPhone,
             rental_mode: form.rentalMode,
             treatment: treatmentValue,
-          });
+            clinic_provides_materials: form.clinicProvidesMaterials,
+          } as any);
           if (error) throw error;
         }
 
@@ -218,7 +223,7 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
 
       setForm({
         firstName: "", lastName: "", cedula: "", cov: "", email: "", phone: "",
-        rentalMode: "", date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión",
+        rentalMode: "", date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false,
       });
     } catch (err) {
       toast.error("Error al enviar la solicitud. Intenta nuevamente.");
@@ -315,14 +320,23 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
 
             {/* Treatment selector for % mode */}
             {form.date && (form.rentalMode === "percent" || form.rentalMode === "procedimiento") && (
-              <div>
-                <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> {form.rentalMode === "procedimiento" ? "Procedimiento a realizar" : "Tratamiento a realizar"}</label>
-                <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.treatment} onChange={(e) => update("treatment", e.target.value)}>
-                  {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                    <option key={t.name} value={t.name}>{t.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">Si no desea compartir, seleccione "Revisión".</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> {form.rentalMode === "procedimiento" ? "Procedimiento a realizar" : "Tratamiento a realizar"}</label>
+                  <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.treatment} onChange={(e) => update("treatment", e.target.value)}>
+                    {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                      <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between bg-muted rounded-lg px-3 py-3 border border-border">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-gold" />
+                    <p className="text-xs font-medium">¿La clínica provee los materiales?</p>
+                  </div>
+                  <Switch checked={form.clinicProvidesMaterials} onCheckedChange={(v) => update("clinicProvidesMaterials", v)} className="data-[state=checked]:bg-gold" />
+                </div>
+                <p className="text-xs text-muted-foreground">El monto será acordado con la administración.</p>
               </div>
             )}
 
