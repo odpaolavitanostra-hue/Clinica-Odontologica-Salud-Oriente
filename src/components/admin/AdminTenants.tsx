@@ -640,7 +640,7 @@ export const AdminTenants = () => {
       {/* Inquilinos Registrados */}
       <div className="space-y-4">
         <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-          <Users className="w-5 h-5 text-gold" /> Inquilinos Registrados
+          <User className="w-5 h-5 text-gold" /> Inquilinos Registrados
           <span className="text-xs text-muted-foreground font-normal">({tenants.length})</span>
         </h3>
         {tenants.length === 0 ? (
