@@ -597,7 +597,7 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
-  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string; treatment?: string }) => {
+  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string; treatment?: string; clinicProvidesMaterials?: boolean; clinicPercentage?: number }) => {
     const mapped: any = {};
     if (updates.rentalMode !== undefined) mapped.rental_mode = updates.rentalMode;
     if (updates.rentalPrice !== undefined) mapped.rental_price = updates.rentalPrice;
@@ -605,6 +605,8 @@ export function useClinicData() {
     if (updates.startTime !== undefined) mapped.start_time = updates.startTime;
     if (updates.endTime !== undefined) mapped.end_time = updates.endTime;
     if (updates.treatment !== undefined) mapped.treatment = updates.treatment;
+    if (updates.clinicProvidesMaterials !== undefined) mapped.clinic_provides_materials = updates.clinicProvidesMaterials;
+    if (updates.clinicPercentage !== undefined) mapped.clinic_percentage = updates.clinicPercentage;
     await supabase.from("tenant_blocked_slots").update(mapped).eq("id", slotId);
     inv("tenant_blocked_slots");
   };
