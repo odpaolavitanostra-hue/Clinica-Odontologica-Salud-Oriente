@@ -563,10 +563,13 @@ export const AdminTenants = () => {
                       {req.rentalMode === "turno" ? "Por Turno" : req.rentalMode === "procedimiento" ? "Por Procedimiento" : "Por Porcentaje (%)"}
                     </span>
                     <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
-                      {req.rentalMode === "percent" ? `${req.rentalPrice}%` : `$${(req.rentalPrice || 0).toFixed(2)} USD`}
+                      {req.rentalMode === "percent" ? `${req.rentalPrice}%` : `$${(req.rentalPrice || 0).toFixed(2)} | Bs. ${formatVES((req.rentalPrice || 0) * tasaBCV)}`}
                     </span>
                     {(req.rentalMode === "percent" || req.rentalMode === "procedimiento") && req.treatment && (
                       <span className="flex items-center gap-1"><Stethoscope className="w-3.5 h-3.5 text-gold" /> {req.treatment}</span>
+                    )}
+                    {req.clinicProvidesMaterials && (
+                      <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-gold" /> Materiales incluidos</span>
                     )}
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
                       {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
