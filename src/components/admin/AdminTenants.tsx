@@ -40,13 +40,13 @@ export const AdminTenants = () => {
   const caracasNow = getCaracasNow();
 
   const resetForm = () => {
-    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
+    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
     setShowForm(false);
     setEditing(null);
   };
 
   const resetBlockForm = () => {
-    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false });
+    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
   };
 
   const isBlockAvailableFor = (date: string, block: "am" | "pm"): boolean => {
