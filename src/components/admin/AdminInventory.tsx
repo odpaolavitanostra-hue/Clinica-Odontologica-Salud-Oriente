@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useClinicData, InventoryItem } from "@/hooks/useClinicData";
-import { Package, Plus, Trash2, Edit, Save, X, AlertTriangle } from "lucide-react";
+import { Package, Plus, Trash2, Edit, Save, X, AlertTriangle, Search } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminInventory = () => {
