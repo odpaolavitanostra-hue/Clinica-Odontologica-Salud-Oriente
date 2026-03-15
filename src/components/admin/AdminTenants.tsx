@@ -281,10 +281,20 @@ export const AdminTenants = () => {
                 ))}
               </select>
             </div>
+            {onClinicMaterialsChange && (
+              <div className="flex items-center justify-between bg-card rounded-lg px-3 py-3 border border-border">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-gold" />
+                  <p className="text-xs font-medium">¿La clínica provee los materiales?</p>
+                </div>
+                <Switch checked={clinicProvidesMaterials || false} onCheckedChange={(v) => onClinicMaterialsChange(v)} className="data-[state=checked]:bg-gold" />
+              </div>
+            )}
             {onPriceChange && (
               <div>
                 <label className="block text-xs font-medium mb-1">Precio por Procedimiento (USD)</label>
                 <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+                {(rentalPrice || 0) > 0 && <p className="text-[10px] text-muted-foreground mt-1">Bs. {formatVES((rentalPrice || 0) * tasaBCV)}</p>}
               </div>
             )}
           </div>
