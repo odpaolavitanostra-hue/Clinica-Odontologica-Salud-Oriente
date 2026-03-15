@@ -17,6 +17,7 @@ export const AdminTenants = () => {
     rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string;
   }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión" });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   // Editing existing blocked slots
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
   const [slotEditForm, setSlotEditForm] = useState<{
