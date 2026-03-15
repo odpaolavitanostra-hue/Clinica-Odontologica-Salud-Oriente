@@ -781,7 +781,7 @@ export const AdminTenants = () => {
                               <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                             </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
                             <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
                             <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
