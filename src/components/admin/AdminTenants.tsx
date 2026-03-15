@@ -28,12 +28,12 @@ export const AdminTenants = () => {
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
     date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false,
+    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
   });
   const [blockForm, setBlockForm] = useState({
     date: "", rentalMode: "" as "" | "turno" | "percent",
     turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false,
+    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
   });
 
   const caracasToday = getCaracasToday();
