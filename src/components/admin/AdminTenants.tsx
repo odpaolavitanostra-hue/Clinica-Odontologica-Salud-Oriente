@@ -267,6 +267,7 @@ export const AdminTenants = () => {
           <div>
             <label className="block text-xs font-medium mb-1">Precio por Turno (USD)</label>
             <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+            {(rentalPrice || 0) > 0 && <p className="text-[10px] text-muted-foreground mt-1">Bs. {formatVES((rentalPrice || 0) * tasaBCV)}</p>}
           </div>
         )}
 
