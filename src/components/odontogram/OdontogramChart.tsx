@@ -233,6 +233,7 @@ export default function OdontogramChart({
             </div>
           </div>
         </div>
+        </div>
       </div>
 
       {/* Notes */}
