@@ -440,25 +440,31 @@ const DoctorPanel = () => {
         {activeTab === "pacientes" && (
           <div className="space-y-4">
             {/* Sticky Search Bar */}
-            <div className="sticky top-[52px] z-40 bg-background pb-2 pt-1 -mx-3 px-3 sm:-mx-4 sm:px-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gold" />
+            <div className="sticky top-[52px] z-40 pb-2 pt-1 -mx-3 px-3 sm:-mx-4 sm:px-4">
+              <div className="relative" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: "#E8C056" }} />
                 <input
                   type="text"
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
-                  placeholder="Buscar por nombre, cédula o teléfono..."
-                  className="w-full bg-noir border border-clinic-green/40 rounded-xl pl-11 pr-4 py-3 text-pearl font-body placeholder:text-muted-foreground focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-colors"
-                  style={{ fontSize: "18px" }}
+                  placeholder="Buscar paciente por nombre, cédula, teléfono..."
+                  className="w-full pl-12 pr-10 py-3.5 font-body focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    fontSize: "20px",
+                    backgroundColor: "#F5F5F5",
+                    borderRadius: "24px",
+                    border: "1px solid #E0E0E0",
+                    color: "#2C2F2D",
+                  }}
                 />
                 {patientSearch && (
-                  <button onClick={() => setPatientSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-pearl">
-                    <X className="w-4 h-4" />
+                  <button onClick={() => setPatientSearch("")} className="absolute right-4 top-1/2 -translate-y-1/2 hover:opacity-70" style={{ color: "#888" }}>
+                    <X className="w-5 h-5" />
                   </button>
                 )}
               </div>
               {patientSearch && (
-                <p className="text-xs text-muted-foreground mt-1 pl-1">
+                <p className="text-xs text-muted-foreground mt-1.5 pl-4">
                   {filteredPatients.length} resultado(s) de {myPatients.length}
                 </p>
               )}
