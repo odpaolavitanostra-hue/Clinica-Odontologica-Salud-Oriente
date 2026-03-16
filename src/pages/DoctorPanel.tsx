@@ -233,15 +233,10 @@ const DoctorPanel = () => {
     // Build table data
     const rows = filteredFinances.map((f) => {
       const app = appointments.find((a) => a.id === f.appointmentId);
-      const doctorRate = doctor.rate || 0.4;
-      const doctorPctLabel = `${(doctorRate * 100).toFixed(0)}%`;
       return [
         f.date,
         app?.patientName || "—",
         app?.treatment || "—",
-        `$${f.treatmentPriceUSD.toFixed(2)}`,
-        `Bs. ${formatVES(f.treatmentPriceUSD * f.tasaBCV)}`,
-        doctorPctLabel,
         `$${f.doctorPayUSD.toFixed(2)}`,
         `Bs. ${formatVES(f.doctorPayUSD * f.tasaBCV)}`,
       ];
@@ -249,7 +244,7 @@ const DoctorPanel = () => {
 
     autoTable(doc, {
       startY: 58,
-      head: [["Fecha", "Paciente", "Tratamiento", "Total $", "Total Bs", "% Doctor", "Ganancia $", "Ganancia Bs"]],
+      head: [["Fecha", "Paciente", "Tratamiento", "Ganancia $", "Ganancia Bs"]],
       body: rows,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [44, 47, 45], textColor: [248, 246, 240] },
