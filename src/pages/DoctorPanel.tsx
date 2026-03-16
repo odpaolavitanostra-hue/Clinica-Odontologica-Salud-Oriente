@@ -1,7 +1,7 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User, ClipboardList } from "lucide-react";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User, ClipboardList, Search, Download, TrendingUp } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,12 +14,14 @@ import BudgetGenerator from "@/components/admin/BudgetGenerator";
 import ClinicalHistoryForm from "@/components/clinical/ClinicalHistoryForm";
 import { type Patient } from "@/hooks/useClinicData";
 import { formatVES } from "@/lib/formatVES";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { appointments, doctors, finances, tasaBCV, patients, inventory, treatments, completeAppointment, updatePatient, updateAppointment, updateDoctor } = useClinicData();
-  const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "inventario" | "recipe" | "presupuesto" | "perfil">("agenda");
+  const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "finanzas" | "inventario" | "recipe" | "presupuesto" | "perfil">("agenda");
   const [completing, setCompleting] = useState<string | null>(null);
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
@@ -43,7 +45,12 @@ const DoctorPanel = () => {
   const [odontogramAppId, setOdontogramAppId] = useState<string | null>(null);
   const [odontogramNotes, setOdontogramNotes] = useState("");
   const odontogram = useOdontogram();
-  
+
+  // Patient search
+  const [patientSearch, setPatientSearch] = useState("");
+
+  // Finance filter
+  const [financeFilter, setFinanceFilter] = useState<"dia" | "semana" | "mes">("mes");
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
@@ -59,6 +66,38 @@ const DoctorPanel = () => {
     const app = appointments.find((a) => a.id === f.appointmentId);
     return app?.doctorId === doctorId;
   });
+
+  // Filtered patients by search
+  const filteredPatients = useMemo(() => {
+    if (!patientSearch.trim()) return myPatients;
+    const q = patientSearch.toLowerCase().trim();
+    return myPatients.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.cedula.toLowerCase().includes(q) ||
+      p.phone.toLowerCase().includes(q)
+    );
+  }, [myPatients, patientSearch]);
+
+  // Filtered finances by time period
+  const filteredFinances = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+
+    return myFinances.filter((f) => {
+      if (financeFilter === "dia") return f.date === todayStr;
+      if (financeFilter === "semana") {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return f.date >= weekAgo.toISOString().split("T")[0];
+      }
+      // mes
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      return f.date >= monthStart;
+    });
+  }, [myFinances, financeFilter]);
+
+  const filteredTotalUSD = filteredFinances.reduce((s, f) => s + f.doctorPayUSD, 0);
+  const filteredTotalTreatments = filteredFinances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
 
   // Detect new appointments
   useEffect(() => {
@@ -171,6 +210,61 @@ const DoctorPanel = () => {
     toast.success("Odontograma guardado");
   };
 
+  // Export PDF report
+  const handleExportPDF = () => {
+    if (!doctor) return;
+    const doc = new jsPDF();
+    const filterLabel = financeFilter === "dia" ? "Hoy" : financeFilter === "semana" ? "Últimos 7 días" : "Mes en curso";
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Salud Oriente", 14, 20);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Reporte de Rendimiento del Doctor", 14, 27);
+    doc.setFontSize(12);
+    doc.text(`Dr(a). ${doctor.name}`, 14, 35);
+    doc.setFontSize(10);
+    doc.text(`Especialidad: ${doctor.specialty}${doctor.cov ? ` • COV: ${doctor.cov}` : ""}`, 14, 41);
+    doc.text(`Período: ${filterLabel}`, 14, 47);
+    doc.text(`Tasa BCV: ${tasaBCV.toFixed(2)} Bs/$`, 14, 53);
+
+    // Build table data
+    const rows = filteredFinances.map((f) => {
+      const app = appointments.find((a) => a.id === f.appointmentId);
+      const doctorRate = doctor.rate || 0.4;
+      const doctorPctLabel = `${(doctorRate * 100).toFixed(0)}%`;
+      return [
+        f.date,
+        app?.patientName || "—",
+        app?.treatment || "—",
+        `$${f.treatmentPriceUSD.toFixed(2)}`,
+        `Bs. ${formatVES(f.treatmentPriceUSD * f.tasaBCV)}`,
+        doctorPctLabel,
+        `$${f.doctorPayUSD.toFixed(2)}`,
+        `Bs. ${formatVES(f.doctorPayUSD * f.tasaBCV)}`,
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 58,
+      head: [["Fecha", "Paciente", "Tratamiento", "Total $", "Total Bs", "% Doctor", "Ganancia $", "Ganancia Bs"]],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [44, 47, 45], textColor: [248, 246, 240] },
+      alternateRowStyles: { fillColor: [245, 243, 237] },
+    });
+
+    const finalY = (doc as any).lastAutoTable?.finalY || 120;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Total Ganancia: $${filteredTotalUSD.toFixed(2)} | Bs. ${formatVES(filteredTotalUSD * tasaBCV)}`, 14, finalY + 10);
+
+    doc.save(`reporte-${doctor.name.replace(/\s+/g, "_")}-${filterLabel}.pdf`);
+    toast.success("Reporte descargado");
+  };
+
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Cargando...</p></div>;
   if (!user) return null;
   if (!doctor) return (
@@ -240,6 +334,7 @@ const DoctorPanel = () => {
           {[
             { key: "agenda" as const, label: "Agenda", icon: <CalendarDays className="w-4 h-4" /> },
             { key: "pacientes" as const, label: "Pacientes", icon: <Users className="w-4 h-4" /> },
+            { key: "finanzas" as const, label: "Finanzas", icon: <TrendingUp className="w-4 h-4" /> },
             { key: "recipe" as const, label: "Recipe", icon: <Stethoscope className="w-4 h-4" /> },
             { key: "presupuesto" as const, label: "Presupuesto", icon: <FileText className="w-4 h-4" /> },
             { key: "inventario" as const, label: "Inventario", icon: <Package className="w-4 h-4" /> },
@@ -344,10 +439,37 @@ const DoctorPanel = () => {
         {/* PACIENTES */}
         {activeTab === "pacientes" && (
           <div className="space-y-4">
-            {myPatients.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No tienes pacientes asignados</p>
+            {/* Sticky Search Bar */}
+            <div className="sticky top-[52px] z-40 bg-background pb-2 pt-1 -mx-3 px-3 sm:-mx-4 sm:px-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gold" />
+                <input
+                  type="text"
+                  value={patientSearch}
+                  onChange={(e) => setPatientSearch(e.target.value)}
+                  placeholder="Buscar por nombre, cédula o teléfono..."
+                  className="w-full bg-noir border border-clinic-green/40 rounded-xl pl-11 pr-4 py-3 text-pearl font-body placeholder:text-muted-foreground focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-colors"
+                  style={{ fontSize: "18px" }}
+                />
+                {patientSearch && (
+                  <button onClick={() => setPatientSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-pearl">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              {patientSearch && (
+                <p className="text-xs text-muted-foreground mt-1 pl-1">
+                  {filteredPatients.length} resultado(s) de {myPatients.length}
+                </p>
+              )}
+            </div>
+
+            {filteredPatients.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                {patientSearch ? "No se encontraron pacientes" : "No tienes pacientes asignados"}
+              </p>
             ) : (
-              myPatients.map((p) => (
+              filteredPatients.map((p) => (
                 <div key={p.id} className="bg-card rounded-xl p-4 sm:p-5 gold-border space-y-3">
                   {editingPatient === p.id ? (
                     <div className="space-y-2">
@@ -421,6 +543,88 @@ const DoctorPanel = () => {
                   )}
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {/* MIS FINANZAS */}
+        {activeTab === "finanzas" && (
+          <div className="space-y-4">
+            <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-accent" /> Mis Finanzas
+            </h3>
+
+            {/* Time Filters */}
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: "dia" as const, label: "Hoy" },
+                { key: "semana" as const, label: "Últimos 7 días" },
+                { key: "mes" as const, label: "Mes en curso" },
+              ]).map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setFinanceFilter(f.key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    financeFilter === f.key
+                      ? "bg-gold text-gold-foreground"
+                      : "bg-card gold-border hover:bg-muted"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-card rounded-xl p-4 gold-border">
+                <p className="text-xs text-muted-foreground mb-1">Total Tratamientos</p>
+                <p className="text-lg font-bold font-display">${filteredTotalTreatments.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Bs. {formatVES(filteredTotalTreatments * tasaBCV)}</p>
+              </div>
+              <div className="bg-card rounded-xl p-4 gold-border">
+                <p className="text-xs text-muted-foreground mb-1">Mi Ganancia Neta</p>
+                <p className="text-lg font-bold font-display text-gold">${filteredTotalUSD.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Bs. {formatVES(filteredTotalUSD * tasaBCV)}</p>
+              </div>
+            </div>
+
+            {/* Detailed List */}
+            <div className="space-y-2">
+              {filteredFinances.length === 0 ? (
+                <p className="text-muted-foreground text-center py-6 text-sm">No hay registros para este período</p>
+              ) : (
+                filteredFinances
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .map((f) => {
+                    const app = appointments.find((a) => a.id === f.appointmentId);
+                    return (
+                      <div key={f.id} className="bg-card rounded-xl p-3 sm:p-4 gold-border">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm truncate">{app?.patientName || "—"}</p>
+                            <p className="text-xs text-muted-foreground">{app?.treatment || "—"} • {f.date}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-sm font-bold text-gold">${f.doctorPayUSD.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">Bs. {formatVES(f.doctorPayUSD * f.tasaBCV)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+
+            {/* Export Button */}
+            {filteredFinances.length > 0 && (
+              <button
+                onClick={handleExportPDF}
+                className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-display font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                style={{ fontSize: "18px" }}
+              >
+                <Download className="w-5 h-5" /> Descargar Reporte PDF
+              </button>
             )}
           </div>
         )}
