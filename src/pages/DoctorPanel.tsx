@@ -97,7 +97,7 @@ const DoctorPanel = () => {
   }, [myFinances, financeFilter]);
 
   const filteredTotalUSD = filteredFinances.reduce((s, f) => s + f.doctorPayUSD, 0);
-  const filteredTotalTreatments = filteredFinances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
+  // filteredTotalTreatments removed — doctor privacy: no access to total treatment price
 
   // Detect new appointments
   useEffect(() => {
