@@ -581,18 +581,11 @@ const DoctorPanel = () => {
               ))}
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-card rounded-xl p-4 gold-border">
-                <p className="text-xs text-muted-foreground mb-1">Total Tratamientos</p>
-                <p className="text-lg font-bold font-display">${filteredTotalTreatments.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground">Bs. {formatVES(filteredTotalTreatments * tasaBCV)}</p>
-              </div>
-              <div className="bg-card rounded-xl p-4 gold-border">
-                <p className="text-xs text-muted-foreground mb-1">Mi Ganancia Neta</p>
-                <p className="text-lg font-bold font-display text-gold">${filteredTotalUSD.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground">Bs. {formatVES(filteredTotalUSD * tasaBCV)}</p>
-              </div>
+            {/* Summary Card — Doctor only sees earnings */}
+            <div className="bg-card rounded-xl p-4 gold-border">
+              <p className="text-xs text-muted-foreground mb-1">Mi Ganancia Neta</p>
+              <p className="text-lg font-bold font-display text-gold">${filteredTotalUSD.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">Bs. {formatVES(filteredTotalUSD * tasaBCV)}</p>
             </div>
 
             {/* Detailed List */}

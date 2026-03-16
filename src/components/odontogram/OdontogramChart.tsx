@@ -97,8 +97,9 @@ export default function OdontogramChart({
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#D4AF37]" />Planeado</span>
       </div>
 
-      {/* Chart area with light bg for clinical clarity */}
-      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4 border border-border overflow-x-auto">
+      {/* Chart area — forced 1000px min-width for touch precision on mobile */}
+      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 sm:p-4 border border-border overflow-x-auto pb-5" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div style={{ minWidth: "1000px" }}>
         {/* PERMANENT - Upper */}
         <div className="mb-1">
           <p className="text-[9px] font-semibold text-muted-foreground mb-1 text-center">PERMANENTES — SUPERIOR</p>
