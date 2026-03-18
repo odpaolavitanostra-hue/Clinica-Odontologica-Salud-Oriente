@@ -729,7 +729,7 @@ export const AdminTenants = () => {
                     })()}
                     <div className="flex gap-2">
                       <button onClick={async () => {
-                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatment, clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials, clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0 });
+                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatments.join(", "), clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials, clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0 });
                         toast.success("Datos actualizados");
                         setEditingRequest(null);
                       }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar cambios</button>
