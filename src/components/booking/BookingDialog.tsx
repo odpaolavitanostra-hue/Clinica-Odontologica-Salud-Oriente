@@ -125,7 +125,7 @@ const BookingDialog = ({ open, onOpenChange, initialTreatment }: BookingDialogPr
         time: form.time,
         treatment: effectiveTreatment,
         priceUSD,
-        status: "pendiente",
+        status: "pendiente_confirmacion",
         notes: form.notes,
       });
 
