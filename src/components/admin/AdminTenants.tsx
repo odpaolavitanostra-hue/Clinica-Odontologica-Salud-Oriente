@@ -804,7 +804,7 @@ export const AdminTenants = () => {
                     onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
                     onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                     onToggleHour={(h) => toggleHour("block", h)}
-                    selectedTreatments={blockForm.treatments} onAddTreatment={(t) => setBlockForm(prev => ({ ...prev, treatments: [...prev.treatments, t] }))} onRemoveTreatment={(idx) => setBlockForm(prev => ({ ...prev, treatments: prev.treatments.filter((_, i) => i !== idx) }))}
+                    selectedTreatments={blockForm.treatments} onSetTreatments={(ts) => setBlockForm(prev => ({ ...prev, treatments: ts }))}
                     clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
                     clinicPercentage={blockForm.clinicPercentage} onClinicPercentageChange={(v) => setBlockForm(prev => ({ ...prev, clinicPercentage: v }))}
                   />
