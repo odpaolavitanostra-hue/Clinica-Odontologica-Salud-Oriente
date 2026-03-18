@@ -98,12 +98,18 @@ export const AdminCalendar = () => {
   const handleBookingSubmit = async () => {
     const f = bookingForm;
     const effectiveDoctorId = f.doctorId || doctors[0]?.id || "";
-    const effectiveTreatment = f.treatment || treatments[0]?.name || "";
+    const effectiveTreatments = f.treatments.filter(Boolean);
+    const effectiveTreatment = effectiveTreatments.join(", ") || treatments[0]?.name || "";
     if (!f.patientName || !f.date || !f.time) { toast.error("Completa campos obligatorios"); return; }
     const schedCheck = validateSchedule(f.date, f.time);
     if (!schedCheck.valid) { toast.error(schedCheck.reason); return; }
     if (!validateSlot(f.date, f.time, appointments, tenants)) { toast.error("Horario no disponible"); return; }
-    const treat = treatments.find((t) => t.name === effectiveTreatment);
+    
+    // Calculate total price from all treatments
+    const totalStdPrice = effectiveTreatments.reduce((sum, tName) => {
+      const t = treatments.find(tr => tr.name === tName);
+      return sum + (t?.priceUSD || 0);
+    }, 0);
 
     const existing = patients.find((p) => (f.patientCedula && p.cedula === f.patientCedula) || p.phone === f.patientPhone || p.name.toLowerCase() === f.patientName.toLowerCase());
     if (!existing && f.patientName) {
@@ -113,8 +119,9 @@ export const AdminCalendar = () => {
       });
     }
 
-    const finalPrice = f.customPrice !== "" ? parseFloat(f.customPrice) : (treat?.priceUSD || 0);
-    const finalNotes = effectiveTreatment === "Otros" && f.otrosMotivo ? `Motivo: ${f.otrosMotivo}${f.notes ? ` | ${f.notes}` : ""}` : f.notes;
+    const finalPrice = f.customPrice !== "" ? parseFloat(f.customPrice) : totalStdPrice;
+    const hasOtros = effectiveTreatments.includes("Otros");
+    const finalNotes = hasOtros && f.otrosMotivo ? `Motivo: ${f.otrosMotivo}${f.notes ? ` | ${f.notes}` : ""}` : f.notes;
 
     const hasPay = !!f.paymentMethod;
     const isDigitalMethod = ["pago_movil", "transferencia", "zelle", "binance"].includes(f.paymentMethod);
@@ -149,7 +156,7 @@ export const AdminCalendar = () => {
 
     toast.success(hasPay ? "Cita agendada con pago registrado" : "Cita agendada");
     setShowBooking(false);
-    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "", doctorCommission: "40" });
+    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatments: [treatments[0]?.name || ""], notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "", doctorCommission: "40" });
   };
 
   const selectExistingPatient = (p: typeof patients[0]) => {
