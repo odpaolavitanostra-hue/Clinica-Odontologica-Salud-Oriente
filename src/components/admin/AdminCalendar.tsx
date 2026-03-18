@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useClinicData, Appointment } from "@/hooks/useClinicData";
 import PaymentModal from "./PaymentModal";
 import { isSlotBlockedByTenant, validateSlot, validateSchedule, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
-import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search } from "lucide-react";
+import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, addWeeks, isSameMonth, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -36,6 +36,9 @@ export const AdminCalendar = () => {
     paymentMethod: "", paymentReference: "",
   });
   const [payingAppId, setPayingAppId] = useState<string | null>(null);
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
 
   const navigate = (dir: number) => {
     if (view === "month") setCurrentDate(addMonths(currentDate, dir));
@@ -183,6 +186,41 @@ export const AdminCalendar = () => {
     return slots;
   };
 
+  const getRescheduleTimeSlots = (dateStr: string, excludeId?: string) => {
+    if (!dateStr) return [];
+    const d = new Date(dateStr + "T00:00:00");
+    const day = d.getDay();
+    if (day === 0) return [];
+    const end = day === 6 ? 14 : 17;
+    const slots: string[] = [];
+    const caracasNow = getCaracasNow();
+    const caracasToday = getCaracasToday();
+    const isToday = dateStr === caracasToday;
+    const currentHour = caracasNow.getHours();
+    for (let h = 8; h < end; h++) {
+      if (isToday && h <= currentHour) continue;
+      const time = `${h.toString().padStart(2, "0")}:00`;
+      if (isSlotBlockedByTenant(dateStr, time, tenants).blocked) continue;
+      const isBooked = appointments.some((a) => a.id !== excludeId && a.date === dateStr && a.time === time && a.status !== "cancelada");
+      if (!isBooked) slots.push(time);
+    }
+    return slots;
+  };
+
+  const handleReschedule = async (appId: string) => {
+    if (!rescheduleDate || !rescheduleTime) { toast.error("Selecciona fecha y hora"); return; }
+    const schedCheck = validateSchedule(rescheduleDate, rescheduleTime);
+    if (!schedCheck.valid) { toast.error(schedCheck.reason); return; }
+    if (!validateSlot(rescheduleDate, rescheduleTime, appointments, tenants, appId)) {
+      toast.error("Horario no disponible"); return;
+    }
+    await updateAppointment(appId, { date: rescheduleDate, time: rescheduleTime });
+    toast.success("✅ Cita reagendada exitosamente");
+    setReschedulingId(null);
+    setRescheduleDate("");
+    setRescheduleTime("");
+  };
+
   const todayStr = getCaracasToday();
 
   const renderAppCard = (app: Appointment) => (
@@ -204,6 +242,7 @@ export const AdminCalendar = () => {
           }`}>{app.status === "pendiente_confirmacion" ? "Por confirmar" : app.status === "pagada" ? "Pagada" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
           {app.status === "pendiente_confirmacion" && (
             <div className="flex gap-1">
+              <button onClick={() => { setReschedulingId(app.id); setRescheduleDate(app.date); setRescheduleTime(""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Reagendar"><CalendarClock className="w-4 h-4" /></button>
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar cita"><Check className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar cita"><X className="w-4 h-4" /></button>
@@ -211,6 +250,7 @@ export const AdminCalendar = () => {
           )}
           {app.status === "pendiente" && (
             <div className="flex gap-1">
+              <button onClick={() => { setReschedulingId(app.id); setRescheduleDate(app.date); setRescheduleTime(""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Reagendar"><CalendarClock className="w-4 h-4" /></button>
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
               <button onClick={() => setPayingAppId(app.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Procesar Pago"><DollarSign className="w-4 h-4" /></button>
               <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Completar sin pago"><Check className="w-4 h-4" /></button>
@@ -220,6 +260,7 @@ export const AdminCalendar = () => {
           {app.status === "pagada" && (
             <div className="flex gap-1 items-center">
               <span className="text-[10px] text-muted-foreground">{app.paymentMethod?.replace('_', ' ')}{app.paymentReference ? ` • Ref: ${app.paymentReference}` : ''}</span>
+              <button onClick={() => { setReschedulingId(app.id); setRescheduleDate(app.date); setRescheduleTime(""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Reagendar"><CalendarClock className="w-4 h-4" /></button>
               <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Completar"><Check className="w-4 h-4" /></button>
             </div>
           )}
@@ -279,6 +320,31 @@ export const AdminCalendar = () => {
           <div className="flex gap-2 pt-2">
             <button onClick={() => handleComplete(app.id)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">Confirmar</button>
             <button onClick={() => setCompleting(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {reschedulingId === app.id && (
+        <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+          <h4 className="font-semibold text-sm flex items-center gap-2"><CalendarClock className="w-4 h-4 text-accent" /> Reagendar cita</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">Nueva fecha</label>
+              <input type="date" min={todayStr} className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm" value={rescheduleDate} onChange={(e) => { setRescheduleDate(e.target.value); setRescheduleTime(""); }} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Nueva hora</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)}>
+                <option value="">Seleccionar hora</option>
+                {getRescheduleTimeSlots(rescheduleDate, app.id).map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => handleReschedule(app.id)} className="bg-accent text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Reagendar</button>
+            <button onClick={() => { setReschedulingId(null); setRescheduleDate(""); setRescheduleTime(""); }} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
           </div>
         </div>
       )}
