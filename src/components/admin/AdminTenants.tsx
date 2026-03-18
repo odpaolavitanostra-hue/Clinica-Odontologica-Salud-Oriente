@@ -163,7 +163,7 @@ export const AdminTenants = () => {
       const startTime = hours[0];
       const lastH = parseInt(hours[hours.length - 1]);
       const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-      await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials });
+      await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatments.join(", "), clinicProvidesMaterials: blockForm.clinicProvidesMaterials });
       toast.success(`Turno ${blockForm.turnoBlock.toUpperCase()} bloqueado para ${blockForm.date}`);
     } else {
       if (blockForm.selectedHours.length === 0) { toast.error("Selecciona al menos una hora"); return; }
