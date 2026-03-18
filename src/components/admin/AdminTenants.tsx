@@ -207,7 +207,7 @@ export const AdminTenants = () => {
         date: requestEditForm.date,
         startTime: requestEditForm.startTime,
         endTime: requestEditForm.endTime,
-        treatment: requestEditForm.treatment,
+        treatment: requestEditForm.treatments.join(", "),
         clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials,
         clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0,
       });
