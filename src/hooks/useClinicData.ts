@@ -503,8 +503,24 @@ export function useClinicData() {
         await schedulePatientNotification("reschedule", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
       } else if (app.status === "pendiente" && existing.status === "pendiente_confirmacion") {
+        // STAGE 2: Admin confirms — send confirmation + doctor + schedule reminder
         await schedulePatientNotification("confirmation", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("new_appointment", ctx);
+
+        // Schedule 2h reminder now that appointment is confirmed
+        const appointmentDateTime = new Date(`${finalDate}T${finalTime}:00-04:00`);
+        const reminderTime = new Date(appointmentDateTime.getTime() - 2 * 60 * 60 * 1000);
+        if (reminderTime > new Date()) {
+          const { getCaracasGreeting } = await import("@/lib/notificationUtils");
+          await supabase.from("scheduled_notifications").insert({
+            type: "reminder",
+            appointment_id: id,
+            patient_name: finalName,
+            phone: finalPhone,
+            message: `⏰ Recordatorio: ${getCaracasGreeting()} ${finalName}, su cita es hoy ${finalDate} a las ${finalTime} en Clínica Salud Oriente. ¡Le esperamos en 2 horas!`,
+            scheduled_for: reminderTime.toISOString(),
+          });
+        }
       } else if (statusChanged || app.treatment) {
         await schedulePatientNotification("modification", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("modification", ctx);
