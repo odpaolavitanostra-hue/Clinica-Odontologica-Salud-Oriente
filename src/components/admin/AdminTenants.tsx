@@ -654,13 +654,25 @@ export const AdminTenants = () => {
                       </div>
                     </div>
                     {requestEditForm.rentalMode === "percent" && (
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Tratamiento</label>
-                        <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.treatment} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatment: e.target.value }))}>
-                          {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                            <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
-                          ))}
-                        </select>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-medium">Tratamientos</label>
+                        {requestEditForm.treatments.map((tName, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <select className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={tName} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatments: prev.treatments.map((t, i) => i === idx ? e.target.value : t) }))}>
+                              {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                                <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+                              ))}
+                            </select>
+                            {requestEditForm.treatments.length > 1 && (
+                              <button type="button" onClick={() => setRequestEditForm(prev => ({ ...prev, treatments: prev.treatments.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => setRequestEditForm(prev => ({ ...prev, treatments: [...prev.treatments, treatments[0]?.name || "Revisión"] }))} className="w-full py-1.5 rounded-lg text-xs font-medium border border-dashed border-gold/50 text-gold hover:bg-gold/10 transition-all flex items-center justify-center gap-1">
+                          <Plus className="w-3 h-3" /> Añadir tratamiento
+                        </button>
                       </div>
                     )}
                     {requestEditForm.rentalMode === "percent" && (
@@ -684,14 +696,21 @@ export const AdminTenants = () => {
                       </div>
                     )}
                     {requestEditForm.rentalMode === "percent" && (() => {
-                      const selectedTreatment = treatments.find(t => t.name === requestEditForm.treatment);
-                      const treatmentPrice = selectedTreatment?.priceUSD || 0;
+                      const totalPrice = getMultiTreatmentTotal(requestEditForm.treatments);
                       const pct = requestEditForm.clinicPercentage;
-                      const clinicAmount = treatmentPrice * (pct / 100);
-                      const doctorAmount = treatmentPrice - clinicAmount;
-                      return treatmentPrice > 0 ? (
+                      const clinicAmount = totalPrice * (pct / 100);
+                      const doctorAmount = totalPrice - clinicAmount;
+                      return totalPrice > 0 ? (
                         <div className="bg-card rounded-lg px-3 py-3 border border-gold/30 space-y-2">
                           <p className="text-xs font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3 text-gold" /> Desglose Financiero</p>
+                          {requestEditForm.treatments.length > 1 && (
+                            <div className="space-y-0.5 pb-1 border-b border-border/30">
+                              {requestEditForm.treatments.map((tName, i) => {
+                                const tr = treatments.find(t => t.name === tName);
+                                return <p key={i} className="text-[10px] text-muted-foreground">• {tName}: ${(tr?.priceUSD || 0).toFixed(2)}</p>;
+                              })}
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-muted rounded-lg px-3 py-2 space-y-0.5">
                               <p className="text-[10px] text-muted-foreground font-medium">Clínica ({pct}%)</p>
@@ -704,7 +723,7 @@ export const AdminTenants = () => {
                               <p className="text-[10px] text-muted-foreground">Bs. {formatVES(doctorAmount * tasaBCV)}</p>
                             </div>
                           </div>
-                          <p className="text-[10px] text-muted-foreground text-center">Precio tratamiento: ${treatmentPrice.toFixed(2)} | Bs. {formatVES(treatmentPrice * tasaBCV)}</p>
+                          <p className="text-[10px] text-muted-foreground text-center">Total: ${totalPrice.toFixed(2)} | Bs. {formatVES(totalPrice * tasaBCV)}</p>
                         </div>
                       ) : null;
                     })()}
