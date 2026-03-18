@@ -13,6 +13,7 @@ export function getCaracasGreeting(): string {
 }
 
 const CLINIC_CLOSING = "¡Te esperamos en C.C Novocentro piso 1, local 1-02, Puerto La Cruz! Llega 5 minutos antes para tu ficha clínica.";
+const CLINIC_NAME = "Clínica Odontológica Salud Oriente";
 
 interface NotificationContext {
   appointmentId: string;
