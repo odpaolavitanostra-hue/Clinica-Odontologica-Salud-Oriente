@@ -149,7 +149,7 @@ export const AdminCalendar = () => {
 
     toast.success(hasPay ? "Cita agendada con pago registrado" : "Cita agendada");
     setShowBooking(false);
-    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "" });
+    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "", doctorCommission: "40" });
   };
 
   const selectExistingPatient = (p: typeof patients[0]) => {
