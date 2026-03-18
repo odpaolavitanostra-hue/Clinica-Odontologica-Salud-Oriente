@@ -180,7 +180,7 @@ export const AdminTenants = () => {
       }
       const customPercent = blockForm.clinicPercentage;
       for (const range of ranges) {
-        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: customPercent });
+        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatments.join(", "), clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: customPercent });
       }
       toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
