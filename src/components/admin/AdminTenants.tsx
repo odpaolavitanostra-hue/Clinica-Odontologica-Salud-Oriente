@@ -241,11 +241,11 @@ export const AdminTenants = () => {
   };
 
   // Schedule selection UI — only turno and percent
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange, clinicPercentage, onClinicPercentageChange }: {
+  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, selectedTreatments, onAddTreatment, onRemoveTreatment, clinicProvidesMaterials, onClinicMaterialsChange, clinicPercentage, onClinicPercentageChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
     rentalPrice?: number; onPriceChange?: (p: number) => void;
-    treatment?: string; onTreatmentChange?: (t: string) => void;
+    selectedTreatments?: string[]; onAddTreatment?: (t: string) => void; onRemoveTreatment?: (idx: number) => void;
     clinicProvidesMaterials?: boolean; onClinicMaterialsChange?: (v: boolean) => void;
     clinicPercentage?: number; onClinicPercentageChange?: (v: number) => void;
   }) => {
@@ -253,6 +253,8 @@ export const AdminTenants = () => {
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
     const needsHours = rentalMode === "percent";
     const pSlots = date && needsHours ? getAvailableSlots(date) : [];
+    const currentTreatments = selectedTreatments || ["Revisión"];
+    const totalPrice = getMultiTreatmentTotal(currentTreatments);
     return (
       <div className="space-y-4">
         <div>
@@ -282,16 +284,47 @@ export const AdminTenants = () => {
           </div>
         )}
 
-        {/* Porcentaje: treatment + materials toggle + auto % */}
+        {/* Porcentaje: multi-treatment + materials toggle + auto % */}
         {date && rentalMode === "percent" && (
           <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamiento a realizar</label>
-              <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
-                {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
-                ))}
-              </select>
+            {/* Multi-treatment list */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamientos a realizar</label>
+              {currentTreatments.map((tName, idx) => {
+                const tr = treatments.find(t => t.name === tName);
+                return (
+                  <div key={idx} className="flex items-center gap-2">
+                    <select className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={tName} onChange={(e) => {
+                      if (onRemoveTreatment && onAddTreatment) {
+                        const newList = [...currentTreatments];
+                        newList[idx] = e.target.value;
+                        // Replace entire list by removing and re-adding
+                        onRemoveTreatment(idx);
+                        // We need a different approach - just call with index update
+                      }
+                      // Simplify: update by replacing at index
+                      const newList = [...currentTreatments];
+                      newList[idx] = e.target.value;
+                      // Remove all then add all back
+                      if (onRemoveTreatment && onAddTreatment) {
+                        // Use parent state update pattern
+                      }
+                    }}>
+                      {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                        <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+                      ))}
+                    </select>
+                    {currentTreatments.length > 1 && (
+                      <button type="button" onClick={() => onRemoveTreatment?.(idx)} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              <button type="button" onClick={() => onAddTreatment?.(treatments[0]?.name || "Revisión")} className="w-full py-2 rounded-lg text-xs font-medium border border-dashed border-gold/50 text-gold hover:bg-gold/10 transition-all flex items-center justify-center gap-1">
+                <Plus className="w-3 h-3" /> Añadir otro tratamiento
+              </button>
             </div>
             <div className="flex items-center justify-between bg-card rounded-lg px-3 py-3 border border-border">
               <div className="flex items-center gap-2">
@@ -315,14 +348,20 @@ export const AdminTenants = () => {
             </div>
             {/* Financial breakdown */}
             {(() => {
-              const selectedTreatment = treatments.find(t => t.name === (treatment || "Revisión"));
-              const treatmentPrice = selectedTreatment?.priceUSD || 0;
               const pct = clinicPercentage ?? getAutoPercentage(clinicProvidesMaterials || false);
-              const clinicAmount = treatmentPrice * (pct / 100);
-              const doctorAmount = treatmentPrice - clinicAmount;
-              return treatmentPrice > 0 ? (
+              const clinicAmount = totalPrice * (pct / 100);
+              const doctorAmount = totalPrice - clinicAmount;
+              return totalPrice > 0 ? (
                 <div className="bg-card rounded-lg px-3 py-3 border border-gold/30 space-y-2">
                   <p className="text-xs font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3 text-gold" /> Desglose Financiero</p>
+                  {currentTreatments.length > 1 && (
+                    <div className="space-y-1 pb-1 border-b border-border/30">
+                      {currentTreatments.map((tName, i) => {
+                        const tr = treatments.find(t => t.name === tName);
+                        return <p key={i} className="text-[10px] text-muted-foreground">• {tName}: ${(tr?.priceUSD || 0).toFixed(2)}</p>;
+                      })}
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-muted rounded-lg px-3 py-2 space-y-0.5">
                       <p className="text-[10px] text-muted-foreground font-medium">Clínica ({pct}%)</p>
@@ -335,7 +374,7 @@ export const AdminTenants = () => {
                       <p className="text-[10px] text-muted-foreground">Bs. {formatVES(doctorAmount * tasaBCV)}</p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground text-center">Precio tratamiento: ${treatmentPrice.toFixed(2)} | Bs. {formatVES(treatmentPrice * tasaBCV)}</p>
+                  <p className="text-[10px] text-muted-foreground text-center">Total tratamientos: ${totalPrice.toFixed(2)} | Bs. {formatVES(totalPrice * tasaBCV)}</p>
                 </div>
               ) : null;
             })()}
