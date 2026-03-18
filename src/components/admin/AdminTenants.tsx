@@ -6,6 +6,80 @@ import { toast } from "sonner";
 import PaymentModal from "./PaymentModal";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
+// Schedule selection UI (moved outside to prevent re-renders losing focus)
+const ScheduleSelector = ({ 
+  date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange,
+  amAvail, pmAvail, pSlots, caracasToday
+}: {
+  date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
+  onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
+  rentalPrice?: number; onPriceChange?: (p: number) => void;
+  amAvail: boolean; pmAvail: boolean; pSlots: string[]; caracasToday: string;
+}) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Clock className="w-3 h-3 text-gold" /> Fecha *</label>
+        <input type="date" min={caracasToday} className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={date} onChange={(e) => onDateChange(e.target.value)} />
+      </div>
+      {date && (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold flex items-center gap-1"><Building2 className="w-3 h-3 text-gold" /> Modalidad de Alquiler</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+              <Clock className="w-4 h-4" /> Por Turno
+            </button>
+            <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+              <Building2 className="w-4 h-4" /> Por Porcentaje (%)
+            </button>
+          </div>
+        </div>
+      )}
+      {date && rentalMode && onPriceChange && (
+        <div>
+          <label className="block text-xs font-medium mb-1">{rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
+          <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
+        </div>
+      )}
+      {date && rentalMode === "turno" && (
+        <div className="space-y-3">
+          <p className="text-xs font-medium">Seleccione el turno:</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" disabled={!amAvail} onClick={() => onTurnoChange("am")} className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!amAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "am" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+              <Sun className="w-5 h-5" /><span className="font-semibold">Mañana (AM)</span><span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
+              {!amAvail && <span className="text-xs text-destructive">No disponible</span>}
+            </button>
+            <button type="button" disabled={!pmAvail} onClick={() => onTurnoChange("pm")} className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!pmAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "pm" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+              <Moon className="w-5 h-5" /><span className="font-semibold">Tarde (PM)</span><span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
+              {!pmAvail && <span className="text-xs text-destructive">No disponible</span>}
+            </button>
+          </div>
+          {!amAvail && !pmAvail && <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha.</p>}
+        </div>
+      )}
+      {date && rentalMode === "percent" && (
+        <div className="space-y-3">
+          {pSlots.length > 0 ? (
+            <>
+              <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {pSlots.map((slot) => (
+                  <button key={slot} type="button" onClick={() => onToggleHour(slot)} className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${selectedHours.includes(slot) ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                    {slot}
+                  </button>
+                ))}
+              </div>
+              {selectedHours.length > 0 ? <p className="text-xs text-muted-foreground">{selectedHours.length} hora(s) seleccionada(s)</p> : null}
+            </>
+          ) : (
+            <p className="text-xs text-destructive text-center py-4">No hay horas disponibles para esta fecha.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AdminTenants = () => {
   const { tenants, treatments, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, deleteRentalRequest, completeRentalSlot, updateBlockedSlot, tasaBCV, addTransaction } = useClinicData();
   const [showForm, setShowForm] = useState(false);
@@ -220,83 +294,13 @@ export const AdminTenants = () => {
     setEditingSlot(null);
   };
 
-  // Schedule selection UI
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange }: {
-    date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
-    onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
-    rentalPrice?: number; onPriceChange?: (p: number) => void;
-  }) => {
-    const amAvail = date ? isBlockAvailableFor(date, "am") : false;
-    const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
-    const pSlots = date && rentalMode === "percent" ? getAvailableSlots(date) : [];
-    return (
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Clock className="w-3 h-3 text-gold" /> Fecha *</label>
-          <input type="date" min={caracasToday} className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={date} onChange={(e) => onDateChange(e.target.value)} />
-        </div>
-        {date && (
-          <div className="space-y-3">
-            <p className="text-xs font-semibold flex items-center gap-1"><Building2 className="w-3 h-3 text-gold" /> Modalidad de Alquiler</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Clock className="w-4 h-4" /> Por Turno
-              </button>
-              <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Building2 className="w-4 h-4" /> Por Porcentaje (%)
-              </button>
-            </div>
-          </div>
-        )}
-        {date && rentalMode && onPriceChange && (
-          <div>
-            <label className="block text-xs font-medium mb-1">{rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
-            <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
-          </div>
-        )}
-        {date && rentalMode === "turno" && (
-          <div className="space-y-3">
-            <p className="text-xs font-medium">Seleccione el turno:</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" disabled={!amAvail} onClick={() => onTurnoChange("am")} className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!amAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "am" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Sun className="w-5 h-5" /><span className="font-semibold">Mañana (AM)</span><span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
-                {!amAvail && <span className="text-xs text-destructive">No disponible</span>}
-              </button>
-              <button type="button" disabled={!pmAvail} onClick={() => onTurnoChange("pm")} className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!pmAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "pm" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Moon className="w-5 h-5" /><span className="font-semibold">Tarde (PM)</span><span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
-                {!pmAvail && <span className="text-xs text-destructive">No disponible</span>}
-              </button>
-            </div>
-            {!amAvail && !pmAvail && <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha.</p>}
-          </div>
-        )}
-        {date && rentalMode === "percent" && (
-          <div className="space-y-3">
-            {pSlots.length > 0 ? (
-              <>
-                <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                  {pSlots.map((slot) => (
-                    <button key={slot} type="button" onClick={() => onToggleHour(slot)} className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${selectedHours.includes(slot) ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-                {selectedHours.length > 0 && <p className="text-xs text-muted-foreground">{selectedHours.length} hora(s) seleccionada(s)</p>}
-              </>
-            ) : (
-              <p className="text-xs text-destructive text-center py-4">No hay horas disponibles para esta fecha.</p>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const pendingCount = rentalRequests.filter(r => r.status === 'pending_review').length;
-  const confirmedCount = rentalRequests.filter(r => r.status === 'approved').length;
-  const completedCount = rentalRequests.filter(r => r.status === 'completed').length;
-  const cancelledCount = rentalRequests.filter(r => r.status === 'cancelled').length;
+  const { pendingCount, confirmedCount, completedCount, cancelledCount } = rentalRequests.reduce((acc, r) => {
+    if (r.status === 'pending_review') acc.pendingCount++;
+    if (r.status === 'approved') acc.confirmedCount++;
+    if (r.status === 'completed') acc.completedCount++;
+    if (r.status === 'cancelled') acc.cancelledCount++;
+    return acc;
+  }, { pendingCount: 0, confirmedCount: 0, completedCount: 0, cancelledCount: 0 });
   const filteredRequests = rentalRequests.filter(r => {
     if (filterStatus === "pending") return r.status === 'pending_review';
     if (filterStatus === "approved") return r.status === 'approved';
@@ -491,33 +495,33 @@ export const AdminTenants = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1">Nombre *</label>
-                <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") })} maxLength={50} />
+                <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.firstName} onChange={(e) => setForm(prev => ({ ...prev, firstName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") }))} maxLength={50} />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Apellido *</label>
-                <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") })} maxLength={50} />
+                <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.lastName} onChange={(e) => setForm(prev => ({ ...prev, lastName: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "") }))} maxLength={50} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cédula *</label>
-                <input type="text" inputMode="numeric" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => setForm({ ...form, cedula: e.target.value.replace(/[^0-9]/g, "") })} maxLength={20} placeholder="12345678" />
+                <input type="text" inputMode="numeric" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => setForm(prev => ({ ...prev, cedula: e.target.value.replace(/[^0-9]/g, "") }))} maxLength={20} placeholder="12345678" />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV *</label>
-                <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => setForm({ ...form, cov: e.target.value })} maxLength={20} placeholder="COV-12345" />
+                <input type="text" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => setForm(prev => ({ ...prev, cov: e.target.value }))} maxLength={20} placeholder="COV-12345" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Mail className="w-3 h-3" /> Email *</label>
-                <input type="email" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={100} placeholder="doctor@correo.com" />
+                <input type="email" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.email} onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))} maxLength={100} placeholder="doctor@correo.com" />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Teléfono *</label>
                 <div className="flex">
                   <span className="inline-flex items-center px-2 bg-card border border-r-0 border-border rounded-l-lg text-xs text-muted-foreground font-medium">+58</span>
-                  <input type="tel" inputMode="numeric" className="w-full bg-card rounded-r-lg rounded-l-none px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.phone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); setForm({ ...form, phone: val }); }} maxLength={10} placeholder="4121234567" />
+                  <input type="tel" inputMode="numeric" className="w-full bg-card rounded-r-lg rounded-l-none px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.phone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); setForm(prev => ({ ...prev, phone: val })); }} maxLength={10} placeholder="4121234567" />
                 </div>
               </div>
             </div>
@@ -531,6 +535,10 @@ export const AdminTenants = () => {
                 onTurnoChange={(t) => setForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                 onToggleHour={(h) => toggleHour("form", h)}
                 rentalPrice={form.rentalPrice} onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
+                amAvail={form.date ? isBlockAvailableFor(form.date, "am") : false}
+                pmAvail={form.date ? isBlockAvailableFor(form.date, "pm") : false}
+                pSlots={form.date && form.rentalMode === "percent" ? getAvailableSlots(form.date) : []}
+                caracasToday={caracasToday}
               />
             </div>
           )}
@@ -538,14 +546,14 @@ export const AdminTenants = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1">Modo de Alquiler</label>
-                <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm({ ...form, rentalMode: e.target.value as "turno" | "percent" })}>
+                <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalMode} onChange={(e) => setForm(prev => ({ ...prev, rentalMode: e.target.value as "turno" | "percent" }))}>
                   <option value="turno">Por Turno</option>
                   <option value="percent">Por Porcentaje (%)</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">{form.rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
-                <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalPrice} onChange={(e) => setForm({ ...form, rentalPrice: parseFloat(e.target.value) || 0 })} />
+                <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.rentalPrice} onChange={(e) => setForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
               </div>
             </div>
           )}
@@ -583,6 +591,10 @@ export const AdminTenants = () => {
                   onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
                   onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                   onToggleHour={(h) => toggleHour("block", h)}
+                  amAvail={blockForm.date ? isBlockAvailableFor(blockForm.date, "am") : false}
+                  pmAvail={blockForm.date ? isBlockAvailableFor(blockForm.date, "pm") : false}
+                  pSlots={blockForm.date && blockForm.rentalMode === "percent" ? getAvailableSlots(blockForm.date) : []}
+                  caracasToday={caracasToday}
                 />
                 {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
                   <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>

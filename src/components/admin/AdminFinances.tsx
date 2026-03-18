@@ -99,11 +99,14 @@ export const AdminFinances = () => {
 
   const periodLabel = periodFilter === "dia" ? customDate : periodFilter === "semana" ? `${start} al ${end}` : periodFilter === "mes" ? `${start.slice(0, 7)}` : "Histórico";
 
+  const appsMap = new Map(appointments.map(a => [a.id, a]));
+  const docsMap = new Map(doctors.map(d => [d.id, d]));
+
   const exportXLSX = () => {
     const wb = XLSX.utils.book_new();
     const fiscalData = filteredFinances.map((f) => {
-      const app = appointments.find((a) => a.id === f.appointmentId);
-      const doctor = app ? doctors.find((d) => d.id === app.doctorId) : null;
+      const app = appsMap.get(f.appointmentId);
+      const doctor = app ? docsMap.get(app.doctorId) : null;
       return { Fecha: f.date, Paciente: app?.patientName || "N/A", Tratamiento: app?.treatment || "N/A", Doctor: doctor?.name || "N/A", "Ingreso USD": f.treatmentPriceUSD.toFixed(2), "Ingreso VES": (f.treatmentPriceUSD * f.tasaBCV).toFixed(2), "Pago Doctor USD": f.doctorPayUSD.toFixed(2), "Pago Doctor VES": (f.doctorPayUSD * f.tasaBCV).toFixed(2), "Materiales USD": f.materialsCostUSD.toFixed(2), "Materiales VES": (f.materialsCostUSD * f.tasaBCV).toFixed(2), "Utilidad USD": f.utilityUSD.toFixed(2), "Utilidad VES": (f.utilityUSD * f.tasaBCV).toFixed(2), "Tasa BCV": f.tasaBCV.toFixed(2) };
     });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fiscalData), "Pacientes");
@@ -254,8 +257,8 @@ export const AdminFinances = () => {
               <p className="text-muted-foreground text-center py-12">No hay registros financieros en este período</p>
             ) : (
               filteredFinances.sort((a, b) => b.date.localeCompare(a.date)).map((f) => {
-                const app = appointments.find((a) => a.id === f.appointmentId);
-                const doctor = app ? doctors.find((d) => d.id === app.doctorId) : null;
+                const app = appsMap.get(f.appointmentId);
+                const doctor = app ? docsMap.get(app.doctorId) : null;
                 return (
                   <div key={f.id} className="bg-card rounded-xl p-4 gold-border">
                     <div className="flex items-start justify-between flex-wrap gap-2">
@@ -340,9 +343,11 @@ const ReconciliationView = ({ transactions, start, end, tasaBCV }: { transaction
   const [refSearch, setRefSearch] = useState("");
 
   const filtered = transactions
-    .filter(t => t.date >= start && t.date <= end)
-    .filter(t => !methodFilter || t.paymentMethod === methodFilter)
-    .filter(t => !refSearch || t.paymentReference.toLowerCase().includes(refSearch.toLowerCase()))
+    .filter(t => 
+      t.date >= start && t.date <= end &&
+      (!methodFilter || t.paymentMethod === methodFilter) &&
+      (!refSearch || t.paymentReference.toLowerCase().includes(refSearch.toLowerCase()))
+    )
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
 
   const totalUSD = filtered.reduce((s, t) => s + t.amountUSD, 0);

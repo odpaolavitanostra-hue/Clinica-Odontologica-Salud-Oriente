@@ -37,30 +37,48 @@ export const AdminCalendar = () => {
   });
   const [payingAppId, setPayingAppId] = useState<string | null>(null);
 
-  const navigate = (dir: number) => {
-    if (view === "month") setCurrentDate(addMonths(currentDate, dir));
-    else if (view === "week") setCurrentDate(addWeeks(currentDate, dir));
-    else setCurrentDate(addDays(currentDate, dir));
-  };
+  // Pre-calculate index maps for fast lookups
+  const appsByDateMap = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+    appointments.forEach((a) => {
+      if (filter !== "all" && a.status !== filter) return;
+      if (!map.has(a.date)) map.set(a.date, []);
+      map.get(a.date)!.push(a);
+    });
+    return map;
+  }, [appointments, filter]);
 
-  const getBlockedForDate = (dateStr: string) => {
-    const blocked: { time: string; tenant: string; status: string }[] = [];
+  const appsByDateTimeMap = useMemo(() => {
+    const map = new Map<string, Appointment>();
+    appointments.forEach((a) => {
+      if (filter !== "all" && a.status !== filter) return;
+      map.set(`${a.date}-${a.time}`, a);
+    });
+    return map;
+  }, [appointments, filter]);
+
+  const blockedByDateMap = useMemo(() => {
+    const map = new Map<string, { time: string; tenant: string; status: string }[]>();
     tenants.forEach((t) => {
       t.blockedSlots.forEach((sl) => {
-        if (sl.date !== dateStr) return;
         if (sl.status === 'cancelled') return;
         const status = sl.status || 'approved';
+        if (!map.has(sl.date)) map.set(sl.date, []);
+        
         if (sl.allDay) {
-          for (let h = 8; h < 17; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
+          for (let h = 8; h < 17; h++) map.get(sl.date)!.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
         } else if (sl.startTime && sl.endTime) {
           const start = parseInt(sl.startTime.split(":")[0]);
           const end = parseInt(sl.endTime.split(":")[0]);
-          for (let h = start; h < end; h++) blocked.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
+          for (let h = start; h < end; h++) map.get(sl.date)!.push({ time: `${h.toString().padStart(2, "0")}:00`, tenant: `${t.firstName} ${t.lastName}`, status });
         }
       });
     });
-    return blocked;
-  };
+    return map;
+  }, [tenants]);
+
+  const getBlockedForDate = (dateStr: string) => blockedByDateMap.get(dateStr) || [];
+  const getAppsForDate = (dateStr: string) => appsByDateMap.get(dateStr) || [];
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -78,8 +96,11 @@ export const AdminCalendar = () => {
 
   const hours = Array.from({ length: 9 }, (_, i) => 8 + i);
 
-  const getAppsForDate = (dateStr: string) =>
-    appointments.filter((a) => a.date === dateStr && (filter === "all" || a.status === filter));
+  const navigate = (dir: number) => {
+    if (view === "month") setCurrentDate(addMonths(currentDate, dir));
+    else if (view === "week") setCurrentDate(addWeeks(currentDate, dir));
+    else setCurrentDate(addDays(currentDate, dir));
+  };
 
   const handleComplete = async (id: string) => {
     await completeAppointment(id, materials);
@@ -419,8 +440,8 @@ export const AdminCalendar = () => {
               return (
                 <button key={dateStr} onClick={() => { setSelectedDate(dateStr); setView("day"); setCurrentDate(day); }} className={`min-h-[70px] p-1 rounded-lg text-left transition-all border ${isSelected ? "border-primary bg-primary/10" : "border-transparent hover:bg-muted"} ${!isCurrentMonth ? "opacity-30" : ""} ${isToday ? "ring-1 ring-primary/50" : ""}`}>
                   <span className={`text-xs font-semibold ${isToday ? "text-primary" : ""}`}>{format(day, "d")}</span>
-                  {dayApps.length > 0 && <div className="mt-1"><span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-semibold">{dayApps.length}</span></div>}
-                  {blocked.length > 0 && <div className="mt-0.5"><span className="text-[10px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full">🔒</span></div>}
+                  {dayApps.length > 0 ? <div className="mt-1"><span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-semibold">{dayApps.length}</span></div> : null}
+                  {blocked.length > 0 ? <div className="mt-0.5"><span className="text-[10px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full">🔒</span></div> : null}
                 </button>
               );
             })}
@@ -444,7 +465,7 @@ export const AdminCalendar = () => {
                   {weekDays.map((day) => {
                     const dateStr = format(day, "yyyy-MM-dd");
                     const time = `${h.toString().padStart(2, "0")}:00`;
-                    const app = appointments.find((a) => a.date === dateStr && a.time === time && (filter === "all" || a.status === filter));
+                    const app = appsByDateTimeMap.get(`${dateStr}-${time}`);
                     const blocked = getBlockedForDate(dateStr).find((b) => b.time === time);
                     return (
                       <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? (blocked.status === 'pending_review' ? "bg-amber-500/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(245,158,11,0.15)_4px,rgba(245,158,11,0.15)_8px)]" : blocked.status === 'completed' ? "bg-clinic-green/15" : "bg-card border-primary/30") : ""}`}>
@@ -473,7 +494,8 @@ export const AdminCalendar = () => {
           {hours.map((h) => {
             const dateStr = format(currentDate, "yyyy-MM-dd");
             const time = `${h.toString().padStart(2, "0")}:00`;
-            const dayApps = appointments.filter((a) => a.date === dateStr && a.time === time && (filter === "all" || a.status === filter));
+            const app = appsByDateTimeMap.get(`${dateStr}-${time}`);
+            const dayApps = app ? [app] : [];
             const blocked = getBlockedForDate(dateStr).find((b) => b.time === time);
             return (
               <div key={h} className="flex gap-3">

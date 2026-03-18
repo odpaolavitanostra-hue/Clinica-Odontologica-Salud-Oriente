@@ -1,22 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   CalendarDays, Users, Package, DollarSign, Settings, LogOut, 
   Stethoscope, Menu, X, LayoutDashboard, Building2, Bell, UserCheck, Moon, Sun 
 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { AdminCalendar } from "@/components/admin/AdminCalendar";
-import { AdminDoctors } from "@/components/admin/AdminDoctors";
-import { AdminPatients } from "@/components/admin/AdminPatients";
-import { AdminInventory } from "@/components/admin/AdminInventory";
-import { AdminFinances } from "@/components/admin/AdminFinances";
-import { AdminSettings } from "@/components/admin/AdminSettings";
-import { AdminTenants } from "@/components/admin/AdminTenants";
-import { AdminLeads } from "@/components/admin/AdminLeads";
 import { useAuth } from "@/hooks/useAuth";
 import { useClinicData } from "@/hooks/useClinicData";
 import logoWhite from "@/assets/logo-icon-white.png";
+
+const AdminDashboard = lazy(() => import("@/components/admin/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
+const AdminCalendar = lazy(() => import("@/components/admin/AdminCalendar").then(m => ({ default: m.AdminCalendar })));
+const AdminDoctors = lazy(() => import("@/components/admin/AdminDoctors").then(m => ({ default: m.AdminDoctors })));
+const AdminPatients = lazy(() => import("@/components/admin/AdminPatients").then(m => ({ default: m.AdminPatients })));
+const AdminInventory = lazy(() => import("@/components/admin/AdminInventory").then(m => ({ default: m.AdminInventory })));
+const AdminFinances = lazy(() => import("@/components/admin/AdminFinances").then(m => ({ default: m.AdminFinances })));
+const AdminSettings = lazy(() => import("@/components/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
+const AdminTenants = lazy(() => import("@/components/admin/AdminTenants").then(m => ({ default: m.AdminTenants })));
+const AdminLeads = lazy(() => import("@/components/admin/AdminLeads").then(m => ({ default: m.AdminLeads })));
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -53,10 +54,10 @@ const Admin = () => {
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user?.id) {
       navigate("/login");
     }
-  }, [loading, user, navigate]);
+  }, [loading, user?.id, navigate]);
 
   useEffect(() => {
     const currentAppCount = appointments.length;
@@ -137,17 +138,17 @@ const Admin = () => {
             <div className="relative">
               <button onClick={() => setShowNotifications(!showNotifications)} className="relative text-noir-foreground/60 hover:text-primary transition-colors">
                 <Bell className="w-5 h-5" />
-                {notifications.length > 0 && (
+                {notifications.length > 0 ? (
                   <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">{notifications.length}</span>
-                )}
+                ) : null}
               </button>
               {showNotifications && (
                 <div className="absolute right-0 top-full mt-2 w-72 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
                     <span className="text-xs font-semibold">Notificaciones</span>
-                    {notifications.length > 0 && (
+                    {notifications.length > 0 ? (
                       <button onClick={clearNotifications} className="text-xs text-muted-foreground hover:text-destructive">Limpiar</button>
-                    )}
+                    ) : null}
                   </div>
                   {notifications.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-6">Sin notificaciones nuevas</p>
@@ -187,7 +188,7 @@ const Admin = () => {
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
-                {rentalBadge && <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">{pendingRentalCount}</span>}
+                {rentalBadge ? <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">{pendingRentalCount}</span> : null}
               </button>
             );
           })}
@@ -211,7 +212,7 @@ const Admin = () => {
                 >
                   <tab.icon className="w-5 h-5" />
                   {tab.label}
-                  {rentalBadge && <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingRentalCount}</span>}
+                  {rentalBadge ? <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingRentalCount}</span> : null}
                 </button>
               );
             })}
@@ -221,7 +222,13 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         <div key={activeTab} className="module-enter">
-          {renderContent()}
+          <Suspense fallback={
+            <div className="flex items-center justify-center p-12">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }>
+            {renderContent()}
+          </Suspense>
         </div>
       </main>
     </div>

@@ -73,8 +73,11 @@ const DoctorPanel = () => {
   }, [myAppointments.length]);
 
   const totalEarnedUSD = myFinances.reduce((sum, f) => sum + f.doctorPayUSD, 0);
-  const pendingCount = myAppointments.filter((a) => a.status === "pendiente").length;
-  const completedCount = myAppointments.filter((a) => a.status === "completada").length;
+  const { pendingCount, completedCount } = myAppointments.reduce((acc, a) => {
+    if (a.status === "pendiente") acc.pendingCount++;
+    if (a.status === "completada") acc.completedCount++;
+    return acc;
+  }, { pendingCount: 0, completedCount: 0 });
 
   const handleLogout = async () => { await signOut(); navigate("/"); };
 
@@ -193,17 +196,17 @@ const DoctorPanel = () => {
             <div className="relative">
               <button onClick={() => setShowNotifications(!showNotifications)} className="relative text-noir-foreground/60 hover:text-primary transition-colors p-1">
                 <Bell className="w-5 h-5" />
-                {notifications.length > 0 && (
+                {notifications.length > 0 ? (
                   <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">{notifications.length}</span>
-                )}
+                ) : null}
               </button>
               {showNotifications && (
                 <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-2 border-b border-border">
                     <span className="text-xs font-semibold">Notificaciones</span>
-                    {notifications.length > 0 && (
+                    {notifications.length > 0 ? (
                       <button onClick={() => { setNotifications([]); setShowNotifications(false); }} className="text-xs text-muted-foreground hover:text-destructive">Limpiar</button>
-                    )}
+                    ) : null}
                   </div>
                   {notifications.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-4">Sin notificaciones</p>
@@ -387,13 +390,13 @@ const DoctorPanel = () => {
                       {/* Photos */}
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1"><Camera className="w-3 h-3" /> Fotos ({p.photos.length})</p>
-                        {p.photos.length > 0 && (
+                        {p.photos.length > 0 ? (
                           <div className="flex gap-2 overflow-x-auto pb-1">
                             {p.photos.map((url, i) => (
                               <img key={i} src={url} alt={`Foto ${i+1}`} className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg border border-border cursor-pointer flex-shrink-0" onClick={() => window.open(url, "_blank")} />
                             ))}
                           </div>
-                        )}
+                        ) : null}
                         <label className={`inline-flex items-center gap-1 mt-1 text-xs text-primary cursor-pointer hover:underline ${uploadingPhoto ? 'opacity-50' : ''}`}>
                           <Upload className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar foto"}
                           <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(p.id, e.target.files[0]); }} />

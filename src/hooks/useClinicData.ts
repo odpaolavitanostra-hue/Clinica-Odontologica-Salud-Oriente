@@ -450,14 +450,14 @@ export function useClinicData() {
     if (!app) return;
 
     // Deduct inventory
-    for (const { itemId, qty } of materialsUsed) {
+    await Promise.all(materialsUsed.map(async ({ itemId, qty }) => {
       const item = inventory.find(i => i.id === itemId);
       if (item) {
         await supabase.from("inventory").update({
           stock: Math.round((item.stock - qty) * 100) / 100,
         }).eq("id", itemId);
       }
-    }
+    }));
 
     // Calculate finance
     const doctor = doctors.find(d => d.id === app.doctorId);
