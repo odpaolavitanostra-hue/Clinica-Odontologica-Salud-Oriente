@@ -16,8 +16,8 @@ export const AdminTenants = () => {
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
   const [requestEditForm, setRequestEditForm] = useState<{
-    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean; clinicPercentage: number;
-  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatments: string[]; clinicProvidesMaterials: boolean; clinicPercentage: number;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatments: ["Revisión"], clinicProvidesMaterials: false, clinicPercentage: 40 });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -28,25 +28,33 @@ export const AdminTenants = () => {
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
     date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
+    treatments: ["Revisión"] as string[], clinicProvidesMaterials: false, clinicPercentage: 40,
   });
   const [blockForm, setBlockForm] = useState({
     date: "", rentalMode: "" as "" | "turno" | "percent",
     turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
+    treatments: ["Revisión"] as string[], clinicProvidesMaterials: false, clinicPercentage: 40,
   });
 
   const caracasToday = getCaracasToday();
   const caracasNow = getCaracasNow();
 
   const resetForm = () => {
-    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
+    setForm({ firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "", rentalMode: "turno", rentalPrice: 0, date: "", turnoBlock: "", selectedHours: [], treatments: ["Revisión"], clinicProvidesMaterials: false, clinicPercentage: 40 });
     setShowForm(false);
     setEditing(null);
   };
 
   const resetBlockForm = () => {
-    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
+    setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [], treatments: ["Revisión"], clinicProvidesMaterials: false, clinicPercentage: 40 });
+  };
+
+  // Helper to calculate total price for multiple treatments
+  const getMultiTreatmentTotal = (treatmentNames: string[]) => {
+    return treatmentNames.reduce((sum, name) => {
+      const t = treatments.find(tr => tr.name === name);
+      return sum + (t?.priceUSD || 0);
+    }, 0);
   };
 
   const isBlockAvailableFor = (date: string, block: "am" | "pm"): boolean => {
@@ -109,7 +117,7 @@ export const AdminTenants = () => {
             const startTime = hours[0];
             const lastH = parseInt(hours[hours.length - 1]);
             const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: 0 });
+            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatments.join(", "), clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: 0 });
           } else if (form.rentalMode === "percent" && form.selectedHours.length > 0) {
             const sorted = [...form.selectedHours].sort();
             const ranges: { start: string; end: string }[] = [];
@@ -123,7 +131,7 @@ export const AdminTenants = () => {
               prevHour = currentH;
             }
             for (const range of ranges) {
-              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatment, clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: form.clinicPercentage });
+              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: form.rentalMode, treatment: form.treatments.join(", "), clinicProvidesMaterials: form.clinicProvidesMaterials, clinicPercentage: form.clinicPercentage });
             }
           }
         }
@@ -134,7 +142,7 @@ export const AdminTenants = () => {
   };
 
   const handleEdit = (t: Tenant) => {
-    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: (t.rentalMode === "turno" ? "turno" : "percent") as "turno" | "percent", rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [], treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
+    setForm({ firstName: t.firstName, lastName: t.lastName, cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula, rentalMode: (t.rentalMode === "turno" ? "turno" : "percent") as "turno" | "percent", rentalPrice: t.rentalPrice, date: "", turnoBlock: "", selectedHours: [], treatments: ["Revisión"], clinicProvidesMaterials: false, clinicPercentage: 40 });
     setEditing(t.id);
     setShowForm(true);
   };
@@ -155,7 +163,7 @@ export const AdminTenants = () => {
       const startTime = hours[0];
       const lastH = parseInt(hours[hours.length - 1]);
       const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-      await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials });
+      await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime, endTime, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatments.join(", "), clinicProvidesMaterials: blockForm.clinicProvidesMaterials });
       toast.success(`Turno ${blockForm.turnoBlock.toUpperCase()} bloqueado para ${blockForm.date}`);
     } else {
       if (blockForm.selectedHours.length === 0) { toast.error("Selecciona al menos una hora"); return; }
@@ -172,7 +180,7 @@ export const AdminTenants = () => {
       }
       const customPercent = blockForm.clinicPercentage;
       for (const range of ranges) {
-        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatment, clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: customPercent });
+        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved', rentalMode: blockForm.rentalMode, treatment: blockForm.treatments.join(", "), clinicProvidesMaterials: blockForm.clinicProvidesMaterials, clinicPercentage: customPercent });
       }
       toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
@@ -181,11 +189,12 @@ export const AdminTenants = () => {
 
   const startEditRequest = (req: typeof rentalRequests[0]) => {
     setEditingRequest(req.id);
+    const reqTreatments = req.treatment ? req.treatment.split(", ").filter(Boolean) : ["Revisión"];
     setRequestEditForm({
       rentalMode: req.rentalMode === "procedimiento" ? "percent" : req.rentalMode,
       rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
-      treatment: req.treatment || "Revisión", clinicProvidesMaterials: req.clinicProvidesMaterials || false,
+      treatments: reqTreatments, clinicProvidesMaterials: req.clinicProvidesMaterials || false,
       clinicPercentage: req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false),
     });
   };
@@ -198,7 +207,7 @@ export const AdminTenants = () => {
         date: requestEditForm.date,
         startTime: requestEditForm.startTime,
         endTime: requestEditForm.endTime,
-        treatment: requestEditForm.treatment,
+        treatment: requestEditForm.treatments.join(", "),
         clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials,
         clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0,
       });
@@ -232,11 +241,11 @@ export const AdminTenants = () => {
   };
 
   // Schedule selection UI — only turno and percent
-  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, treatment, onTreatmentChange, clinicProvidesMaterials, onClinicMaterialsChange, clinicPercentage, onClinicPercentageChange }: {
+  const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange, selectedTreatments, onSetTreatments, clinicProvidesMaterials, onClinicMaterialsChange, clinicPercentage, onClinicPercentageChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
     rentalPrice?: number; onPriceChange?: (p: number) => void;
-    treatment?: string; onTreatmentChange?: (t: string) => void;
+    selectedTreatments?: string[]; onSetTreatments?: (ts: string[]) => void;
     clinicProvidesMaterials?: boolean; onClinicMaterialsChange?: (v: boolean) => void;
     clinicPercentage?: number; onClinicPercentageChange?: (v: number) => void;
   }) => {
@@ -244,6 +253,8 @@ export const AdminTenants = () => {
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
     const needsHours = rentalMode === "percent";
     const pSlots = date && needsHours ? getAvailableSlots(date) : [];
+    const currentTreatments = selectedTreatments || ["Revisión"];
+    const totalPrice = getMultiTreatmentTotal(currentTreatments);
     return (
       <div className="space-y-4">
         <div>
@@ -273,16 +284,33 @@ export const AdminTenants = () => {
           </div>
         )}
 
-        {/* Porcentaje: treatment + materials toggle + auto % */}
+        {/* Porcentaje: multi-treatment + materials toggle + auto % */}
         {date && rentalMode === "percent" && (
           <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamiento a realizar</label>
-              <select className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={treatment || "Revisión"} onChange={(e) => onTreatmentChange?.(e.target.value)}>
-                {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                  <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+            {/* Multi-treatment list */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium flex items-center gap-1"><Stethoscope className="w-3 h-3 text-gold" /> Tratamientos a realizar</label>
+              {currentTreatments.map((tName, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <select className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={tName} onChange={(e) => {
+                      const newList = [...currentTreatments];
+                      newList[idx] = e.target.value;
+                      onSetTreatments?.(newList);
+                    }}>
+                      {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                        <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+                      ))}
+                    </select>
+                    {currentTreatments.length > 1 && (
+                      <button type="button" onClick={() => onSetTreatments?.(currentTreatments.filter((_, i) => i !== idx))} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 ))}
-              </select>
+              <button type="button" onClick={() => onSetTreatments?.([...currentTreatments, treatments[0]?.name || "Revisión"])} className="w-full py-2 rounded-lg text-xs font-medium border border-dashed border-gold/50 text-gold hover:bg-gold/10 transition-all flex items-center justify-center gap-1">
+                <Plus className="w-3 h-3" /> Añadir otro tratamiento
+              </button>
             </div>
             <div className="flex items-center justify-between bg-card rounded-lg px-3 py-3 border border-border">
               <div className="flex items-center gap-2">
@@ -306,14 +334,20 @@ export const AdminTenants = () => {
             </div>
             {/* Financial breakdown */}
             {(() => {
-              const selectedTreatment = treatments.find(t => t.name === (treatment || "Revisión"));
-              const treatmentPrice = selectedTreatment?.priceUSD || 0;
               const pct = clinicPercentage ?? getAutoPercentage(clinicProvidesMaterials || false);
-              const clinicAmount = treatmentPrice * (pct / 100);
-              const doctorAmount = treatmentPrice - clinicAmount;
-              return treatmentPrice > 0 ? (
+              const clinicAmount = totalPrice * (pct / 100);
+              const doctorAmount = totalPrice - clinicAmount;
+              return totalPrice > 0 ? (
                 <div className="bg-card rounded-lg px-3 py-3 border border-gold/30 space-y-2">
                   <p className="text-xs font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3 text-gold" /> Desglose Financiero</p>
+                  {currentTreatments.length > 1 && (
+                    <div className="space-y-1 pb-1 border-b border-border/30">
+                      {currentTreatments.map((tName, i) => {
+                        const tr = treatments.find(t => t.name === tName);
+                        return <p key={i} className="text-[10px] text-muted-foreground">• {tName}: ${(tr?.priceUSD || 0).toFixed(2)}</p>;
+                      })}
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-muted rounded-lg px-3 py-2 space-y-0.5">
                       <p className="text-[10px] text-muted-foreground font-medium">Clínica ({pct}%)</p>
@@ -326,7 +360,7 @@ export const AdminTenants = () => {
                       <p className="text-[10px] text-muted-foreground">Bs. {formatVES(doctorAmount * tasaBCV)}</p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground text-center">Precio tratamiento: ${treatmentPrice.toFixed(2)} | Bs. {formatVES(treatmentPrice * tasaBCV)}</p>
+                  <p className="text-[10px] text-muted-foreground text-center">Total tratamientos: ${totalPrice.toFixed(2)} | Bs. {formatVES(totalPrice * tasaBCV)}</p>
                 </div>
               ) : null;
             })()}
@@ -458,7 +492,7 @@ export const AdminTenants = () => {
                   onTurnoChange={(t) => setForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                   onToggleHour={(h) => toggleHour("form", h)}
                   rentalPrice={form.rentalPrice} onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
-                   treatment={form.treatment} onTreatmentChange={(t) => setForm(prev => ({ ...prev, treatment: t }))}
+                   selectedTreatments={form.treatments} onSetTreatments={(ts) => setForm(prev => ({ ...prev, treatments: ts }))}
                    clinicProvidesMaterials={form.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
                    clinicPercentage={form.clinicPercentage} onClinicPercentageChange={(v) => setForm(prev => ({ ...prev, clinicPercentage: v }))}
                  />
@@ -606,13 +640,25 @@ export const AdminTenants = () => {
                       </div>
                     </div>
                     {requestEditForm.rentalMode === "percent" && (
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Tratamiento</label>
-                        <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.treatment} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatment: e.target.value }))}>
-                          {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
-                            <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
-                          ))}
-                        </select>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-medium">Tratamientos</label>
+                        {requestEditForm.treatments.map((tName, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <select className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={tName} onChange={(e) => setRequestEditForm(prev => ({ ...prev, treatments: prev.treatments.map((t, i) => i === idx ? e.target.value : t) }))}>
+                              {[...treatments].sort((a, b) => a.name.localeCompare(b.name, "es")).map((t) => (
+                                <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)} | Bs. {formatVES(t.priceUSD * tasaBCV)}</option>
+                              ))}
+                            </select>
+                            {requestEditForm.treatments.length > 1 && (
+                              <button type="button" onClick={() => setRequestEditForm(prev => ({ ...prev, treatments: prev.treatments.filter((_, i) => i !== idx) }))} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => setRequestEditForm(prev => ({ ...prev, treatments: [...prev.treatments, treatments[0]?.name || "Revisión"] }))} className="w-full py-1.5 rounded-lg text-xs font-medium border border-dashed border-gold/50 text-gold hover:bg-gold/10 transition-all flex items-center justify-center gap-1">
+                          <Plus className="w-3 h-3" /> Añadir tratamiento
+                        </button>
                       </div>
                     )}
                     {requestEditForm.rentalMode === "percent" && (
@@ -636,14 +682,21 @@ export const AdminTenants = () => {
                       </div>
                     )}
                     {requestEditForm.rentalMode === "percent" && (() => {
-                      const selectedTreatment = treatments.find(t => t.name === requestEditForm.treatment);
-                      const treatmentPrice = selectedTreatment?.priceUSD || 0;
+                      const totalPrice = getMultiTreatmentTotal(requestEditForm.treatments);
                       const pct = requestEditForm.clinicPercentage;
-                      const clinicAmount = treatmentPrice * (pct / 100);
-                      const doctorAmount = treatmentPrice - clinicAmount;
-                      return treatmentPrice > 0 ? (
+                      const clinicAmount = totalPrice * (pct / 100);
+                      const doctorAmount = totalPrice - clinicAmount;
+                      return totalPrice > 0 ? (
                         <div className="bg-card rounded-lg px-3 py-3 border border-gold/30 space-y-2">
                           <p className="text-xs font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3 text-gold" /> Desglose Financiero</p>
+                          {requestEditForm.treatments.length > 1 && (
+                            <div className="space-y-0.5 pb-1 border-b border-border/30">
+                              {requestEditForm.treatments.map((tName, i) => {
+                                const tr = treatments.find(t => t.name === tName);
+                                return <p key={i} className="text-[10px] text-muted-foreground">• {tName}: ${(tr?.priceUSD || 0).toFixed(2)}</p>;
+                              })}
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-muted rounded-lg px-3 py-2 space-y-0.5">
                               <p className="text-[10px] text-muted-foreground font-medium">Clínica ({pct}%)</p>
@@ -656,13 +709,13 @@ export const AdminTenants = () => {
                               <p className="text-[10px] text-muted-foreground">Bs. {formatVES(doctorAmount * tasaBCV)}</p>
                             </div>
                           </div>
-                          <p className="text-[10px] text-muted-foreground text-center">Precio tratamiento: ${treatmentPrice.toFixed(2)} | Bs. {formatVES(treatmentPrice * tasaBCV)}</p>
+                          <p className="text-[10px] text-muted-foreground text-center">Total: ${totalPrice.toFixed(2)} | Bs. {formatVES(totalPrice * tasaBCV)}</p>
                         </div>
                       ) : null;
                     })()}
                     <div className="flex gap-2">
                       <button onClick={async () => {
-                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatment, clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials, clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0 });
+                        await updateBlockedSlot(req.id, { rentalMode: requestEditForm.rentalMode, rentalPrice: requestEditForm.rentalPrice, date: requestEditForm.date, startTime: requestEditForm.startTime, endTime: requestEditForm.endTime, treatment: requestEditForm.treatments.join(", "), clinicProvidesMaterials: requestEditForm.clinicProvidesMaterials, clinicPercentage: requestEditForm.rentalMode === 'percent' ? requestEditForm.clinicPercentage : 0 });
                         toast.success("Datos actualizados");
                         setEditingRequest(null);
                       }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar cambios</button>
@@ -751,7 +804,7 @@ export const AdminTenants = () => {
                     onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
                     onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                     onToggleHour={(h) => toggleHour("block", h)}
-                    treatment={blockForm.treatment} onTreatmentChange={(t) => setBlockForm(prev => ({ ...prev, treatment: t }))}
+                    selectedTreatments={blockForm.treatments} onSetTreatments={(ts) => setBlockForm(prev => ({ ...prev, treatments: ts }))}
                     clinicProvidesMaterials={blockForm.clinicProvidesMaterials} onClinicMaterialsChange={(v) => setBlockForm(prev => ({ ...prev, clinicProvidesMaterials: v }))}
                     clinicPercentage={blockForm.clinicPercentage} onClinicPercentageChange={(v) => setBlockForm(prev => ({ ...prev, clinicPercentage: v }))}
                   />
