@@ -372,6 +372,27 @@ export function useClinicData() {
     inv("inventory");
   };
 
+  // ─── CRM Pipeline Automation ───
+  const autoMoveToCRM = async (name: string, phone: string, email: string, cedula: string, status: "completed" | "lost", interest: string) => {
+    // Check if lead already exists by phone or cedula
+    const { data: existingLeads } = await supabase.from("leads").select("id").or(`phone.eq.${phone},cedula.eq.${cedula}`).limit(1);
+    if (existingLeads && existingLeads.length > 0) {
+      // Update existing lead status
+      const contactEntry = { date: new Date().toISOString(), note: status === "completed" ? `✅ Tratamiento completado: ${interest}` : `❌ Cita cancelada: ${interest}` };
+      const { data: lead } = await supabase.from("leads").select("contact_history").eq("id", existingLeads[0].id).single();
+      const history = [...((lead?.contact_history as any[]) || []), contactEntry];
+      await supabase.from("leads").update({ status, contact_history: history, updated_at: new Date().toISOString() }).eq("id", existingLeads[0].id);
+    } else {
+      // Create new lead in the pipeline
+      await supabase.from("leads").insert({
+        name, phone, email, cedula, status, interest,
+        source: "Sistema", notes: status === "completed" ? "Auto: Tratamiento completado" : "Auto: Cita cancelada — Recuperación",
+        is_high_value: false, contact_history: [{ date: new Date().toISOString(), note: status === "completed" ? `✅ Tratamiento completado: ${interest}` : `❌ Cita cancelada: ${interest}` }],
+      });
+    }
+    inv("leads");
+  };
+
   // ─── Appointment CRUD ───
   const INVASIVE_TREATMENTS = ["cirugía", "endodoncia", "extracción", "implante", "implantes"];
 
