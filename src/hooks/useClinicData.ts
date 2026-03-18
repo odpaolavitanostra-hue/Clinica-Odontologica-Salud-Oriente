@@ -502,6 +502,8 @@ export function useClinicData() {
         if (doctor?.phone) await scheduleStaffDoctorNotification("cancellation", ctx);
         const tenantCancel = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
         if (tenantCancel?.phone) await scheduleTenantDoctorNotification("cancellation", { ...ctx, tenantPhone: tenantCancel.phone, tenantName: `${tenantCancel.firstName} ${tenantCancel.lastName}` });
+        // ─── CRM Pipeline: Auto-move to "Recuperación" (lost) ───
+        await autoMoveToCRM(finalName, finalPhone, existing.patientEmail || '', existing.patientCedula || '', "lost", finalTreatment);
       } else if (dateChanged || timeChanged) {
         await schedulePatientNotification("reschedule", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
