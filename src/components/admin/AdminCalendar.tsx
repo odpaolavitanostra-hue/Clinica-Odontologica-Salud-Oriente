@@ -392,17 +392,33 @@ export const AdminCalendar = () => {
             <div><label className="block text-sm font-medium mb-1">Teléfono</label><input type="tel" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.patientPhone} onChange={(e) => setBookingForm((p) => ({ ...p, patientPhone: e.target.value }))} /></div>
             <div><label className="block text-sm font-medium mb-1">Email</label><input type="email" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.patientEmail} onChange={(e) => setBookingForm((p) => ({ ...p, patientEmail: e.target.value }))} /></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div><label className="block text-sm font-medium mb-1">Doctor</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.doctorId || doctors[0]?.id} onChange={(e) => setBookingForm((p) => ({ ...p, doctorId: e.target.value }))}>{doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-            <div><label className="block text-sm font-medium mb-1">Tratamiento</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.treatment || treatments[0]?.name} onChange={(e) => setBookingForm((p) => ({ ...p, treatment: e.target.value, customPrice: "" }))}>{[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}</select></div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Doctor</label>
+            <select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.doctorId || doctors[0]?.id} onChange={(e) => setBookingForm((p) => ({ ...p, doctorId: e.target.value }))}>{doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select>
           </div>
-          {(bookingForm.treatment || treatments[0]?.name) === "Otros" && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Tratamientos</label>
+            {bookingForm.treatments.map((tName, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <select className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={tName} onChange={(e) => setBookingForm((p) => ({ ...p, treatments: p.treatments.map((t, i) => i === idx ? e.target.value : t), customPrice: "" }))}>
+                  {[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)}</option>)}
+                </select>
+                {bookingForm.treatments.length > 1 && (
+                  <button type="button" onClick={() => setBookingForm((p) => ({ ...p, treatments: p.treatments.filter((_, i) => i !== idx), customPrice: "" }))} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><X className="w-4 h-4" /></button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={() => setBookingForm((p) => ({ ...p, treatments: [...p.treatments, treatments[0]?.name || ""], customPrice: "" }))} className="w-full py-2 rounded-lg text-xs font-medium border border-dashed border-primary/50 text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-1">
+              <Plus className="w-3 h-3" /> Añadir otro tratamiento
+            </button>
+          </div>
+          {bookingForm.treatments.includes("Otros") && (
             <div><label className="block text-sm font-medium mb-1">Motivo de consulta *</label><input type="text" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder="Describa el motivo de la consulta" value={bookingForm.otrosMotivo} onChange={(e) => setBookingForm((p) => ({ ...p, otrosMotivo: e.target.value }))} maxLength={200} /></div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Precio USD (editable)</label>
-              <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder={`Estándar: $${(treatments.find(t => t.name === (bookingForm.treatment || treatments[0]?.name))?.priceUSD || 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
+              <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder={`Estándar: $${bookingForm.treatments.reduce((s, tName) => s + (treatments.find(t => t.name === tName)?.priceUSD || 0), 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
               <p className="text-xs text-muted-foreground mt-1">Deja vacío para usar el precio estándar</p>
             </div>
             <div>
