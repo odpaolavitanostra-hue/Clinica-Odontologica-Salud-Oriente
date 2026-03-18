@@ -16,8 +16,8 @@ export const AdminTenants = () => {
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
   const [editingRequest, setEditingRequest] = useState<string | null>(null);
   const [requestEditForm, setRequestEditForm] = useState<{
-    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatment: string; clinicProvidesMaterials: boolean; clinicPercentage: number;
-  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40 });
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string; treatments: string[]; clinicProvidesMaterials: boolean; clinicPercentage: number;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "", treatments: ["Revisión"], clinicProvidesMaterials: false, clinicPercentage: 40 });
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "completed" | "cancelled">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
@@ -28,12 +28,12 @@ export const AdminTenants = () => {
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
     date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
+    treatments: ["Revisión"] as string[], clinicProvidesMaterials: false, clinicPercentage: 40,
   });
   const [blockForm, setBlockForm] = useState({
     date: "", rentalMode: "" as "" | "turno" | "percent",
     turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
-    treatment: "Revisión", clinicProvidesMaterials: false, clinicPercentage: 40,
+    treatments: ["Revisión"] as string[], clinicProvidesMaterials: false, clinicPercentage: 40,
   });
 
   const caracasToday = getCaracasToday();
