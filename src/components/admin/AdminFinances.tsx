@@ -192,6 +192,7 @@ export const AdminFinances = () => {
           </div>
           <button onClick={exportXLSX} className="btn-gold px-4 py-2 text-sm flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
           <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-primary" /> Recipe</button>
+          <button onClick={() => setInvoiceHubOpen(true)} className="bg-card gold-border px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 hover:bg-muted"><FileText className="w-4 h-4 text-primary" /> Facturas</button>
         </div>
       </div>
 
