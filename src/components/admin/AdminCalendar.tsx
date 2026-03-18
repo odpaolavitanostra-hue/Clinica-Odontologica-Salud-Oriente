@@ -323,6 +323,31 @@ export const AdminCalendar = () => {
           </div>
         </div>
       )}
+
+      {reschedulingId === app.id && (
+        <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+          <h4 className="font-semibold text-sm flex items-center gap-2"><CalendarClock className="w-4 h-4 text-accent" /> Reagendar cita</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">Nueva fecha</label>
+              <input type="date" min={todayStr} className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm" value={rescheduleDate} onChange={(e) => { setRescheduleDate(e.target.value); setRescheduleTime(""); }} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Nueva hora</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)}>
+                <option value="">Seleccionar hora</option>
+                {getRescheduleTimeSlots(rescheduleDate, app.id).map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => handleReschedule(app.id)} className="bg-accent text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Reagendar</button>
+            <button onClick={() => { setReschedulingId(null); setRescheduleDate(""); setRescheduleTime(""); }} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
