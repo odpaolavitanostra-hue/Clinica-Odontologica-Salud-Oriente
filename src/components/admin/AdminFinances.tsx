@@ -4,6 +4,7 @@ import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Ed
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import InvoiceGenerator from "./InvoiceGenerator";
+import AdminInvoiceHub from "./AdminInvoiceHub";
 import RecipeGenerator from "./RecipeGenerator";
 import { formatVES } from "@/lib/formatVES";
 import CierreCaja from "./CierreCaja";
@@ -47,6 +48,7 @@ export const AdminFinances = () => {
   const { finances, appointments, doctors, patients, tenants, tasaBCV, setTasaBCV, updateFinance, transactions } = useClinicData();
   const [invoiceData, setInvoiceData] = useState<{ appointment: any; doctor: any; finance: any } | null>(null);
   const [recipeOpen, setRecipeOpen] = useState(false);
+  const [invoiceHubOpen, setInvoiceHubOpen] = useState(false);
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion" | "cierre">("resumen");
@@ -190,6 +192,7 @@ export const AdminFinances = () => {
           </div>
           <button onClick={exportXLSX} className="btn-gold px-4 py-2 text-sm flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
           <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-primary" /> Recipe</button>
+          <button onClick={() => setInvoiceHubOpen(true)} className="bg-card gold-border px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 hover:bg-muted"><FileText className="w-4 h-4 text-primary" /> Facturas</button>
         </div>
       </div>
 
@@ -329,6 +332,17 @@ export const AdminFinances = () => {
         onOpenChange={setRecipeOpen}
         doctors={doctors}
         patients={patients}
+      />
+
+      <AdminInvoiceHub
+        open={invoiceHubOpen}
+        onOpenChange={setInvoiceHubOpen}
+        appointments={appointments}
+        doctors={doctors}
+        finances={finances}
+        tenants={tenants}
+        transactions={transactions}
+        tasaBCV={tasaBCV}
       />
     </div>
   );

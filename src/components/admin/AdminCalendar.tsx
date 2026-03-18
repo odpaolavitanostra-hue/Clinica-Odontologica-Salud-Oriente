@@ -34,6 +34,7 @@ export const AdminCalendar = () => {
     doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "",
     customPrice: "" as string, otrosMotivo: "",
     paymentMethod: "", paymentReference: "",
+    doctorCommission: "40",
   });
   const [payingAppId, setPayingAppId] = useState<string | null>(null);
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
@@ -148,7 +149,7 @@ export const AdminCalendar = () => {
 
     toast.success(hasPay ? "Cita agendada con pago registrado" : "Cita agendada");
     setShowBooking(false);
-    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "" });
+    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "", doctorCommission: "40" });
   };
 
   const selectExistingPatient = (p: typeof patients[0]) => {
@@ -391,10 +392,17 @@ export const AdminCalendar = () => {
           {(bookingForm.treatment || treatments[0]?.name) === "Otros" && (
             <div><label className="block text-sm font-medium mb-1">Motivo de consulta *</label><input type="text" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder="Describa el motivo de la consulta" value={bookingForm.otrosMotivo} onChange={(e) => setBookingForm((p) => ({ ...p, otrosMotivo: e.target.value }))} maxLength={200} /></div>
           )}
-          <div>
-            <label className="block text-sm font-medium mb-1">Precio USD (editable)</label>
-            <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder={`Estándar: $${(treatments.find(t => t.name === (bookingForm.treatment || treatments[0]?.name))?.priceUSD || 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
-            <p className="text-xs text-muted-foreground mt-1">Deja vacío para usar el precio estándar</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Precio USD (editable)</label>
+              <input type="number" step="0.01" min="0" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder={`Estándar: $${(treatments.find(t => t.name === (bookingForm.treatment || treatments[0]?.name))?.priceUSD || 0).toFixed(2)}`} value={bookingForm.customPrice} onChange={(e) => setBookingForm((p) => ({ ...p, customPrice: e.target.value }))} />
+              <p className="text-xs text-muted-foreground mt-1">Deja vacío para usar el precio estándar</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">% Comisión Doctor</label>
+              <input type="number" step="1" min="0" max="100" className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" value={bookingForm.doctorCommission} onChange={(e) => setBookingForm((p) => ({ ...p, doctorCommission: e.target.value }))} />
+              <p className="text-xs text-muted-foreground mt-1">Por defecto: 40%</p>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="block text-sm font-medium mb-1">Fecha</label><input type="date" min={todayStr} className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.date} onChange={(e) => setBookingForm((p) => ({ ...p, date: e.target.value, time: "" }))} /></div>
