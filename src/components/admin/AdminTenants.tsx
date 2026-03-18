@@ -189,11 +189,12 @@ export const AdminTenants = () => {
 
   const startEditRequest = (req: typeof rentalRequests[0]) => {
     setEditingRequest(req.id);
+    const reqTreatments = req.treatment ? req.treatment.split(", ").filter(Boolean) : ["Revisión"];
     setRequestEditForm({
       rentalMode: req.rentalMode === "procedimiento" ? "percent" : req.rentalMode,
       rentalPrice: req.rentalPrice || 0,
       date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
-      treatment: req.treatment || "Revisión", clinicProvidesMaterials: req.clinicProvidesMaterials || false,
+      treatments: reqTreatments, clinicProvidesMaterials: req.clinicProvidesMaterials || false,
       clinicPercentage: req.clinicPercentage || getAutoPercentage(req.clinicProvidesMaterials || false),
     });
   };
