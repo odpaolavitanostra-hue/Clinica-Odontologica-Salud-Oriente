@@ -12,8 +12,9 @@ export function getCaracasGreeting(): string {
   return "Hola, buenas noches";
 }
 
-const CLINIC_CLOSING = "¡Te esperamos en C.C Novocentro piso 1, local 1-02, Puerto La Cruz! Llega 5 minutos antes para tu ficha clínica.";
-const CLINIC_NAME = "Clínica Odontológica Salud Oriente";
+const CLINIC_NAME = "Salud Oriente";
+const CLINIC_LOCATION = "📍 Ubicación: C.C. Novocentro, Piso 1, Local 1-02, Puerto La Cruz.";
+const CLINIC_EARLY_NOTE = "⚠️ Nota: Por favor, llega 5 minutos antes para completar tu ficha clínica.";
 
 interface NotificationContext {
   appointmentId: string;
@@ -24,14 +25,11 @@ interface NotificationContext {
   treatment: string;
   date: string;
   time: string;
-  /** Is the assigned doctor a staff (own) doctor vs a tenant? */
   isStaffDoctor?: boolean;
 }
 
-/**
- * Schedule a patient notification for a status change.
- * NEVER includes financial amounts.
- */
+// ─── PATIENT NOTIFICATIONS ───
+
 export async function schedulePatientNotification(
   type: "confirmation" | "reschedule" | "cancellation" | "modification",
   ctx: NotificationContext
@@ -41,16 +39,38 @@ export async function schedulePatientNotification(
 
   switch (type) {
     case "confirmation":
-      message = `✅ ${greeting} ${ctx.patientName}, su cita para ${ctx.treatment} con ${ctx.doctorName || "su especialista"} ha sido confirmada para el ${ctx.date} a las ${ctx.time}. ${CLINIC_CLOSING}`;
+      message =
+        `${greeting}, ${ctx.patientName}. ¡Tu cita en ${CLINIC_NAME} ha sido CONFIRMADA! ✅\n\n` +
+        `Dr(a): ${ctx.doctorName || "Por asignar"}\n` +
+        `Fecha: ${ctx.date}\n` +
+        `Hora: ${ctx.time}\n\n` +
+        `${CLINIC_LOCATION}\n` +
+        `${CLINIC_EARLY_NOTE}\n\n` +
+        `¡Te esperamos!`;
       break;
     case "reschedule":
-      message = `📅 ${greeting} ${ctx.patientName}, su cita ha sido reagendada. Nueva fecha: ${ctx.date} a las ${ctx.time} — Tratamiento: ${ctx.treatment}. ${CLINIC_CLOSING}`;
+      message =
+        `📅 ${greeting}, ${ctx.patientName}. Tu cita en ${CLINIC_NAME} ha sido reagendada.\n\n` +
+        `Nueva fecha: ${ctx.date}\n` +
+        `Nueva hora: ${ctx.time}\n` +
+        `Tratamiento: ${ctx.treatment}\n\n` +
+        `${CLINIC_LOCATION}\n` +
+        `${CLINIC_EARLY_NOTE}`;
       break;
     case "cancellation":
-      message = `❌ ${greeting} ${ctx.patientName}, lamentamos informarle que su cita de ${ctx.treatment} para el ${ctx.date} a las ${ctx.time} ha sido cancelada. Si desea reagendar, contáctenos al 0422-7180013.`;
+      message =
+        `❌ ${greeting}, ${ctx.patientName}. Lamentamos informarte que tu cita de ${ctx.treatment} ` +
+        `para el ${ctx.date} a las ${ctx.time} ha sido cancelada.\n\n` +
+        `Si deseas reagendar, contáctanos al 0422-7180013.`;
       break;
     case "modification":
-      message = `📝 ${greeting} ${ctx.patientName}, su cita ha sido actualizada. Tratamiento: ${ctx.treatment}, Fecha: ${ctx.date}, Hora: ${ctx.time}. ${CLINIC_CLOSING}`;
+      message =
+        `📝 ${greeting}, ${ctx.patientName}. Tu cita en ${CLINIC_NAME} ha sido actualizada.\n\n` +
+        `Tratamiento: ${ctx.treatment}\n` +
+        `Fecha: ${ctx.date}\n` +
+        `Hora: ${ctx.time}\n\n` +
+        `${CLINIC_LOCATION}\n` +
+        `${CLINIC_EARLY_NOTE}`;
       break;
   }
 
@@ -64,23 +84,28 @@ export async function schedulePatientNotification(
   });
 }
 
-/**
- * Schedule a doctor (staff) notification — includes patient name, treatment, date, time.
- */
+// ─── STAFF DOCTOR NOTIFICATIONS ───
+
 export async function scheduleStaffDoctorNotification(
   type: "new_appointment" | "reschedule" | "cancellation" | "modification",
   ctx: NotificationContext
 ) {
   if (!ctx.doctorPhone) return;
 
+  const doctorLastName = (ctx.doctorName || "Doctor").split(" ").slice(-1)[0];
+
   const labels: Record<string, string> = {
-    new_appointment: "🆕 Nueva cita asignada",
-    reschedule: "📅 Cita reagendada",
-    cancellation: "❌ Cita cancelada",
-    modification: "📝 Cita modificada",
+    new_appointment: "Nueva Cita Confirmada",
+    reschedule: "Cita Reagendada",
+    cancellation: "Cita Cancelada",
+    modification: "Cita Modificada",
   };
 
-  const message = `${labels[type]}: Paciente ${ctx.patientName}, Tratamiento: ${ctx.treatment}, Fecha: ${ctx.date}, Hora: ${ctx.time}.`;
+  const message =
+    `Hola Dr(a). ${doctorLastName}, tienes una ${labels[type]}.\n\n` +
+    `Paciente: ${ctx.patientName}\n` +
+    `Tratamiento: ${ctx.treatment}\n` +
+    `Horario: ${ctx.date} - ${ctx.time}`;
 
   await supabase.from("scheduled_notifications").insert({
     type: `doctor_${type}`,
@@ -92,24 +117,29 @@ export async function scheduleStaffDoctorNotification(
   });
 }
 
-/**
- * Schedule a tenant doctor notification — PRIVACY: NO patient name, only logistics.
- */
+// ─── TENANT DOCTOR NOTIFICATIONS (PRIVACY: NO PATIENT NAME) ───
+
 export async function scheduleTenantDoctorNotification(
   type: "new_appointment" | "reschedule" | "cancellation" | "modification",
-  ctx: NotificationContext & { tenantPhone: string }
+  ctx: NotificationContext & { tenantPhone: string; tenantName?: string }
 ) {
   if (!ctx.tenantPhone) return;
 
+  const tenantLastName = (ctx.tenantName || "Doctor").split(" ").slice(-1)[0];
+
   const labels: Record<string, string> = {
-    new_appointment: "🆕 Nuevo bloque asignado",
-    reschedule: "📅 Bloque reagendado",
-    cancellation: "❌ Bloque cancelado",
-    modification: "📝 Bloque modificado",
+    new_appointment: "Turno Confirmado",
+    reschedule: "Turno Reagendado",
+    cancellation: "Turno Cancelado",
+    modification: "Turno Modificado",
   };
 
   // CRITICAL: No patient name for tenant privacy
-  const message = `${labels[type]}: Fecha: ${ctx.date}, Hora: ${ctx.time}, Tratamiento: ${ctx.treatment}.`;
+  const message =
+    `Hola Dr(a). ${tenantLastName}, un nuevo ${labels[type]}.\n\n` +
+    `Tratamiento: ${ctx.treatment}\n` +
+    `Horario: ${ctx.date} - ${ctx.time}\n\n` +
+    `Nota: Los datos del paciente son gestionados por administración.`;
 
   await supabase.from("scheduled_notifications").insert({
     type: `tenant_${type}`,
@@ -121,27 +151,45 @@ export async function scheduleTenantDoctorNotification(
   });
 }
 
-/**
- * Schedule a Stage 1 "Reception" notification — sent immediately when a patient books via web.
- * Confirms receipt of request, shows all submitted data, and informs status is PENDIENTE DE CONFIRMACIÓN.
- */
+// ─── STAGE 1: RECEPTION (WEB BOOKING → PATIENT) ───
+
 export async function scheduleReceptionNotification(ctx: NotificationContext) {
-  const greeting = getCaracasGreeting();
-  const message = `📋 ${greeting} ${ctx.patientName}, ${CLINIC_NAME} ha recibido tu solicitud de cita.\n\n` +
-    `📌 Detalles de tu solicitud:\n` +
-    `• Tratamiento: ${ctx.treatment}\n` +
-    `• Especialista: ${ctx.doctorName || "Por asignar"}\n` +
-    `• Fecha solicitada: ${ctx.date}\n` +
-    `• Hora: ${ctx.time}\n` +
-    `• Teléfono: ${ctx.patientPhone}\n\n` +
-    `⏳ Tu cita se encuentra actualmente en estado: PENDIENTE DE CONFIRMACIÓN. ` +
-    `Nuestro equipo administrativo validará la disponibilidad y te notificará en breve la aprobación final.`;
+  const message =
+    `Hola ${ctx.patientName}, ${CLINIC_NAME} ha recibido tu solicitud. ` +
+    `Actualmente está PENDIENTE DE CONFIRMACIÓN. ` +
+    `Te avisaremos por esta vía en cuanto sea aprobada. ¡Gracias por tu paciencia!`;
 
   await supabase.from("scheduled_notifications").insert({
     type: "reception",
     appointment_id: ctx.appointmentId,
     patient_name: ctx.patientName,
     phone: ctx.patientPhone,
+    message,
+    scheduled_for: new Date().toISOString(),
+  });
+}
+
+// ─── ADMIN ALERT (WEB BOOKING → ADMIN EMAIL) ───
+
+export async function scheduleAdminAlertNotification(
+  ctx: NotificationContext & { requesterType?: "Paciente" | "Inquilino" }
+) {
+  const requesterType = ctx.requesterType || "Paciente";
+
+  const message =
+    `🚨 Nueva Solicitud de Cita - ${ctx.patientName}\n\n` +
+    `Se ha registrado una nueva solicitud pendiente en el sistema.\n\n` +
+    `Solicitante: ${ctx.patientName}\n` +
+    `Tipo: ${requesterType}\n` +
+    `Fecha/Hora: ${ctx.date} a las ${ctx.time}\n` +
+    `Tratamiento: ${ctx.treatment}\n\n` +
+    `Por favor, ingresa al panel para validar la disponibilidad y confirmar.`;
+
+  await supabase.from("scheduled_notifications").insert({
+    type: "admin_alert",
+    appointment_id: ctx.appointmentId,
+    patient_name: ctx.patientName,
+    phone: "admin",
     message,
     scheduled_for: new Date().toISOString(),
   });
