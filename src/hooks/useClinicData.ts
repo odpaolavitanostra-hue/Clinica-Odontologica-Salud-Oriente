@@ -500,9 +500,13 @@ export function useClinicData() {
       if (app.status === "cancelada") {
         await schedulePatientNotification("cancellation", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("cancellation", ctx);
+        const tenantCancel = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
+        if (tenantCancel?.phone) await scheduleTenantDoctorNotification("cancellation", { ...ctx, tenantPhone: tenantCancel.phone, tenantName: `${tenantCancel.firstName} ${tenantCancel.lastName}` });
       } else if (dateChanged || timeChanged) {
         await schedulePatientNotification("reschedule", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
+        const tenantReschedule = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
+        if (tenantReschedule?.phone) await scheduleTenantDoctorNotification("reschedule", { ...ctx, tenantPhone: tenantReschedule.phone, tenantName: `${tenantReschedule.firstName} ${tenantReschedule.lastName}` });
       } else if (app.status === "pendiente" && existing.status === "pendiente_confirmacion") {
         // STAGE 2: Admin confirms — send confirmation + doctor (staff or tenant) + schedule reminder
         await schedulePatientNotification("confirmation", ctx);
