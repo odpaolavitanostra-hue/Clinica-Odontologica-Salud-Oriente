@@ -100,11 +100,18 @@ export async function scheduleStaffDoctorNotification(
     modification: "Cita Modificada",
   };
 
-  const message =
-    `Hola Dr(a). ${doctorLastName}, tienes una ${labels[type]}.\n\n` +
-    `Paciente: ${ctx.patientName}\n` +
-    `Tratamiento: ${ctx.treatment}\n` +
-    `Horario: ${ctx.date} - ${ctx.time}`;
+  let message = "";
+  if (type === "reschedule") {
+    message =
+      `Hola Dr(a). ${doctorLastName}, la cita de ${ctx.patientName} ha sido reagendada.\n\n` +
+      `Nuevo horario: ${ctx.date} a las ${ctx.time}.`;
+  } else {
+    message =
+      `Hola Dr(a). ${doctorLastName}, tienes una ${labels[type]}.\n\n` +
+      `Paciente: ${ctx.patientName}\n` +
+      `Tratamiento: ${ctx.treatment}\n` +
+      `Horario: ${ctx.date} - ${ctx.time}`;
+  }
 
   await supabase.from("scheduled_notifications").insert({
     type: `doctor_${type}`,
