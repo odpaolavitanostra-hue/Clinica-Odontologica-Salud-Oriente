@@ -4,6 +4,7 @@ import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Ed
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import InvoiceGenerator from "./InvoiceGenerator";
+import AdminInvoiceHub from "./AdminInvoiceHub";
 import RecipeGenerator from "./RecipeGenerator";
 import { formatVES } from "@/lib/formatVES";
 import CierreCaja from "./CierreCaja";
