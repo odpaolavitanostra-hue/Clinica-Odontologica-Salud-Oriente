@@ -36,6 +36,9 @@ export const AdminCalendar = () => {
     paymentMethod: "", paymentReference: "",
   });
   const [payingAppId, setPayingAppId] = useState<string | null>(null);
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
 
   const navigate = (dir: number) => {
     if (view === "month") setCurrentDate(addMonths(currentDate, dir));
