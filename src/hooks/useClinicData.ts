@@ -457,7 +457,52 @@ export function useClinicData() {
     if (app.paymentMethod !== undefined) mapped.payment_method = app.paymentMethod;
     if (app.paymentReference !== undefined) mapped.payment_reference = app.paymentReference;
     if (app.odontogramData !== undefined) mapped.odontogram_data = app.odontogramData;
+    if (app.date !== undefined) mapped.date = app.date;
+    if (app.time !== undefined) mapped.time = app.time;
+    if (app.treatment !== undefined) mapped.treatment = app.treatment;
     await supabase.from("appointments").update(mapped).eq("id", id);
+
+    // Auto-schedule notifications on status changes
+    const existing = appointments.find(a => a.id === id);
+    if (existing) {
+      const finalDate = app.date || existing.date;
+      const finalTime = app.time || existing.time;
+      const finalTreatment = app.treatment || existing.treatment;
+      const finalPhone = app.patientPhone || existing.patientPhone;
+      const finalName = app.patientName || existing.patientName;
+      const doctor = doctors.find(d => d.id === (app.doctorId || existing.doctorId));
+
+      const ctx = {
+        appointmentId: id,
+        patientName: finalName,
+        patientPhone: finalPhone,
+        doctorName: doctor?.name,
+        doctorPhone: doctor?.phone,
+        treatment: finalTreatment,
+        date: finalDate,
+        time: finalTime,
+      };
+
+      // Detect type of change
+      const dateChanged = app.date && app.date !== existing.date;
+      const timeChanged = app.time && app.time !== existing.time;
+      const statusChanged = app.status && app.status !== existing.status;
+
+      if (app.status === "cancelada") {
+        await schedulePatientNotification("cancellation", ctx);
+        if (doctor?.phone) await scheduleStaffDoctorNotification("cancellation", ctx);
+      } else if (dateChanged || timeChanged) {
+        await schedulePatientNotification("reschedule", ctx);
+        if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
+      } else if (app.status === "pendiente" && existing.status === "pendiente_confirmacion") {
+        await schedulePatientNotification("confirmation", ctx);
+        if (doctor?.phone) await scheduleStaffDoctorNotification("new_appointment", ctx);
+      } else if (statusChanged || app.treatment) {
+        await schedulePatientNotification("modification", ctx);
+        if (doctor?.phone) await scheduleStaffDoctorNotification("modification", ctx);
+      }
+    }
+
     inv("appointments");
   };
   const deleteAppointment = async (id: string) => {
