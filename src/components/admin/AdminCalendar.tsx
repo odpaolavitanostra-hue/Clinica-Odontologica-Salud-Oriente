@@ -31,7 +31,7 @@ export const AdminCalendar = () => {
   const [patientSearch, setPatientSearch] = useState("");
   const [bookingForm, setBookingForm] = useState({
     patientName: "", patientCedula: "", patientPhone: "", patientEmail: "",
-    doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "",
+    doctorId: doctors[0]?.id || "", date: "", time: "", treatments: [treatments[0]?.name || ""] as string[], notes: "",
     customPrice: "" as string, otrosMotivo: "",
     paymentMethod: "", paymentReference: "",
     doctorCommission: "40",
