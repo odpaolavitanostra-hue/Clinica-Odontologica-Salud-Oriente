@@ -395,50 +395,55 @@ export function useClinicData() {
 
     const appointmentId = inserted?.id;
 
-    // Auto-schedule notifications
+    // Auto-schedule notifications using dynamic greeting
     if (appointmentId && app.patientPhone) {
-      const notifications: any[] = [];
+      const doctor = doctors.find(d => d.id === app.doctorId);
+      const ctx = {
+        appointmentId,
+        patientName: app.patientName,
+        patientPhone: app.patientPhone,
+        doctorName: doctor?.name,
+        doctorPhone: doctor?.phone,
+        treatment: app.treatment,
+        date: app.date,
+        time: app.time,
+      };
+
+      // 1. Instant confirmation with dynamic greeting
+      await schedulePatientNotification("confirmation", ctx);
+
+      // 2. Staff doctor notification
+      if (doctor?.phone) {
+        await scheduleStaffDoctorNotification("new_appointment", ctx);
+      }
+
+      // 3. Reminder: 2 hours before appointment
       const appointmentDateTime = new Date(`${app.date}T${app.time}:00-04:00`);
-
-      // 1. Instant confirmation (scheduled_for = now)
-      notifications.push({
-        type: "confirmation",
-        appointment_id: appointmentId,
-        patient_name: app.patientName,
-        phone: app.patientPhone,
-        message: `✅ ¡Cita confirmada! Hola ${app.patientName}, su cita para ${app.treatment} ha sido agendada para el ${app.date} a las ${app.time} en Clínica Salud Oriente (C.C Novocentro piso 1, local 1-02, Puerto La Cruz). ¡Le esperamos!`,
-        scheduled_for: new Date().toISOString(),
-      });
-
-      // 2. Reminder: 2 hours before appointment
       const reminderTime = new Date(appointmentDateTime.getTime() - 2 * 60 * 60 * 1000);
       if (reminderTime > new Date()) {
-        notifications.push({
+        const { getCaracasGreeting } = await import("@/lib/notificationUtils");
+        await supabase.from("scheduled_notifications").insert({
           type: "reminder",
           appointment_id: appointmentId,
           patient_name: app.patientName,
           phone: app.patientPhone,
-          message: `⏰ Recordatorio: Hola ${app.patientName}, su cita es hoy ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos en 2 horas!`,
+          message: `⏰ Recordatorio: ${getCaracasGreeting()} ${app.patientName}, su cita es hoy ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos en 2 horas!`,
           scheduled_for: reminderTime.toISOString(),
         });
       }
 
-      // 3. Post-op follow-up: 24h after (only for invasive treatments)
+      // 4. Post-op follow-up: 24h after (only for invasive treatments)
       const isInvasive = INVASIVE_TREATMENTS.some(t => app.treatment.toLowerCase().includes(t));
       if (isInvasive) {
         const followupTime = new Date(appointmentDateTime.getTime() + 24 * 60 * 60 * 1000);
-        notifications.push({
+        await supabase.from("scheduled_notifications").insert({
           type: "postop",
           appointment_id: appointmentId,
           patient_name: app.patientName,
           phone: app.patientPhone,
-          message: `Hola ${app.patientName}, ayer se realizó su ${app.treatment} en Clínica Salud Oriente. ¿Cómo se siente? Si tiene alguna molestia, no dude en contactarnos.`,
+          message: `Hola ${app.patientName}, ayer se realizó su ${app.treatment} en Clínica Salud Oriente. ¿Cómo se siente? Si tiene alguna molestia, no dude en contactarnos al 0422-7180013.`,
           scheduled_for: followupTime.toISOString(),
         });
-      }
-
-      if (notifications.length > 0) {
-        await supabase.from("scheduled_notifications").insert(notifications);
       }
     }
 
