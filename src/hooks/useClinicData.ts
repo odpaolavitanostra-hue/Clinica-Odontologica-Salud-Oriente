@@ -1,7 +1,6 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
+import { schedulePatientNotification, scheduleStaffDoctorNotification } from "@/lib/notificationUtils";
 // Types matching the old store interface (camelCase)
 export interface Doctor {
   id: string;
