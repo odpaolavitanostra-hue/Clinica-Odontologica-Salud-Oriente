@@ -598,6 +598,7 @@ const DoctorPanel = () => {
                           <div className="min-w-0 flex-1">
                             <p className="font-semibold text-sm truncate">{app?.patientName || "—"}</p>
                             <p className="text-xs text-muted-foreground">{app?.treatment || "—"} • {f.date}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Tasa BCV: {f.tasaBCV.toFixed(2)} Bs/$</p>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <p className="text-sm font-bold text-gold">${f.doctorPayUSD.toFixed(2)}</p>
