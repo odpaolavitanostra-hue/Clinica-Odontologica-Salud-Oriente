@@ -34,6 +34,7 @@ export const AdminCalendar = () => {
     doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "",
     customPrice: "" as string, otrosMotivo: "",
     paymentMethod: "", paymentReference: "",
+    doctorCommission: "40",
   });
   const [payingAppId, setPayingAppId] = useState<string | null>(null);
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
