@@ -50,12 +50,11 @@ export async function schedulePatientNotification(
       break;
     case "reschedule":
       message =
-        `📅 ${greeting}, ${ctx.patientName}. Tu cita en ${CLINIC_NAME} ha sido reagendada.\n\n` +
-        `Nueva fecha: ${ctx.date}\n` +
-        `Nueva hora: ${ctx.time}\n` +
-        `Tratamiento: ${ctx.treatment}\n\n` +
-        `${CLINIC_LOCATION}\n` +
-        `${CLINIC_EARLY_NOTE}`;
+        `${greeting}, ${ctx.patientName}. Tu cita en ${CLINIC_NAME} ha sido REAGENDADA con éxito. ✅\n\n` +
+        `🗓️ Nueva Fecha: ${ctx.date}\n` +
+        `⏰ Nueva Hora: ${ctx.time}\n` +
+        `👨‍⚕️ Especialista: ${ctx.doctorName || "Por asignar"}\n\n` +
+        `📍 Te esperamos en C.C. Novocentro, Piso 1, Local 1-02. Por favor, llega 5 minutos antes.`;
       break;
     case "cancellation":
       message =
