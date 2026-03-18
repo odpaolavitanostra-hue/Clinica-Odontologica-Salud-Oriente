@@ -320,20 +320,19 @@ export const AdminLeads = () => {
       )}
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 overflow-x-auto">
         {STATUSES.map(status => {
           const columnLeads = filtered.filter(l => l.status === status.id);
           return (
-            <div key={status.id} className="bg-card/50 rounded-xl p-4 gold-border min-h-[300px] space-y-3">
+            <div key={status.id} className="bg-card/50 rounded-xl p-3 gold-border min-h-[250px] space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="font-display text-base font-semibold flex items-center gap-1.5">
+                <h4 className="text-sm font-semibold flex items-center gap-1.5">
                   <span>{status.emoji}</span> {status.label}
                 </h4>
-                <span className="text-sm bg-muted px-2 py-0.5 rounded-full">{columnLeads.length}</span>
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{columnLeads.length}</span>
               </div>
-              <p className="text-xs text-muted-foreground">{status.desc}</p>
+              <p className="text-[11px] text-muted-foreground">{status.desc}</p>
 
-              {/* Campaign button for cold/lost leads */}
               {(status.id === "cold" || status.id === "lost") && columnLeads.length > 0 && (
                 <button
                   onClick={() => {
@@ -342,7 +341,7 @@ export const AdminLeads = () => {
                     navigator.clipboard.writeText(payload);
                     toast.success(`Payload copiado con ${phones.length} contactos`);
                   }}
-                  className="w-full text-xs bg-primary/10 text-primary rounded-lg py-1.5 hover:bg-primary/20 transition-colors flex items-center justify-center gap-1"
+                  className="w-full text-[11px] bg-primary/10 text-primary rounded-lg py-1.5 hover:bg-primary/20 transition-colors flex items-center justify-center gap-1"
                 >
                   <MessageCircle className="w-3 h-3" /> Campaña ({columnLeads.length})
                 </button>
@@ -352,77 +351,72 @@ export const AdminLeads = () => {
                 {columnLeads.map(lead => {
                   const lastContact = getLastContact(lead);
                   return (
-                  <div key={lead.id} className="bg-card rounded-lg p-4 border border-border/50 space-y-2 hover:border-primary/30 transition-all">
-                     <div className="flex items-start justify-between">
-                       <div className="flex items-center gap-1.5">
-                         {lead.isHighValue && <Star className="w-4 h-4 text-primary fill-primary" />}
-                         <p className="font-display text-base font-semibold leading-tight">{lead.name}</p>
+                  <div key={lead.id} className="bg-card rounded-xl p-3 border border-border/50 space-y-1.5 hover:border-primary/30 transition-all">
+                     <div className="flex items-start justify-between gap-2">
+                       <div className="flex items-center gap-1.5 min-w-0">
+                         {lead.isHighValue && <Star className="w-3.5 h-3.5 text-primary fill-primary shrink-0" />}
+                         <p className="text-sm font-semibold leading-tight truncate">{lead.name}</p>
                       </div>
-                      <div className="flex gap-1">
-                        <button onClick={() => editLead(lead)} className="text-muted-foreground hover:text-primary"><Edit2 className="w-3 h-3" /></button>
-                        <button onClick={() => deleteLead(lead.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => editLead(lead)} className="text-muted-foreground hover:text-primary"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => deleteLead(lead.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
-                    {lead.interest && <p className="text-[11px] text-primary font-medium">{lead.interest}</p>}
-                    <p className="text-[10px] text-muted-foreground">{lead.source} • {lead.phone || "Sin teléfono"}</p>
-                    {lead.notes && <p className="text-[10px] text-muted-foreground italic">"{lead.notes}"</p>}
+                    {lead.interest && <p className="text-xs text-primary font-medium truncate">{lead.interest}</p>}
+                    <p className="text-[11px] text-muted-foreground truncate">{lead.source} • {lead.phone || "Sin teléfono"}</p>
+                    {lead.notes && <p className="text-[11px] text-muted-foreground italic line-clamp-2">"{lead.notes}"</p>}
 
-                    {/* Last contact indicator */}
                     {lastContact && (
-                      <p className="text-[9px] text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-2.5 h-2.5" /> Hace {lastContact.daysAgo}d {lastContact.channel ? `(${lastContact.channel})` : ""}
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5 shrink-0" /> Hace {lastContact.daysAgo}d {lastContact.channel ? `(${lastContact.channel})` : ""}
                       </p>
                     )}
 
-                    {/* Quick status change */}
                     <select
                       value={lead.status}
                       onChange={e => updateLeadStatus(lead.id, e.target.value)}
-                      className="w-full text-[10px] bg-muted border border-border rounded px-2 py-1"
+                      className="w-full text-[11px] bg-muted border border-border rounded-lg px-2 py-1.5"
                     >
                       {STATUSES.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>)}
                     </select>
 
-                    {/* Contact history */}
                     {lead.contactHistory.length > 0 && (
-                      <div className="space-y-1 pt-1 border-t border-border/30">
+                      <div className="space-y-0.5 pt-1 border-t border-border/30">
                         {lead.contactHistory.slice(-2).map((h, i) => (
-                          <p key={i} className="text-[9px] text-muted-foreground">
+                          <p key={i} className="text-[10px] text-muted-foreground line-clamp-1">
                             <span className="font-medium">{new Date(h.date).toLocaleDateString()}</span>: {h.note}
                           </p>
                         ))}
                       </div>
                     )}
 
-                    {/* Add note */}
                     <div className="flex gap-1">
                       <input
                         value={noteInput[lead.id] || ""}
                         onChange={e => setNoteInput(prev => ({ ...prev, [lead.id]: e.target.value }))}
                         placeholder="Nota rápida..."
-                        className="flex-1 text-[10px] bg-muted border border-border rounded px-2 py-1"
+                        className="flex-1 text-[11px] bg-muted border border-border rounded-lg px-2 py-1.5"
                         onKeyDown={e => e.key === "Enter" && addContactNote(lead.id)}
                       />
-                      <button onClick={() => addContactNote(lead.id)} className="text-[10px] text-primary hover:text-primary/80 font-semibold px-1">+</button>
+                      <button onClick={() => addContactNote(lead.id)} className="text-xs text-primary hover:text-primary/80 font-semibold px-1">+</button>
                     </div>
 
-                    {/* Communication Buttons */}
                     <div className="flex gap-1.5 pt-1">
                       {lead.phone && (
                         <button onClick={() => openMsgModal(lead, "whatsapp")}
-                          className="flex-1 flex items-center justify-center gap-1 text-[10px] bg-clinic-green/10 text-clinic-green rounded-lg py-1.5 hover:bg-clinic-green/20 transition-colors font-medium">
-                          <MessageCircle className="w-3 h-3" /> WhatsApp
+                          className="flex-1 flex items-center justify-center gap-1 text-[11px] bg-clinic-green/10 text-clinic-green rounded-lg py-1.5 hover:bg-clinic-green/20 transition-colors font-medium">
+                          <MessageCircle className="w-3 h-3" /> WA
                         </button>
                       )}
                       {lead.email && (
                         <button onClick={() => openMsgModal(lead, "email")}
-                          className="flex-1 flex items-center justify-center gap-1 text-[10px] bg-blue-500/10 text-blue-400 rounded-lg py-1.5 hover:bg-blue-500/20 transition-colors font-medium">
+                          className="flex-1 flex items-center justify-center gap-1 text-[11px] bg-blue-500/10 text-blue-400 rounded-lg py-1.5 hover:bg-blue-500/20 transition-colors font-medium">
                           <Mail className="w-3 h-3" /> Email
                         </button>
                       )}
                       {lead.phone && (
                         <a href={`tel:${lead.phone}`}
-                          className="flex items-center justify-center gap-1 text-[10px] bg-muted text-muted-foreground rounded-lg py-1.5 px-2 hover:text-foreground transition-colors">
+                          className="flex items-center justify-center text-[11px] bg-muted text-muted-foreground rounded-lg py-1.5 px-2 hover:text-foreground transition-colors">
                           <Phone className="w-3 h-3" />
                         </a>
                       )}
