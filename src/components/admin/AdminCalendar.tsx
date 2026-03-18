@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useClinicData, Appointment } from "@/hooks/useClinicData";
 import PaymentModal from "./PaymentModal";
 import { isSlotBlockedByTenant, validateSlot, validateSchedule, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
-import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search } from "lucide-react";
+import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, addWeeks, isSameMonth, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
