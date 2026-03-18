@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { schedulePatientNotification, scheduleStaffDoctorNotification, scheduleReceptionNotification } from "@/lib/notificationUtils";
+import { schedulePatientNotification, scheduleStaffDoctorNotification, scheduleTenantDoctorNotification, scheduleReceptionNotification, scheduleAdminAlertNotification } from "@/lib/notificationUtils";
 // Types matching the old store interface (camelCase)
 export interface Doctor {
   id: string;
@@ -410,8 +410,9 @@ export function useClinicData() {
       };
 
       if (app.status === "pendiente_confirmacion") {
-        // STAGE 1: Web booking — send reception notification only (no confirmation yet)
+        // STAGE 1: Web booking — reception to patient + alert to admin
         await scheduleReceptionNotification(ctx);
+        await scheduleAdminAlertNotification({ ...ctx, requesterType: "Paciente" });
       } else {
         // Admin-created appointment — send full confirmation + doctor notification
         await schedulePatientNotification("confirmation", ctx);
@@ -499,13 +500,28 @@ export function useClinicData() {
       if (app.status === "cancelada") {
         await schedulePatientNotification("cancellation", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("cancellation", ctx);
+        const tenantCancel = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
+        if (tenantCancel?.phone) await scheduleTenantDoctorNotification("cancellation", { ...ctx, tenantPhone: tenantCancel.phone, tenantName: `${tenantCancel.firstName} ${tenantCancel.lastName}` });
       } else if (dateChanged || timeChanged) {
         await schedulePatientNotification("reschedule", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
+        const tenantReschedule = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
+        if (tenantReschedule?.phone) await scheduleTenantDoctorNotification("reschedule", { ...ctx, tenantPhone: tenantReschedule.phone, tenantName: `${tenantReschedule.firstName} ${tenantReschedule.lastName}` });
       } else if (app.status === "pendiente" && existing.status === "pendiente_confirmacion") {
-        // STAGE 2: Admin confirms — send confirmation + doctor + schedule reminder
+        // STAGE 2: Admin confirms — send confirmation + doctor (staff or tenant) + schedule reminder
         await schedulePatientNotification("confirmation", ctx);
-        if (doctor?.phone) await scheduleStaffDoctorNotification("new_appointment", ctx);
+        if (doctor?.phone) {
+          await scheduleStaffDoctorNotification("new_appointment", ctx);
+        }
+        // Check if doctor is a tenant — send privacy-safe notification
+        const tenant = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
+        if (tenant?.phone) {
+          await scheduleTenantDoctorNotification("new_appointment", {
+            ...ctx,
+            tenantPhone: tenant.phone,
+            tenantName: `${tenant.firstName} ${tenant.lastName}`,
+          });
+        }
 
         // Schedule 2h reminder now that appointment is confirmed
         const appointmentDateTime = new Date(`${finalDate}T${finalTime}:00-04:00`);
