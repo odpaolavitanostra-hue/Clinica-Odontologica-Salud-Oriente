@@ -122,27 +122,27 @@ export async function scheduleTenantDoctorNotification(
 }
 
 /**
- * Dispatch all relevant notifications for an appointment status change.
- * Determines whether the doctor is staff or tenant and sends accordingly.
+ * Schedule a Stage 1 "Reception" notification — sent immediately when a patient books via web.
+ * Confirms receipt of request, shows all submitted data, and informs status is PENDIENTE DE CONFIRMACIÓN.
  */
-export async function dispatchStatusChangeNotifications(
-  type: "confirmation" | "reschedule" | "cancellation" | "modification",
-  ctx: NotificationContext,
-  doctors: Array<{ id: string; name: string; phone: string }>,
-  tenants?: Array<{ id: string; firstName: string; lastName: string; phone: string }>
-) {
-  const doctor = doctors.find(d => d.id === ctx.appointmentId ? false : true) // find by matching
-    ? doctors.find(d => d.name === ctx.doctorName || d.phone === ctx.doctorPhone)
-    : undefined;
-  
-  // Map type for doctor notification
-  const doctorType = type === "confirmation" ? "new_appointment" : type;
+export async function scheduleReceptionNotification(ctx: NotificationContext) {
+  const greeting = getCaracasGreeting();
+  const message = `📋 ${greeting} ${ctx.patientName}, ${CLINIC_NAME} ha recibido tu solicitud de cita.\n\n` +
+    `📌 Detalles de tu solicitud:\n` +
+    `• Tratamiento: ${ctx.treatment}\n` +
+    `• Especialista: ${ctx.doctorName || "Por asignar"}\n` +
+    `• Fecha solicitada: ${ctx.date}\n` +
+    `• Hora: ${ctx.time}\n` +
+    `• Teléfono: ${ctx.patientPhone}\n\n` +
+    `⏳ Tu cita se encuentra actualmente en estado: PENDIENTE DE CONFIRMACIÓN. ` +
+    `Nuestro equipo administrativo validará la disponibilidad y te notificará en breve la aprobación final.`;
 
-  // 1. Patient notification (always)
-  await schedulePatientNotification(type, ctx);
-
-  // 2. Staff doctor notification (if doctor is in doctors list)
-  if (ctx.doctorPhone) {
-    await scheduleStaffDoctorNotification(doctorType, ctx);
-  }
+  await supabase.from("scheduled_notifications").insert({
+    type: "reception",
+    appointment_id: ctx.appointmentId,
+    patient_name: ctx.patientName,
+    phone: ctx.patientPhone,
+    message,
+    scheduled_for: new Date().toISOString(),
+  });
 }

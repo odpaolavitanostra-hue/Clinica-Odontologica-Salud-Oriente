@@ -395,7 +395,7 @@ export function useClinicData() {
 
     const appointmentId = inserted?.id;
 
-    // Auto-schedule notifications using dynamic greeting
+    // Auto-schedule notifications based on status
     if (appointmentId && app.patientPhone) {
       const doctor = doctors.find(d => d.id === app.doctorId);
       const ctx = {
@@ -409,41 +409,44 @@ export function useClinicData() {
         time: app.time,
       };
 
-      // 1. Instant confirmation with dynamic greeting
-      await schedulePatientNotification("confirmation", ctx);
+      if (app.status === "pendiente_confirmacion") {
+        // STAGE 1: Web booking — send reception notification only (no confirmation yet)
+        await scheduleReceptionNotification(ctx);
+      } else {
+        // Admin-created appointment — send full confirmation + doctor notification
+        await schedulePatientNotification("confirmation", ctx);
+        if (doctor?.phone) {
+          await scheduleStaffDoctorNotification("new_appointment", ctx);
+        }
 
-      // 2. Staff doctor notification
-      if (doctor?.phone) {
-        await scheduleStaffDoctorNotification("new_appointment", ctx);
-      }
+        // Reminder: 2 hours before appointment
+        const appointmentDateTime = new Date(`${app.date}T${app.time}:00-04:00`);
+        const reminderTime = new Date(appointmentDateTime.getTime() - 2 * 60 * 60 * 1000);
+        if (reminderTime > new Date()) {
+          const { getCaracasGreeting } = await import("@/lib/notificationUtils");
+          await supabase.from("scheduled_notifications").insert({
+            type: "reminder",
+            appointment_id: appointmentId,
+            patient_name: app.patientName,
+            phone: app.patientPhone,
+            message: `⏰ Recordatorio: ${getCaracasGreeting()} ${app.patientName}, su cita es hoy ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos en 2 horas!`,
+            scheduled_for: reminderTime.toISOString(),
+          });
+        }
 
-      // 3. Reminder: 2 hours before appointment
-      const appointmentDateTime = new Date(`${app.date}T${app.time}:00-04:00`);
-      const reminderTime = new Date(appointmentDateTime.getTime() - 2 * 60 * 60 * 1000);
-      if (reminderTime > new Date()) {
-        const { getCaracasGreeting } = await import("@/lib/notificationUtils");
-        await supabase.from("scheduled_notifications").insert({
-          type: "reminder",
-          appointment_id: appointmentId,
-          patient_name: app.patientName,
-          phone: app.patientPhone,
-          message: `⏰ Recordatorio: ${getCaracasGreeting()} ${app.patientName}, su cita es hoy ${app.date} a las ${app.time} en Clínica Salud Oriente. ¡Le esperamos en 2 horas!`,
-          scheduled_for: reminderTime.toISOString(),
-        });
-      }
-
-      // 4. Post-op follow-up: 24h after (only for invasive treatments)
-      const isInvasive = INVASIVE_TREATMENTS.some(t => app.treatment.toLowerCase().includes(t));
-      if (isInvasive) {
-        const followupTime = new Date(appointmentDateTime.getTime() + 24 * 60 * 60 * 1000);
-        await supabase.from("scheduled_notifications").insert({
-          type: "postop",
-          appointment_id: appointmentId,
-          patient_name: app.patientName,
-          phone: app.patientPhone,
-          message: `Hola ${app.patientName}, ayer se realizó su ${app.treatment} en Clínica Salud Oriente. ¿Cómo se siente? Si tiene alguna molestia, no dude en contactarnos al 0422-7180013.`,
-          scheduled_for: followupTime.toISOString(),
-        });
+        // Post-op follow-up: 24h after (only for invasive treatments)
+        const isInvasive = INVASIVE_TREATMENTS.some(t => app.treatment.toLowerCase().includes(t));
+        if (isInvasive) {
+          const followupTime = new Date(appointmentDateTime.getTime() + 24 * 60 * 60 * 1000);
+          await supabase.from("scheduled_notifications").insert({
+            type: "postop",
+            appointment_id: appointmentId,
+            patient_name: app.patientName,
+            phone: app.patientPhone,
+            message: `Hola ${app.patientName}, ayer se realizó su ${app.treatment} en Clínica Salud Oriente. ¿Cómo se siente? Si tiene alguna molestia, no dude en contactarnos al 0422-7180013.`,
+            scheduled_for: followupTime.toISOString(),
+          });
+        }
       }
     }
 
