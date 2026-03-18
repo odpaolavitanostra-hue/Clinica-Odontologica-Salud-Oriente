@@ -333,6 +333,17 @@ export const AdminFinances = () => {
         doctors={doctors}
         patients={patients}
       />
+
+      <AdminInvoiceHub
+        open={invoiceHubOpen}
+        onOpenChange={setInvoiceHubOpen}
+        appointments={appointments}
+        doctors={doctors}
+        finances={finances}
+        tenants={tenants}
+        transactions={transactions}
+        tasaBCV={tasaBCV}
+      />
     </div>
   );
 };
