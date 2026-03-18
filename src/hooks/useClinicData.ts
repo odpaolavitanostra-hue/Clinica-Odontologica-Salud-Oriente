@@ -504,9 +504,20 @@ export function useClinicData() {
         await schedulePatientNotification("reschedule", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
       } else if (app.status === "pendiente" && existing.status === "pendiente_confirmacion") {
-        // STAGE 2: Admin confirms — send confirmation + doctor + schedule reminder
+        // STAGE 2: Admin confirms — send confirmation + doctor (staff or tenant) + schedule reminder
         await schedulePatientNotification("confirmation", ctx);
-        if (doctor?.phone) await scheduleStaffDoctorNotification("new_appointment", ctx);
+        if (doctor?.phone) {
+          await scheduleStaffDoctorNotification("new_appointment", ctx);
+        }
+        // Check if doctor is a tenant — send privacy-safe notification
+        const tenant = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
+        if (tenant?.phone) {
+          await scheduleTenantDoctorNotification("new_appointment", {
+            ...ctx,
+            tenantPhone: tenant.phone,
+            tenantName: `${tenant.firstName} ${tenant.lastName}`,
+          });
+        }
 
         // Schedule 2h reminder now that appointment is confirmed
         const appointmentDateTime = new Date(`${finalDate}T${finalTime}:00-04:00`);
