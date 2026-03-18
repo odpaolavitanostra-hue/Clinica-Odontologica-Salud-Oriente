@@ -50,12 +50,11 @@ export async function schedulePatientNotification(
       break;
     case "reschedule":
       message =
-        `📅 ${greeting}, ${ctx.patientName}. Tu cita en ${CLINIC_NAME} ha sido reagendada.\n\n` +
-        `Nueva fecha: ${ctx.date}\n` +
-        `Nueva hora: ${ctx.time}\n` +
-        `Tratamiento: ${ctx.treatment}\n\n` +
-        `${CLINIC_LOCATION}\n` +
-        `${CLINIC_EARLY_NOTE}`;
+        `${greeting}, ${ctx.patientName}. Tu cita en ${CLINIC_NAME} ha sido REAGENDADA con éxito. ✅\n\n` +
+        `🗓️ Nueva Fecha: ${ctx.date}\n` +
+        `⏰ Nueva Hora: ${ctx.time}\n` +
+        `👨‍⚕️ Especialista: ${ctx.doctorName || "Por asignar"}\n\n` +
+        `📍 Te esperamos en C.C. Novocentro, Piso 1, Local 1-02. Por favor, llega 5 minutos antes.`;
       break;
     case "cancellation":
       message =
@@ -101,11 +100,18 @@ export async function scheduleStaffDoctorNotification(
     modification: "Cita Modificada",
   };
 
-  const message =
-    `Hola Dr(a). ${doctorLastName}, tienes una ${labels[type]}.\n\n` +
-    `Paciente: ${ctx.patientName}\n` +
-    `Tratamiento: ${ctx.treatment}\n` +
-    `Horario: ${ctx.date} - ${ctx.time}`;
+  let message = "";
+  if (type === "reschedule") {
+    message =
+      `Hola Dr(a). ${doctorLastName}, la cita de ${ctx.patientName} ha sido reagendada.\n\n` +
+      `Nuevo horario: ${ctx.date} a las ${ctx.time}.`;
+  } else {
+    message =
+      `Hola Dr(a). ${doctorLastName}, tienes una ${labels[type]}.\n\n` +
+      `Paciente: ${ctx.patientName}\n` +
+      `Tratamiento: ${ctx.treatment}\n` +
+      `Horario: ${ctx.date} - ${ctx.time}`;
+  }
 
   await supabase.from("scheduled_notifications").insert({
     type: `doctor_${type}`,
@@ -135,11 +141,19 @@ export async function scheduleTenantDoctorNotification(
   };
 
   // CRITICAL: No patient name for tenant privacy
-  const message =
-    `Hola Dr(a). ${tenantLastName}, un nuevo ${labels[type]}.\n\n` +
-    `Tratamiento: ${ctx.treatment}\n` +
-    `Horario: ${ctx.date} - ${ctx.time}\n\n` +
-    `Nota: Los datos del paciente son gestionados por administración.`;
+  let message = "";
+  if (type === "reschedule") {
+    message =
+      `Hola Dr(a). ${tenantLastName}, un turno ha sido reagendado.\n\n` +
+      `Nuevo horario: ${ctx.date} a las ${ctx.time}.\n` +
+      `Datos del paciente protegidos.`;
+  } else {
+    message =
+      `Hola Dr(a). ${tenantLastName}, un nuevo ${labels[type]}.\n\n` +
+      `Tratamiento: ${ctx.treatment}\n` +
+      `Horario: ${ctx.date} - ${ctx.time}\n\n` +
+      `Nota: Los datos del paciente son gestionados por administración.`;
+  }
 
   await supabase.from("scheduled_notifications").insert({
     type: `tenant_${type}`,
