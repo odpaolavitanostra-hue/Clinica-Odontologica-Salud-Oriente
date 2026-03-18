@@ -550,7 +550,7 @@ export function useClinicData() {
     inv("appointments");
   };
 
-  const completeAppointment = async (id: string, materialsUsed: { itemId: string; qty: number }[]) => {
+  const completeAppointment = async (id: string, materialsUsed: { itemId: string; qty: number }[], customCommission?: number) => {
     const app = appointments.find(a => a.id === id);
     if (!app) return;
 
@@ -564,11 +564,14 @@ export function useClinicData() {
       }
     }
 
-    // Calculate finance
+    // Calculate finance — use custom commission if provided
     const doctor = doctors.find(d => d.id === app.doctorId);
-    const doctorPayUSD = doctor
-      ? doctor.payModel === 'percent' ? app.priceUSD * doctor.rate : doctor.rate
-      : 0;
+    let doctorPayUSD = 0;
+    if (customCommission !== undefined) {
+      doctorPayUSD = app.priceUSD * (customCommission / 100);
+    } else if (doctor) {
+      doctorPayUSD = doctor.payModel === 'percent' ? app.priceUSD * doctor.rate : doctor.rate;
+    }
     const materialsCostUSD = materialsUsed.reduce((sum, { itemId, qty }) => {
       const item = inventory.find(i => i.id === itemId);
       return sum + (item ? item.priceUSD * qty : 0);
@@ -587,6 +590,9 @@ export function useClinicData() {
     await supabase.from("appointments").update({
       status: 'completada', materials_used: materialsUsed,
     }).eq("id", id);
+
+    // ─── CRM Pipeline: Auto-move to "Completado" ───
+    await autoMoveToCRM(app.patientName, app.patientPhone, app.patientEmail || '', app.patientCedula || '', "completed", app.treatment);
 
     inv("appointments", "finances", "inventory");
   };
