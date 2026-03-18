@@ -48,6 +48,7 @@ export const AdminFinances = () => {
   const { finances, appointments, doctors, patients, tenants, tasaBCV, setTasaBCV, updateFinance, transactions } = useClinicData();
   const [invoiceData, setInvoiceData] = useState<{ appointment: any; doctor: any; finance: any } | null>(null);
   const [recipeOpen, setRecipeOpen] = useState(false);
+  const [invoiceHubOpen, setInvoiceHubOpen] = useState(false);
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "conciliacion" | "cierre">("resumen");
