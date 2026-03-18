@@ -141,11 +141,19 @@ export async function scheduleTenantDoctorNotification(
   };
 
   // CRITICAL: No patient name for tenant privacy
-  const message =
-    `Hola Dr(a). ${tenantLastName}, un nuevo ${labels[type]}.\n\n` +
-    `Tratamiento: ${ctx.treatment}\n` +
-    `Horario: ${ctx.date} - ${ctx.time}\n\n` +
-    `Nota: Los datos del paciente son gestionados por administración.`;
+  let message = "";
+  if (type === "reschedule") {
+    message =
+      `Hola Dr(a). ${tenantLastName}, un turno ha sido reagendado.\n\n` +
+      `Nuevo horario: ${ctx.date} a las ${ctx.time}.\n` +
+      `Datos del paciente protegidos.`;
+  } else {
+    message =
+      `Hola Dr(a). ${tenantLastName}, un nuevo ${labels[type]}.\n\n` +
+      `Tratamiento: ${ctx.treatment}\n` +
+      `Horario: ${ctx.date} - ${ctx.time}\n\n` +
+      `Nota: Los datos del paciente son gestionados por administración.`;
+  }
 
   await supabase.from("scheduled_notifications").insert({
     type: `tenant_${type}`,
