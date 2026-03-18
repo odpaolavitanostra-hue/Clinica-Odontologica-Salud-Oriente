@@ -242,6 +242,7 @@ export const AdminCalendar = () => {
           }`}>{app.status === "pendiente_confirmacion" ? "Por confirmar" : app.status === "pagada" ? "Pagada" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
           {app.status === "pendiente_confirmacion" && (
             <div className="flex gap-1">
+              <button onClick={() => { setReschedulingId(app.id); setRescheduleDate(app.date); setRescheduleTime(""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Reagendar"><CalendarClock className="w-4 h-4" /></button>
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar cita"><Check className="w-4 h-4" /></button>
               <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar cita"><X className="w-4 h-4" /></button>
@@ -249,6 +250,7 @@ export const AdminCalendar = () => {
           )}
           {app.status === "pendiente" && (
             <div className="flex gap-1">
+              <button onClick={() => { setReschedulingId(app.id); setRescheduleDate(app.date); setRescheduleTime(""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Reagendar"><CalendarClock className="w-4 h-4" /></button>
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
               <button onClick={() => setPayingAppId(app.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Procesar Pago"><DollarSign className="w-4 h-4" /></button>
               <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Completar sin pago"><Check className="w-4 h-4" /></button>
@@ -258,6 +260,7 @@ export const AdminCalendar = () => {
           {app.status === "pagada" && (
             <div className="flex gap-1 items-center">
               <span className="text-[10px] text-muted-foreground">{app.paymentMethod?.replace('_', ' ')}{app.paymentReference ? ` • Ref: ${app.paymentReference}` : ''}</span>
+              <button onClick={() => { setReschedulingId(app.id); setRescheduleDate(app.date); setRescheduleTime(""); }} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Reagendar"><CalendarClock className="w-4 h-4" /></button>
               <button onClick={() => { setCompleting(app.id); setMaterials([]); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Completar"><Check className="w-4 h-4" /></button>
             </div>
           )}
