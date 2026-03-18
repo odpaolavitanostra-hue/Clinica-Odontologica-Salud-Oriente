@@ -372,6 +372,27 @@ export function useClinicData() {
     inv("inventory");
   };
 
+  // ─── CRM Pipeline Automation ───
+  const autoMoveToCRM = async (name: string, phone: string, email: string, cedula: string, status: "completed" | "lost", interest: string) => {
+    // Check if lead already exists by phone or cedula
+    const { data: existingLeads } = await supabase.from("leads").select("id").or(`phone.eq.${phone},cedula.eq.${cedula}`).limit(1);
+    if (existingLeads && existingLeads.length > 0) {
+      // Update existing lead status
+      const contactEntry = { date: new Date().toISOString(), note: status === "completed" ? `✅ Tratamiento completado: ${interest}` : `❌ Cita cancelada: ${interest}` };
+      const { data: lead } = await supabase.from("leads").select("contact_history").eq("id", existingLeads[0].id).single();
+      const history = [...((lead?.contact_history as any[]) || []), contactEntry];
+      await supabase.from("leads").update({ status, contact_history: history, updated_at: new Date().toISOString() }).eq("id", existingLeads[0].id);
+    } else {
+      // Create new lead in the pipeline
+      await supabase.from("leads").insert({
+        name, phone, email, cedula, status, interest,
+        source: "Sistema", notes: status === "completed" ? "Auto: Tratamiento completado" : "Auto: Cita cancelada — Recuperación",
+        is_high_value: false, contact_history: [{ date: new Date().toISOString(), note: status === "completed" ? `✅ Tratamiento completado: ${interest}` : `❌ Cita cancelada: ${interest}` }],
+      });
+    }
+    inv("leads");
+  };
+
   // ─── Appointment CRUD ───
   const INVASIVE_TREATMENTS = ["cirugía", "endodoncia", "extracción", "implante", "implantes"];
 
@@ -502,6 +523,8 @@ export function useClinicData() {
         if (doctor?.phone) await scheduleStaffDoctorNotification("cancellation", ctx);
         const tenantCancel = tenants.find(t => `${t.firstName} ${t.lastName}` === doctor?.name);
         if (tenantCancel?.phone) await scheduleTenantDoctorNotification("cancellation", { ...ctx, tenantPhone: tenantCancel.phone, tenantName: `${tenantCancel.firstName} ${tenantCancel.lastName}` });
+        // ─── CRM Pipeline: Auto-move to "Recuperación" (lost) ───
+        await autoMoveToCRM(finalName, finalPhone, existing.patientEmail || '', existing.patientCedula || '', "lost", finalTreatment);
       } else if (dateChanged || timeChanged) {
         await schedulePatientNotification("reschedule", ctx);
         if (doctor?.phone) await scheduleStaffDoctorNotification("reschedule", ctx);
@@ -550,7 +573,7 @@ export function useClinicData() {
     inv("appointments");
   };
 
-  const completeAppointment = async (id: string, materialsUsed: { itemId: string; qty: number }[]) => {
+  const completeAppointment = async (id: string, materialsUsed: { itemId: string; qty: number }[], customCommission?: number) => {
     const app = appointments.find(a => a.id === id);
     if (!app) return;
 
@@ -564,11 +587,14 @@ export function useClinicData() {
       }
     }
 
-    // Calculate finance
+    // Calculate finance — use custom commission if provided
     const doctor = doctors.find(d => d.id === app.doctorId);
-    const doctorPayUSD = doctor
-      ? doctor.payModel === 'percent' ? app.priceUSD * doctor.rate : doctor.rate
-      : 0;
+    let doctorPayUSD = 0;
+    if (customCommission !== undefined) {
+      doctorPayUSD = app.priceUSD * (customCommission / 100);
+    } else if (doctor) {
+      doctorPayUSD = doctor.payModel === 'percent' ? app.priceUSD * doctor.rate : doctor.rate;
+    }
     const materialsCostUSD = materialsUsed.reduce((sum, { itemId, qty }) => {
       const item = inventory.find(i => i.id === itemId);
       return sum + (item ? item.priceUSD * qty : 0);
@@ -587,6 +613,9 @@ export function useClinicData() {
     await supabase.from("appointments").update({
       status: 'completada', materials_used: materialsUsed,
     }).eq("id", id);
+
+    // ─── CRM Pipeline: Auto-move to "Completado" ───
+    await autoMoveToCRM(app.patientName, app.patientPhone, app.patientEmail || '', app.patientCedula || '', "completed", app.treatment);
 
     inv("appointments", "finances", "inventory");
   };
