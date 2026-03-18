@@ -410,8 +410,9 @@ export function useClinicData() {
       };
 
       if (app.status === "pendiente_confirmacion") {
-        // STAGE 1: Web booking — send reception notification only (no confirmation yet)
+        // STAGE 1: Web booking — reception to patient + alert to admin
         await scheduleReceptionNotification(ctx);
+        await scheduleAdminAlertNotification({ ...ctx, requesterType: "Paciente" });
       } else {
         // Admin-created appointment — send full confirmation + doctor notification
         await schedulePatientNotification("confirmation", ctx);
