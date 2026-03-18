@@ -186,6 +186,41 @@ export const AdminCalendar = () => {
     return slots;
   };
 
+  const getRescheduleTimeSlots = (dateStr: string, excludeId?: string) => {
+    if (!dateStr) return [];
+    const d = new Date(dateStr + "T00:00:00");
+    const day = d.getDay();
+    if (day === 0) return [];
+    const end = day === 6 ? 14 : 17;
+    const slots: string[] = [];
+    const caracasNow = getCaracasNow();
+    const caracasToday = getCaracasToday();
+    const isToday = dateStr === caracasToday;
+    const currentHour = caracasNow.getHours();
+    for (let h = 8; h < end; h++) {
+      if (isToday && h <= currentHour) continue;
+      const time = `${h.toString().padStart(2, "0")}:00`;
+      if (isSlotBlockedByTenant(dateStr, time, tenants).blocked) continue;
+      const isBooked = appointments.some((a) => a.id !== excludeId && a.date === dateStr && a.time === time && a.status !== "cancelada");
+      if (!isBooked) slots.push(time);
+    }
+    return slots;
+  };
+
+  const handleReschedule = async (appId: string) => {
+    if (!rescheduleDate || !rescheduleTime) { toast.error("Selecciona fecha y hora"); return; }
+    const schedCheck = validateSchedule(rescheduleDate, rescheduleTime);
+    if (!schedCheck.valid) { toast.error(schedCheck.reason); return; }
+    if (!validateSlot(rescheduleDate, rescheduleTime, appointments, tenants, appId)) {
+      toast.error("Horario no disponible"); return;
+    }
+    await updateAppointment(appId, { date: rescheduleDate, time: rescheduleTime });
+    toast.success("✅ Cita reagendada exitosamente");
+    setReschedulingId(null);
+    setRescheduleDate("");
+    setRescheduleTime("");
+  };
+
   const todayStr = getCaracasToday();
 
   const renderAppCard = (app: Appointment) => (
