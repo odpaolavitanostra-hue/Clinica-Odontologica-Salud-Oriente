@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useClinicData, Appointment } from "@/hooks/useClinicData";
 import PaymentModal from "./PaymentModal";
 import { isSlotBlockedByTenant, validateSlot, validateSchedule, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
-import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search, CalendarClock } from "lucide-react";
+import { CalendarDays, Check, X, Trash2, DollarSign, Save, UserCog, Plus, ChevronLeft, ChevronRight, Clock, Search, CalendarClock, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, addWeeks, isSameMonth, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -40,6 +40,13 @@ export const AdminCalendar = () => {
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
+  // Full edit mode
+  const [editingAppId, setEditingAppId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    patientName: "", patientCedula: "", patientPhone: "", patientEmail: "",
+    doctorId: "", date: "", time: "", treatments: [] as string[], notes: "",
+    customPrice: "", status: "" as string,
+  });
 
   const navigate = (dir: number) => {
     if (view === "month") setCurrentDate(addMonths(currentDate, dir));
@@ -231,6 +238,65 @@ export const AdminCalendar = () => {
 
   const todayStr = getCaracasToday();
 
+  const startEditApp = (app: Appointment) => {
+    const treatmentsList = app.treatment.split(", ").filter(Boolean);
+    setEditingAppId(app.id);
+    setEditForm({
+      patientName: app.patientName,
+      patientCedula: app.patientCedula || "",
+      patientPhone: app.patientPhone,
+      patientEmail: app.patientEmail || "",
+      doctorId: app.doctorId,
+      date: app.date,
+      time: app.time,
+      treatments: treatmentsList.length > 0 ? treatmentsList : [treatments[0]?.name || ""],
+      notes: app.notes,
+      customPrice: String(app.priceUSD),
+      status: app.status,
+    });
+  };
+
+  const handleEditSave = async (appId: string) => {
+    const effectiveTreatments = editForm.treatments.filter(Boolean);
+    const effectiveTreatment = effectiveTreatments.join(", ") || treatments[0]?.name || "";
+    if (!editForm.patientName || !editForm.date || !editForm.time) { toast.error("Campos obligatorios incompletos"); return; }
+    const finalPrice = editForm.customPrice ? parseFloat(editForm.customPrice) : effectiveTreatments.reduce((sum, tName) => {
+      const t = treatments.find(tr => tr.name === tName);
+      return sum + (t?.priceUSD || 0);
+    }, 0);
+    await updateAppointment(appId, {
+      patientName: editForm.patientName,
+      patientPhone: editForm.patientPhone,
+      patientCedula: editForm.patientCedula,
+      patientEmail: editForm.patientEmail,
+      doctorId: editForm.doctorId,
+      date: editForm.date,
+      time: editForm.time,
+      treatment: effectiveTreatment,
+      priceUSD: finalPrice,
+      status: editForm.status as any,
+      notes: editForm.notes,
+    });
+    toast.success("✅ Cita actualizada");
+    setEditingAppId(null);
+  };
+
+  const getEditTimeSlots = (dateStr: string, excludeId?: string) => {
+    if (!dateStr) return [];
+    const d = new Date(dateStr + "T00:00:00");
+    const day = d.getDay();
+    if (day === 0) return [];
+    const end = day === 6 ? 14 : 17;
+    const slots: string[] = [];
+    for (let h = 8; h < end; h++) {
+      const time = `${h.toString().padStart(2, "0")}:00`;
+      if (isSlotBlockedByTenant(dateStr, time, tenants).blocked) continue;
+      const isBooked = appointments.some((a) => a.id !== excludeId && a.date === dateStr && a.time === time && a.status !== "cancelada");
+      if (!isBooked) slots.push(time);
+    }
+    return slots;
+  };
+
   const renderAppCard = (app: Appointment) => (
     <div key={app.id} className="bg-card rounded-xl p-4 gold-border">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -275,6 +341,7 @@ export const AdminCalendar = () => {
           {app.status === "completada" && (
             <button onClick={() => { const fin = finances.find((f) => f.appointmentId === app.id); setEditingPay(app.id); setCustomDoctorPay(fin?.doctorPayUSD || 0); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar pago"><DollarSign className="w-4 h-4" /></button>
           )}
+          <button onClick={() => startEditApp(app)} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Editar todo"><Edit className="w-4 h-4" /></button>
           <button onClick={async () => { await deleteAppointment(app.id); toast.info("Cita eliminada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
@@ -353,6 +420,70 @@ export const AdminCalendar = () => {
           <div className="flex gap-2">
             <button onClick={() => handleReschedule(app.id)} className="bg-accent text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Reagendar</button>
             <button onClick={() => { setReschedulingId(null); setRescheduleDate(""); setRescheduleTime(""); }} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Full Edit Mode */}
+      {editingAppId === app.id && (
+        <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+          <h4 className="font-semibold text-sm flex items-center gap-2"><Edit className="w-4 h-4 text-accent" /> Edición completa de cita</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><label className="block text-xs font-medium mb-1">Paciente *</label><input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.patientName} onChange={(e) => setEditForm(p => ({ ...p, patientName: e.target.value }))} /></div>
+            <div><label className="block text-xs font-medium mb-1">Cédula</label><input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.patientCedula} onChange={(e) => setEditForm(p => ({ ...p, patientCedula: e.target.value }))} /></div>
+            <div><label className="block text-xs font-medium mb-1">Teléfono</label><input type="tel" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.patientPhone} onChange={(e) => setEditForm(p => ({ ...p, patientPhone: e.target.value }))} /></div>
+            <div><label className="block text-xs font-medium mb-1">Email</label><input type="email" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.patientEmail} onChange={(e) => setEditForm(p => ({ ...p, patientEmail: e.target.value }))} /></div>
+          </div>
+          <div><label className="block text-xs font-medium mb-1">Doctor</label>
+            <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.doctorId} onChange={(e) => setEditForm(p => ({ ...p, doctorId: e.target.value }))}>
+              {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs font-medium">Tratamientos</label>
+            {editForm.treatments.map((tName, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <select className="flex-1 bg-card rounded-lg px-3 py-2 text-sm border border-border" value={tName} onChange={(e) => setEditForm(p => ({ ...p, treatments: p.treatments.map((t, i) => i === idx ? e.target.value : t), customPrice: "" }))}>
+                  {[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map(t => <option key={t.name} value={t.name}>{t.name} — ${t.priceUSD.toFixed(2)}</option>)}
+                </select>
+                {editForm.treatments.length > 1 && (
+                  <button type="button" onClick={() => setEditForm(p => ({ ...p, treatments: p.treatments.filter((_, i) => i !== idx), customPrice: "" }))} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><X className="w-4 h-4" /></button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={() => setEditForm(p => ({ ...p, treatments: [...p.treatments, treatments[0]?.name || ""], customPrice: "" }))} className="w-full py-1.5 rounded-lg text-xs font-medium border border-dashed border-primary/50 text-primary hover:bg-primary/10 flex items-center justify-center gap-1">
+              <Plus className="w-3 h-3" /> Añadir tratamiento
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div><label className="block text-xs font-medium mb-1">Precio USD</label>
+              <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" placeholder={`$${editForm.treatments.reduce((s, tName) => s + (treatments.find(t => t.name === tName)?.priceUSD || 0), 0).toFixed(2)}`} value={editForm.customPrice} onChange={(e) => setEditForm(p => ({ ...p, customPrice: e.target.value }))} />
+            </div>
+            <div><label className="block text-xs font-medium mb-1">Fecha</label>
+              <input type="date" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.date} onChange={(e) => setEditForm(p => ({ ...p, date: e.target.value, time: "" }))} />
+            </div>
+            <div><label className="block text-xs font-medium mb-1">Hora</label>
+              <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.time} onChange={(e) => setEditForm(p => ({ ...p, time: e.target.value }))}>
+                <option value={editForm.time}>{editForm.time} (actual)</option>
+                {getEditTimeSlots(editForm.date, app.id).filter(t => t !== editForm.time).map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          <div><label className="block text-xs font-medium mb-1">Estado</label>
+            <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border" value={editForm.status} onChange={(e) => setEditForm(p => ({ ...p, status: e.target.value }))}>
+              <option value="pendiente_confirmacion">Por confirmar</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="pagada">Pagada</option>
+              <option value="completada">Completada</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div><label className="block text-xs font-medium mb-1">Notas</label>
+            <textarea className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border resize-none" rows={2} value={editForm.notes} onChange={(e) => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => handleEditSave(app.id)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar cambios</button>
+            <button onClick={() => setEditingAppId(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
           </div>
         </div>
       )}

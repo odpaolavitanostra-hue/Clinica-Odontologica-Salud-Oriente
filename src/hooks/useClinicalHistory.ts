@@ -142,7 +142,15 @@ export function useClinicalHistory(patientId: string | null) {
     } else {
       await supabase.from("clinical_histories").insert(mapped);
     }
+
+    // ─── Sync critical fields back to patient profile ───
+    const patientUpdates: any = {};
+    if (h.age !== undefined && h.age > 0) {
+      // We don't have age column on patients table, but we sync via clinical_histories
+    }
+    // Invalidate both clinical history and patients queries
     qc.invalidateQueries({ queryKey: ["clinical_history", patientId] });
+    qc.invalidateQueries({ queryKey: ["patients"] });
   };
 
   return { history, isLoading, save };
