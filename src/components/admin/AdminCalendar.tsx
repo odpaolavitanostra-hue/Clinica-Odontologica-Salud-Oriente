@@ -238,7 +238,65 @@ export const AdminCalendar = () => {
 
   const todayStr = getCaracasToday();
 
-  const renderAppCard = (app: Appointment) => (
+  const startEditApp = (app: Appointment) => {
+    const treatmentsList = app.treatment.split(", ").filter(Boolean);
+    setEditingAppId(app.id);
+    setEditForm({
+      patientName: app.patientName,
+      patientCedula: app.patientCedula || "",
+      patientPhone: app.patientPhone,
+      patientEmail: app.patientEmail || "",
+      doctorId: app.doctorId,
+      date: app.date,
+      time: app.time,
+      treatments: treatmentsList.length > 0 ? treatmentsList : [treatments[0]?.name || ""],
+      notes: app.notes,
+      customPrice: String(app.priceUSD),
+      status: app.status,
+    });
+  };
+
+  const handleEditSave = async (appId: string) => {
+    const effectiveTreatments = editForm.treatments.filter(Boolean);
+    const effectiveTreatment = effectiveTreatments.join(", ") || treatments[0]?.name || "";
+    if (!editForm.patientName || !editForm.date || !editForm.time) { toast.error("Campos obligatorios incompletos"); return; }
+    const finalPrice = editForm.customPrice ? parseFloat(editForm.customPrice) : effectiveTreatments.reduce((sum, tName) => {
+      const t = treatments.find(tr => tr.name === tName);
+      return sum + (t?.priceUSD || 0);
+    }, 0);
+    await updateAppointment(appId, {
+      patientName: editForm.patientName,
+      patientPhone: editForm.patientPhone,
+      patientCedula: editForm.patientCedula,
+      patientEmail: editForm.patientEmail,
+      doctorId: editForm.doctorId,
+      date: editForm.date,
+      time: editForm.time,
+      treatment: effectiveTreatment,
+      priceUSD: finalPrice,
+      status: editForm.status as any,
+      notes: editForm.notes,
+    });
+    toast.success("✅ Cita actualizada");
+    setEditingAppId(null);
+  };
+
+  const getEditTimeSlots = (dateStr: string, excludeId?: string) => {
+    if (!dateStr) return [];
+    const d = new Date(dateStr + "T00:00:00");
+    const day = d.getDay();
+    if (day === 0) return [];
+    const end = day === 6 ? 14 : 17;
+    const slots: string[] = [];
+    for (let h = 8; h < end; h++) {
+      const time = `${h.toString().padStart(2, "0")}:00`;
+      if (isSlotBlockedByTenant(dateStr, time, tenants).blocked) continue;
+      const isBooked = appointments.some((a) => a.id !== excludeId && a.date === dateStr && a.time === time && a.status !== "cancelada");
+      if (!isBooked) slots.push(time);
+    }
+    return slots;
+  };
+
     <div key={app.id} className="bg-card rounded-xl p-4 gold-border">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
