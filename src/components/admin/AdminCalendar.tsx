@@ -40,6 +40,13 @@ export const AdminCalendar = () => {
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
+  // Full edit mode
+  const [editingAppId, setEditingAppId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    patientName: "", patientCedula: "", patientPhone: "", patientEmail: "",
+    doctorId: "", date: "", time: "", treatments: [] as string[], notes: "",
+    customPrice: "", status: "" as string,
+  });
 
   const navigate = (dir: number) => {
     if (view === "month") setCurrentDate(addMonths(currentDate, dir));
