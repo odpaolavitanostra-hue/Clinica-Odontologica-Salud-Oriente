@@ -341,6 +341,7 @@ export const AdminCalendar = () => {
           {app.status === "completada" && (
             <button onClick={() => { const fin = finances.find((f) => f.appointmentId === app.id); setEditingPay(app.id); setCustomDoctorPay(fin?.doctorPayUSD || 0); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar pago"><DollarSign className="w-4 h-4" /></button>
           )}
+          <button onClick={() => startEditApp(app)} className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20" title="Editar todo"><Edit className="w-4 h-4" /></button>
           <button onClick={async () => { await deleteAppointment(app.id); toast.info("Cita eliminada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
