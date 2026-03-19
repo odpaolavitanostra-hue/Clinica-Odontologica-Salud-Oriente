@@ -478,6 +478,8 @@ export function useClinicData() {
     const mapped: any = {};
     if (app.patientName !== undefined) mapped.patient_name = app.patientName;
     if (app.patientPhone !== undefined) mapped.patient_phone = app.patientPhone;
+    if (app.patientCedula !== undefined) mapped.patient_cedula = app.patientCedula;
+    if (app.patientEmail !== undefined) mapped.patient_email = app.patientEmail;
     if (app.doctorId !== undefined) mapped.doctor_id = app.doctorId;
     if (app.status !== undefined) mapped.status = app.status;
     if (app.materialsUsed !== undefined) mapped.materials_used = app.materialsUsed;
