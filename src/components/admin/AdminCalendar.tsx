@@ -297,6 +297,7 @@ export const AdminCalendar = () => {
     return slots;
   };
 
+  const renderAppCard = (app: Appointment) => (
     <div key={app.id} className="bg-card rounded-xl p-4 gold-border">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
