@@ -560,7 +560,7 @@ export const AdminTenants = () => {
         ) : (
           filteredRequests.map((req) => {
             const cleanPhone = req.requesterPhone.replace(/[^0-9+]/g, "");
-            const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone;
+            const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone.replace(/^0/, "58");
             const isEditing = editingRequest === req.id;
             const isPending = req.status === 'pending_review';
             const isApproved = req.status === 'approved';

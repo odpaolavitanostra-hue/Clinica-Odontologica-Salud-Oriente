@@ -323,8 +323,8 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
               className="bg-clinic-green text-clinic-green-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
               <MessageCircle className="w-4 h-4" /> WhatsApp
             </button>
-            <button disabled
-              className="bg-muted text-muted-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 opacity-50 text-sm cursor-not-allowed">
+            <button onClick={sendEmail} disabled={!form.patientEmail}
+              className="bg-blue-600 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
               <Mail className="w-4 h-4" /> Email
             </button>
           </div>
