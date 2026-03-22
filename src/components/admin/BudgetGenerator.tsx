@@ -46,7 +46,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
 
   const handlePatientSelect = (patientId: string) => {
     const p = patients.find(pt => pt.id === patientId);
-    if (p) setForm(prev => ({ ...prev, patientId, patientName: p.name, patientCedula: p.cedula, patientPhone: p.phone }));
+    if (p) setForm(prev => ({ ...prev, patientId, patientName: p.name, patientCedula: p.cedula, patientPhone: p.phone, patientEmail: p.email || "" }));
   };
 
   const addItem = () => setItems(prev => [...prev, { treatment: "", priceUSD: 0, qty: 1 }]);
