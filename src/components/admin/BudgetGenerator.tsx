@@ -215,6 +215,13 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
+  const sendEmail = () => {
+    if (!form.patientEmail) return;
+    const subject = encodeURIComponent("Presupuesto Odontológico — Clínica Salud Oriente");
+    const body = encodeURIComponent(`Hola ${form.patientName}, adjuntamos su Presupuesto de Clínica Salud Oriente. El monto total es Bs. ${totalVES.toLocaleString("es-VE", { minimumFractionDigits: 2 })}. ¡Feliz día!`);
+    window.open(`mailto:${form.patientEmail}?subject=${subject}&body=${body}`, "_blank");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
