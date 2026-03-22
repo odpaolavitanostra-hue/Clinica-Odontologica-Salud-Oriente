@@ -261,9 +261,15 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium mb-1">Teléfono (para WhatsApp)</label>
-            <input className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={form.patientPhone} onChange={e => setForm(p => ({ ...p, patientPhone: e.target.value }))} placeholder="04XX-XXXXXXX" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">Teléfono (WhatsApp)</label>
+              <input className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={form.patientPhone} onChange={e => setForm(p => ({ ...p, patientPhone: e.target.value }))} placeholder="04XX-XXXXXXX" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Email</label>
+              <input type="email" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={form.patientEmail} onChange={e => setForm(p => ({ ...p, patientEmail: e.target.value }))} placeholder="correo@ejemplo.com" />
+            </div>
           </div>
 
           {/* Treatment Items */}
