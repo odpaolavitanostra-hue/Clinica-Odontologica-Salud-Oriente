@@ -122,6 +122,7 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
     patientName: "",
     patientCedula: "",
     patientPhone: "",
+    patientEmail: "",
     content: "",
     diagnosis: "",
   });
@@ -132,13 +133,24 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
   const handlePatientSelect = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
-      setForm(prev => ({ ...prev, patientId, patientName: patient.name, patientCedula: patient.cedula, patientPhone: patient.phone }));
+      setForm(prev => ({ ...prev, patientId, patientName: patient.name, patientCedula: patient.cedula, patientPhone: patient.phone, patientEmail: patient.email || "" }));
     }
   };
 
   const handlePrint = () => {
     if (!selectedDoctor) return;
     printRecipe(selectedDoctor, form.patientName, form.patientCedula, form.diagnosis, form.content);
+  };
+
+  const handleWhatsApp = () => {
+    if (form.patientPhone) sendRecipeWhatsApp(form.patientName, form.patientPhone);
+  };
+
+  const handleEmail = () => {
+    if (!form.patientEmail) return;
+    const subject = encodeURIComponent("Recipe Médico — Clínica Salud Oriente");
+    const body = encodeURIComponent(`Hola ${form.patientName}, adjuntamos su Recipe Médico de Clínica Salud Oriente. ¡Feliz día!`);
+    window.open(`mailto:${form.patientEmail}?subject=${subject}&body=${body}`, "_blank");
   };
 
   return (
@@ -182,9 +194,15 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium mb-1">Teléfono (para WhatsApp)</label>
-            <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={form.patientPhone} onChange={(e) => update("patientPhone", e.target.value)} placeholder="04XX-XXXXXXX" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">Teléfono (WhatsApp)</label>
+              <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={form.patientPhone} onChange={(e) => update("patientPhone", e.target.value)} placeholder="04XX-XXXXXXX" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Email</label>
+              <input type="email" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={form.patientEmail} onChange={(e) => update("patientEmail", e.target.value)} placeholder="correo@ejemplo.com" />
+            </div>
           </div>
 
           <div>
@@ -200,13 +218,14 @@ const RecipeGenerator = ({ open, onOpenChange, doctors, patients }: RecipeGenera
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button onClick={handlePrint} disabled={!selectedDoctor || !form.content}
               className="bg-primary text-primary-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
-              <Printer className="w-4 h-4" /> Imprimir
+              <Printer className="w-4 h-4" /> Imprimir/PDF
             </button>
-            <button onClick={() => { if (form.patientPhone) sendRecipeWhatsApp(form.patientName, form.patientPhone); }} disabled={!form.content || !form.patientPhone}
+            <button onClick={handleWhatsApp} disabled={!form.content || !form.patientPhone}
               className="bg-clinic-green text-clinic-green-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
               <MessageCircle className="w-4 h-4" /> WhatsApp
             </button>
-            <button disabled className="bg-muted text-muted-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+            <button onClick={handleEmail} disabled={!form.content || !form.patientEmail}
+              className="bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
               <Mail className="w-4 h-4" /> Email
             </button>
           </div>

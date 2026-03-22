@@ -33,6 +33,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
     patientName: "",
     patientCedula: "",
     patientPhone: "",
+    patientEmail: "",
     notes: "",
   });
   const [items, setItems] = useState<BudgetItem[]>([{ treatment: "", priceUSD: 0, qty: 1 }]);
@@ -45,7 +46,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
 
   const handlePatientSelect = (patientId: string) => {
     const p = patients.find(pt => pt.id === patientId);
-    if (p) setForm(prev => ({ ...prev, patientId, patientName: p.name, patientCedula: p.cedula, patientPhone: p.phone }));
+    if (p) setForm(prev => ({ ...prev, patientId, patientName: p.name, patientCedula: p.cedula, patientPhone: p.phone, patientEmail: p.email || "" }));
   };
 
   const addItem = () => setItems(prev => [...prev, { treatment: "", priceUSD: 0, qty: 1 }]);
@@ -214,6 +215,13 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
+  const sendEmail = () => {
+    if (!form.patientEmail) return;
+    const subject = encodeURIComponent("Presupuesto Odontológico — Clínica Salud Oriente");
+    const body = encodeURIComponent(`Hola ${form.patientName}, adjuntamos su Presupuesto de Clínica Salud Oriente. El monto total es Bs. ${totalVES.toLocaleString("es-VE", { minimumFractionDigits: 2 })}. ¡Feliz día!`);
+    window.open(`mailto:${form.patientEmail}?subject=${subject}&body=${body}`, "_blank");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -253,9 +261,15 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium mb-1">Teléfono (para WhatsApp)</label>
-            <input className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={form.patientPhone} onChange={e => setForm(p => ({ ...p, patientPhone: e.target.value }))} placeholder="04XX-XXXXXXX" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">Teléfono (WhatsApp)</label>
+              <input className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={form.patientPhone} onChange={e => setForm(p => ({ ...p, patientPhone: e.target.value }))} placeholder="04XX-XXXXXXX" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Email</label>
+              <input type="email" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border" value={form.patientEmail} onChange={e => setForm(p => ({ ...p, patientEmail: e.target.value }))} placeholder="correo@ejemplo.com" />
+            </div>
           </div>
 
           {/* Treatment Items */}
@@ -315,8 +329,8 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
               className="bg-clinic-green text-clinic-green-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
               <MessageCircle className="w-4 h-4" /> WhatsApp
             </button>
-            <button disabled
-              className="bg-muted text-muted-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 opacity-50 text-sm cursor-not-allowed">
+            <button onClick={sendEmail} disabled={!form.patientEmail}
+              className="bg-blue-600 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
               <Mail className="w-4 h-4" /> Email
             </button>
           </div>
