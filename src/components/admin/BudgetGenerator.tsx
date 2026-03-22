@@ -33,6 +33,7 @@ const BudgetGenerator = ({ open, onOpenChange, doctors, patients, treatments, ta
     patientName: "",
     patientCedula: "",
     patientPhone: "",
+    patientEmail: "",
     notes: "",
   });
   const [items, setItems] = useState<BudgetItem[]>([{ treatment: "", priceUSD: 0, qty: 1 }]);
